@@ -1,0 +1,74 @@
+import { contextBridge, ipcRenderer } from 'electron';
+import { IPC } from './shared/api';
+import type { PharmacyApi } from './shared/api';
+
+const invoke = (channel: string, ...args: unknown[]) =>
+  ipcRenderer.invoke(channel, ...args);
+
+const api: PharmacyApi = {
+  auth: {
+    hasUsers: () => invoke(IPC.authHasUsers),
+    register: (username, pin, role) => invoke(IPC.authRegister, username, pin, role),
+    login: (username, pin) => invoke(IPC.authLogin, username, pin),
+    listUsers: () => invoke(IPC.authListUsers),
+    deleteUser: (id) => invoke(IPC.authDeleteUser, id),
+  },
+  medicines: {
+    list: (search) => invoke(IPC.medicinesList, search),
+    get: (id) => invoke(IPC.medicinesGet, id),
+    create: (input) => invoke(IPC.medicinesCreate, input),
+    update: (id, input) => invoke(IPC.medicinesUpdate, id, input),
+    remove: (id) => invoke(IPC.medicinesRemove, id),
+  },
+  batches: {
+    listByMedicine: (medicineId) => invoke(IPC.batchesListByMedicine, medicineId),
+    create: (input) => invoke(IPC.batchesCreate, input),
+    update: (id, input) => invoke(IPC.batchesUpdate, id, input),
+    remove: (id) => invoke(IPC.batchesRemove, id),
+    stock: (search) => invoke(IPC.batchesStock, search),
+  },
+  suppliers: {
+    list: (search) => invoke(IPC.suppliersList, search),
+    create: (input) => invoke(IPC.suppliersCreate, input),
+    update: (id, input) => invoke(IPC.suppliersUpdate, id, input),
+    remove: (id) => invoke(IPC.suppliersRemove, id),
+  },
+  customers: {
+    list: (search) => invoke(IPC.customersList, search),
+    create: (input) => invoke(IPC.customersCreate, input),
+    update: (id, input) => invoke(IPC.customersUpdate, id, input),
+    remove: (id) => invoke(IPC.customersRemove, id),
+  },
+  purchases: {
+    create: (input) => invoke(IPC.purchasesCreate, input),
+    list: (search) => invoke(IPC.purchasesList, search),
+  },
+  sales: {
+    searchSellable: (search) => invoke(IPC.salesSearchSellable, search),
+    create: (input) => invoke(IPC.salesCreate, input),
+    list: (from, to) => invoke(IPC.salesList, from, to),
+    get: (id) => invoke(IPC.salesGet, id),
+  },
+  reports: {
+    dashboard: () => invoke(IPC.reportsDashboard),
+    lowStock: () => invoke(IPC.reportsLowStock),
+    expiring: (withinDays) => invoke(IPC.reportsExpiring, withinDays),
+    salesReport: (from, to) => invoke(IPC.reportsSalesReport, from, to),
+    gstSummary: (from, to) => invoke(IPC.reportsGstSummary, from, to),
+    stockValuation: () => invoke(IPC.reportsStockValuation),
+    exportCsv: (filename, csv) => invoke(IPC.reportsExportCsv, filename, csv),
+  },
+  settings: {
+    get: () => invoke(IPC.settingsGet),
+    save: (settings) => invoke(IPC.settingsSave, settings),
+  },
+  backup: {
+    backup: () => invoke(IPC.backupBackup),
+    restore: () => invoke(IPC.backupRestore),
+  },
+  print: {
+    invoice: (saleId) => invoke(IPC.printInvoice, saleId),
+  },
+};
+
+contextBridge.exposeInMainWorld('pharmacy', api);
