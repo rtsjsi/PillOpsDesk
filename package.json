@@ -1,7 +1,7 @@
 {
   "name": "pillopsdesk",
   "productName": "PillOpsDesk",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Offline desktop pharmacy management app for small-town medical stores (GST billing, inventory, batch/expiry, reports).",
   "main": ".vite/build/main.js",
   "author": "PillOpsDesk",
@@ -13,6 +13,14 @@
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "postinstall": "electron-rebuild -f -w better-sqlite3",
     "lint": "eslint --ext .ts,.tsx .",
+    "pretest": "npm rebuild better-sqlite3",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "posttest": "electron-rebuild -f -w better-sqlite3",
+    "package:e2e": "electron-forge package",
+    "test:e2e": "playwright test",
+    "test:e2e:login": "playwright test tests/e2e/login.spec.ts",
+    "test:e2e:ui": "playwright test --ui",
     "license:keypair": "node scripts/generate-keypair.cjs",
     "license:generate": "node scripts/generate-license.cjs"
   },
@@ -25,8 +33,7 @@
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.6.0",
-    "@electron-forge/maker-squirrel": "^7.6.0",
-    "@electron-forge/maker-zip": "^7.6.0",
+    "@electron-forge/maker-squirrel": "^7.11.2",
     "@electron-forge/plugin-auto-unpack-natives": "^7.6.0",
     "@electron-forge/plugin-fuses": "^7.6.0",
     "@electron-forge/plugin-vite": "^7.6.0",
@@ -41,6 +48,8 @@
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.13",
     "typescript": "^5.6.2",
-    "vite": "^5.4.8"
+    "vite": "^5.4.8",
+    "vitest": "^3.2.4",
+    "@playwright/test": "^1.55.0"
   }
 }

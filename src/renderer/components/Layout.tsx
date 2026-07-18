@@ -37,10 +37,19 @@ export function Layout() {
     <div className="flex h-full">
       <aside className="flex w-60 flex-col bg-brand-800 text-brand-50">
         <div className="border-b border-brand-700 px-5 py-4">
-          <div className="text-lg font-bold leading-tight">
-            {settings?.store_name || 'PillOpsDesk'}
+          <div className="flex items-center gap-3">
+            <img
+              src="/icon.png"
+              alt=""
+              className="h-9 w-9 shrink-0 rounded-lg"
+            />
+            <div className="min-w-0">
+              <div className="truncate text-lg font-bold leading-tight">
+                {settings?.store_name || 'PillOpsDesk'}
+              </div>
+              <div className="text-xs text-brand-200">Offline Management</div>
+            </div>
           </div>
-          <div className="text-xs text-brand-200">Offline Management</div>
         </div>
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           {navItems.map((item) => (

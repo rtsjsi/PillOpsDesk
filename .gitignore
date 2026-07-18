@@ -8,4 +8,15 @@ Thumbs.db
 *.db
 *.db-wal
 *.db-shm
+.env.test
+tests/e2e/.user-data/
+tests/e2e/.user-data-run/
+tests/e2e/.user-data-smoke/
+tests/e2e/report/
+test-results/
+playwright-report/
+# License signing keys + issued customer licenses (vendor-only, never commit)
 scripts/keys/
+# Authenticode certificate for Windows installer signing
+*.pfx
+*.p12

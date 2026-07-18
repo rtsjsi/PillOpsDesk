@@ -1,24 +1,88 @@
 import type { ForgeConfig } from '@electron-forge/shared-types';
 import { MakerSquirrel } from '@electron-forge/maker-squirrel';
-import { MakerZIP } from '@electron-forge/maker-zip';
 import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+const iconPath = path.resolve(__dirname, 'assets/icons/icon');
+const appManifestPath = path.resolve(__dirname, 'assets/windows/app.manifest');
+
+const publisherName = 'PillOpsDesk';
+
+/** Authenticode signing (required for Windows Smart App Control). Set env vars when you have a cert. */
+function getWindowsSignOptions():
+  | { certificateFile: string; certificatePassword?: string }
+  | undefined {
+  const certificateFile = process.env.WINDOWS_CERT_FILE;
+  if (!certificateFile) return undefined;
+  return {
+    certificateFile,
+    certificatePassword: process.env.WINDOWS_CERT_PASSWORD,
+  };
+}
+
+const windowsSign = getWindowsSignOptions();
+
+const PACKAGED_NODE_MODULES = [
+  'better-sqlite3',
+  'bindings',
+  'file-uri-to-path',
+  'electron-squirrel-startup',
+];
+
+async function copyPackagedNodeModules(buildPath: string): Promise<void> {
+  const sourceNodeModules = path.resolve(__dirname, 'node_modules');
+  const destNodeModules = path.resolve(buildPath, 'node_modules');
+
+  await Promise.all(
+    PACKAGED_NODE_MODULES.map(async (packageName) => {
+      const sourcePath = path.join(sourceNodeModules, packageName);
+      const destPath = path.join(destNodeModules, packageName);
+      await fs.mkdir(path.dirname(destPath), { recursive: true });
+      await fs.cp(sourcePath, destPath, { recursive: true });
+    })
+  );
+}
 
 const config: ForgeConfig = {
+  buildIdentifier: 'release',
   packagerConfig: {
     asar: true,
     name: 'PillOpsDesk',
     executableName: 'pillopsdesk',
+    icon: iconPath,
+    win32metadata: {
+      CompanyName: publisherName,
+      ProductName: 'PillOpsDesk',
+      FileDescription: 'Offline pharmacy management for medical stores',
+      OriginalFilename: 'pillopsdesk.exe',
+      InternalName: 'pillopsdesk',
+      'application-manifest': appManifestPath,
+    },
+    ...(windowsSign ? { windowsSign } : {}),
+    extraResource: [
+      path.resolve(__dirname, 'assets/icons/icon.ico'),
+      path.resolve(__dirname, 'assets/icons/icon.png'),
+    ],
   },
   rebuildConfig: {},
+  hooks: {
+    packageAfterPrune: async (_forgeConfig, buildPath) => {
+      await copyPackagedNodeModules(buildPath);
+    },
+  },
   makers: [
     new MakerSquirrel({
       name: 'pillopsdesk',
       setupExe: 'PillOpsDeskSetup.exe',
+      setupIcon: path.resolve(__dirname, 'assets/icons/icon.ico'),
+      authors: publisherName,
+      copyright: `Copyright © ${new Date().getFullYear()} ${publisherName}`,
+      ...(windowsSign ? { windowsSign } : {}),
     }),
-    new MakerZIP({}, ['darwin']),
   ],
   plugins: [
     new AutoUnpackNativesPlugin({}),

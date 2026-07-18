@@ -12,6 +12,13 @@ if (process.platform === 'win32' && require('electron-squirrel-startup')) {
   app.quit();
 }
 
+function getAppIconPath(): string {
+  if (app.isPackaged) {
+    return path.join(process.resourcesPath, 'icon.ico');
+  }
+  return path.join(__dirname, '../../assets/icons/icon.ico');
+}
+
 const createWindow = (): void => {
   const mainWindow = new BrowserWindow({
     width: 1280,
@@ -19,6 +26,7 @@ const createWindow = (): void => {
     minWidth: 1024,
     minHeight: 680,
     title: 'PillOpsDesk',
+    icon: getAppIconPath(),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
