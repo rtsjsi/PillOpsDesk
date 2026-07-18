@@ -3,6 +3,8 @@ import type { Medicine, MedicineInput, Batch, BatchInput } from '../../shared/ty
 import { inr, formatDate, daysUntil, todayIso } from '../lib/format';
 import { Modal } from '../components/Modal';
 import { Spinner, EmptyState, Badge, useToast, errMsg } from '../components/ui';
+import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
+import { useWriteAllowed } from '../App';
 
 const GST_RATES = [0, 5, 12, 18, 28];
 
@@ -19,6 +21,7 @@ const emptyMedicine: MedicineInput = {
 
 export function Inventory() {
   const toast = useToast();
+  const canWrite = useWriteAllowed();
   const [search, setSearch] = useState('');
   const [meds, setMeds] = useState<Medicine[] | null>(null);
   const [stockMap, setStockMap] = useState<Record<number, number>>({});
@@ -101,9 +104,10 @@ export function Inventory() {
 
   return (
     <div className="space-y-4">
+      <ReadOnlyNotice />
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">Inventory</h1>
-        <button className="btn-primary" onClick={openNew}>
+        <button className="btn-primary" onClick={openNew} disabled={!canWrite}>
           + Add Medicine
         </button>
       </div>

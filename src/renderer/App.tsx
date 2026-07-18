@@ -24,6 +24,7 @@ interface AuthState {
 interface LicenseState {
   status: LicenseStatus | null;
   refreshLicense: () => Promise<LicenseStatus>;
+  canWrite: boolean;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -39,6 +40,10 @@ export function useLicense(): LicenseState {
   const ctx = useContext(LicenseContext);
   if (!ctx) throw new Error('useLicense outside provider');
   return ctx;
+}
+
+export function useWriteAllowed(): boolean {
+  return useLicense().canWrite;
 }
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -70,7 +75,11 @@ export default function App() {
       const status = await window.pharmacy.license.getStatus();
       setLicenseStatus(status);
 
-      if (status.state === 'active' || status.state === 'grace') {
+      if (
+        status.state === 'active' ||
+        status.state === 'grace' ||
+        status.state === 'readonly'
+      ) {
         const cached = sessionStorage.getItem('user');
         if (cached) {
           try {
@@ -112,9 +121,14 @@ export default function App() {
     );
   }
 
+  const canWrite =
+    licenseStatus.state === 'active' || licenseStatus.state === 'grace';
+
   return (
     <ToastProvider>
-      <LicenseContext.Provider value={{ status: licenseStatus, refreshLicense }}>
+      <LicenseContext.Provider
+        value={{ status: licenseStatus, refreshLicense, canWrite }}
+      >
         <AuthContext.Provider value={{ user, setUser: handleSetUser, logout }}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />

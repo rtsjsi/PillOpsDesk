@@ -2,12 +2,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 import type { Settings, User } from '../../shared/types';
 import { Modal } from '../components/Modal';
 import { Spinner, useToast, errMsg, Badge } from '../components/ui';
-import { useAuth, useLicense } from '../App';
+import { useAuth, useLicense, useWriteAllowed } from '../App';
 import { formatDate } from '../lib/format';
 
 export function SettingsPage() {
   const toast = useToast();
   const { user } = useAuth();
+  const canWrite = useWriteAllowed();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -117,13 +118,18 @@ export function SettingsPage() {
           </div>
         </div>
         <div className="mt-4 flex justify-end">
-          <button className="btn-primary" onClick={save} disabled={saving}>
+          <button className="btn-primary" onClick={save} disabled={saving || !canWrite}>
             Save Settings
           </button>
         </div>
+        {!canWrite && (
+          <p className="mt-2 text-right text-xs text-slate-500">
+            Store profile cannot be edited while the subscription is expired.
+          </p>
+        )}
       </div>
 
-      <UsersSection currentUserId={user?.id ?? 0} />
+      <UsersSection currentUserId={user?.id ?? 0} readOnly={!canWrite} />
 
       <SubscriptionSection />
 
@@ -137,10 +143,15 @@ export function SettingsPage() {
           <button className="btn-primary" onClick={backup}>
             Backup Now
           </button>
-          <button className="btn-secondary" onClick={restore}>
+          <button className="btn-secondary" onClick={restore} disabled={!canWrite}>
             Restore from Backup
           </button>
         </div>
+        {!canWrite && (
+          <p className="mt-2 text-xs text-slate-500">
+            Backups can still be exported in read-only mode. Restore is disabled until renewal.
+          </p>
+        )}
       </div>
     </div>
   );
@@ -156,7 +167,13 @@ function SubscriptionSection() {
   if (!status) return null;
 
   const tone =
-    status.state === 'active' ? 'green' : status.state === 'grace' ? 'amber' : 'red';
+    status.state === 'active'
+      ? 'green'
+      : status.state === 'grace'
+        ? 'amber'
+        : status.state === 'readonly'
+          ? 'red'
+          : 'red';
 
   const copyMachineId = async () => {
     try {
@@ -238,7 +255,13 @@ function SubscriptionSection() {
   );
 }
 
-function UsersSection({ currentUserId }: { currentUserId: number }) {
+function UsersSection({
+  currentUserId,
+  readOnly,
+}: {
+  currentUserId: number;
+  readOnly: boolean;
+}) {
   const toast = useToast();
   const [users, setUsers] = useState<User[] | null>(null);
   const [modal, setModal] = useState(false);
@@ -279,7 +302,7 @@ function UsersSection({ currentUserId }: { currentUserId: number }) {
     <div className="card p-5">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-slate-700">Users</h2>
-        <button className="btn-primary" onClick={() => setModal(true)}>
+        <button className="btn-primary" onClick={() => setModal(true)} disabled={readOnly}>
           + Add User
         </button>
       </div>
@@ -305,7 +328,7 @@ function UsersSection({ currentUserId }: { currentUserId: number }) {
                   <button
                     className="btn-danger px-2 py-1"
                     onClick={() => remove(u)}
-                    disabled={u.id === currentUserId}
+                    disabled={u.id === currentUserId || readOnly}
                   >
                     Delete
                   </button>

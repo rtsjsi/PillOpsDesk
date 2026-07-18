@@ -272,15 +272,17 @@ export function getLicenseStatus(): LicenseStatus {
   const daysRemaining = daysBetween(today, payload.expires);
 
   if (today > graceEnds) {
+    touchLastSeen(today);
     return buildStatus(
-      'blocked',
-      'Your subscription has expired. Renew your annual license to continue.',
+      'readonly',
+      'Subscription expired. You can view records and reports, but billing and stock changes are disabled until you renew.',
       {
         pharmacyId: payload.pharmacy_id,
         pharmacyName: payload.pharmacy_name,
         expires: payload.expires,
         graceEnds,
         daysRemaining,
+        readOnly: true,
       }
     );
   }
@@ -337,9 +339,23 @@ export function activateLicense(licenseKey: string): LicenseStatus {
   return status;
 }
 
+/** Allows active, grace, and read-only modes (viewing and login). */
 export function assertAppUsable(): void {
   const status = getLicenseStatus();
   if (status.state === 'unlicensed' || status.state === 'blocked') {
     throw new Error(status.message);
+  }
+}
+
+/** Blocks writes when unlicensed, blocked, or read-only (post-grace expiry). */
+export function assertWriteAllowed(): void {
+  const status = getLicenseStatus();
+  if (status.state === 'unlicensed' || status.state === 'blocked') {
+    throw new Error(status.message);
+  }
+  if (status.state === 'readonly') {
+    throw new Error(
+      'Subscription expired. Renew your license in Settings to resume billing and stock updates.'
+    );
   }
 }

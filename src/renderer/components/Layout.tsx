@@ -80,6 +80,14 @@ export function Layout() {
             <strong>Subscription expired.</strong> {licenseStatus.message}
           </div>
         )}
+        {licenseStatus?.state === 'readonly' && (
+          <div className="border-b border-red-200 bg-red-50 px-6 py-3 text-sm text-red-900">
+            <strong>Read-only mode.</strong> {licenseStatus.message}
+            {user?.role === 'owner' && (
+              <span> Renew under Settings → Subscription.</span>
+            )}
+          </div>
+        )}
         <div className="mx-auto max-w-7xl p-6">
           <Outlet />
         </div>

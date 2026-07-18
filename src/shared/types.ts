@@ -199,7 +199,7 @@ export interface LicensePayload {
   grace_days: number;
 }
 
-export type LicenseState = 'active' | 'grace' | 'blocked' | 'unlicensed';
+export type LicenseState = 'active' | 'grace' | 'readonly' | 'blocked' | 'unlicensed';
 
 export interface LicenseStatus {
   state: LicenseState;
@@ -211,4 +211,6 @@ export interface LicenseStatus {
   daysRemaining?: number;
   message: string;
   clockTampered?: boolean;
+  /** True when subscription is past expiry + grace; viewing allowed, writes blocked. */
+  readOnly?: boolean;
 }

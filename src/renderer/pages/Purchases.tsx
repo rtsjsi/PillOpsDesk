@@ -8,6 +8,8 @@ import type {
 import { inr, formatDate, todayIso } from '../lib/format';
 import { Modal } from '../components/Modal';
 import { Spinner, EmptyState, useToast, errMsg } from '../components/ui';
+import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
+import { useWriteAllowed } from '../App';
 
 interface DraftItem extends PurchaseItemInput {
   medicine_name: string;
@@ -15,6 +17,7 @@ interface DraftItem extends PurchaseItemInput {
 
 export function Purchases() {
   const toast = useToast();
+  const canWrite = useWriteAllowed();
   const [purchases, setPurchases] = useState<Purchase[] | null>(null);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [modal, setModal] = useState(false);
@@ -30,9 +33,10 @@ export function Purchases() {
 
   return (
     <div className="space-y-4">
+      <ReadOnlyNotice />
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">Purchases</h1>
-        <button className="btn-primary" onClick={() => setModal(true)}>
+        <button className="btn-primary" onClick={() => setModal(true)} disabled={!canWrite}>
           + New Purchase
         </button>
       </div>
