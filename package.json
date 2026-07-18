@@ -9,20 +9,23 @@
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
+    "package:e2e": "npm run package",
     "make": "electron-forge make",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "postinstall": "electron-rebuild -f -w better-sqlite3",
-    "lint": "eslint --ext .ts,.tsx .",
+    "clean": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/clean.ps1",
+    "typecheck": "tsc --noEmit",
+    "lint": "npm run typecheck",
     "pretest": "npm rebuild better-sqlite3",
     "test": "vitest run",
     "test:watch": "vitest",
     "posttest": "electron-rebuild -f -w better-sqlite3",
-    "package:e2e": "electron-forge package",
     "test:e2e": "playwright test",
     "test:e2e:login": "playwright test tests/e2e/login.spec.ts",
     "test:e2e:ui": "playwright test --ui",
     "license:keypair": "node scripts/generate-keypair.cjs",
-    "license:generate": "node scripts/generate-license.cjs"
+    "license:generate": "node scripts/generate-license.cjs",
+    "icons": "node scripts/generate-icons.cjs"
   },
   "dependencies": {
     "better-sqlite3": "^12.11.1",
@@ -39,17 +42,19 @@
     "@electron-forge/plugin-vite": "^7.6.0",
     "@electron/fuses": "^1.8.0",
     "@electron/rebuild": "^4.0.1",
+    "@playwright/test": "^1.55.0",
     "@types/better-sqlite3": "^7.6.11",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.2",
     "autoprefixer": "^10.4.20",
     "electron": "^33.0.2",
+    "png-to-ico": "^3.0.2",
     "postcss": "^8.4.47",
+    "sharp": "^0.35.3",
     "tailwindcss": "^3.4.13",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
-    "vitest": "^3.2.4",
-    "@playwright/test": "^1.55.0"
+    "vitest": "^3.2.4"
   }
 }

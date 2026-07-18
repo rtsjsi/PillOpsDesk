@@ -111,15 +111,18 @@ tsconfig.json             # @shared/* path alias -> src/shared/*
 ## 5. Commands
 
 ```bash
-npm install     # installs deps; postinstall rebuilds better-sqlite3 for Electron
-npm start       # run the app in development (Vite dev server + Electron)
-npm run make    # build the Windows installer (out/make/.../PillOpsDeskSetup.exe)
-npm run rebuild # manually rebuild better-sqlite3 against Electron if needed
-npx tsc --noEmit  # typecheck (no emit; Vite/Forge does the actual build)
+npm install       # installs deps; postinstall rebuilds better-sqlite3 for Electron
+npm start         # run the app in development (Vite dev server + Electron)
+npm test          # unit tests (Vitest)
+npm run test:e2e  # Playwright e2e (needs packaged app via npm run package)
+npm run make      # build the Windows installer (out/make/.../PillOpsDeskSetup.exe)
+npm run clean     # delete out/, .vite/, Playwright artifacts, e2e user-data
+npm run rebuild   # manually rebuild better-sqlite3 against Electron if needed
+npm run typecheck # TypeScript check (no emit; Vite/Forge does the actual build)
+npm run icons     # regenerate app icons from assets/icons/icon.svg
 ```
 
-There is currently no test suite and no standalone lint script wired beyond the
-`lint` placeholder. Run `npx tsc --noEmit` to validate types after changes.
+`npm run lint` is an alias for `typecheck` (no ESLint config in this repo).
 
 ## 6. Data model (SQLite)
 

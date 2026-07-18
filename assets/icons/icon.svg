@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#256964"/>
+      <stop offset="100%" stop-color="#123433"/>
+    </linearGradient>
+    <linearGradient id="mint" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#b8e0dc"/>
+      <stop offset="100%" stop-color="#69b5ae"/>
+    </linearGradient>
+    <clipPath id="capsule">
+      <rect x="-110" y="-270" width="220" height="540" rx="110"/>
+    </clipPath>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <g transform="translate(470 480) rotate(-24)">
+    <g clip-path="url(#capsule)">
+      <rect x="-110" y="-270" width="220" height="270" fill="#f8fafc"/>
+      <rect x="-110" y="0" width="220" height="270" fill="url(#mint)"/>
+      <rect x="-110" y="-6" width="220" height="12" fill="#1c4442" opacity="0.22"/>
+      <ellipse cx="-36" cy="130" rx="24" ry="100" fill="#ffffff" opacity="0.22"/>
+    </g>
+  </g>
+  <g transform="translate(760 760)">
+    <circle cx="0" cy="0" r="108" fill="#eef7f6"/>
+    <rect x="-24" y="-70" width="48" height="140" rx="12" fill="#205552"/>
+    <rect x="-70" y="-24" width="140" height="48" rx="12" fill="#205552"/>
+  </g>
+</svg>

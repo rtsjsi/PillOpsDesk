@@ -6,7 +6,6 @@ param(
 $ErrorActionPreference = 'Stop'
 $ProjectRoot = Split-Path $PSScriptRoot -Parent
 
-$ZipDir = Join-Path $OutRoot 'make\zip\win32\x64'
 $AppDir = Join-Path $OutRoot 'PillOpsDesk-win32-x64'
 $ReleaseDir = Join-Path $OutRoot 'dist'
 

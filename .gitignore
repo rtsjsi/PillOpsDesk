@@ -5,16 +5,20 @@ dist/
 *.log
 .DS_Store
 Thumbs.db
+desktop.ini
 *.db
 *.db-wal
 *.db-shm
-.env.test
+.env
+.env.*
+!.env.test.example
 tests/e2e/.user-data/
 tests/e2e/.user-data-run/
 tests/e2e/.user-data-smoke/
 tests/e2e/report/
 test-results/
 playwright-report/
+coverage/
 # License signing keys + issued customer licenses (vendor-only, never commit)
 scripts/keys/
 # Authenticode certificate for Windows installer signing

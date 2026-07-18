@@ -7,7 +7,6 @@ let db: Database.Database | null = null;
 
 export function getDbPath(): string {
   // Lazy-load electron so Vitest can import this module without the Electron runtime.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { app } = require('electron') as typeof import('electron');
   const dir = app.getPath('userData');
   if (!fs.existsSync(dir)) {

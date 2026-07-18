@@ -1,0 +1,27 @@
+{
+  "files.watcherExclude": {
+    "**/out/**": true,
+    "**/.vite/**": true,
+    "**/node_modules/**": true,
+    "**/test-results/**": true,
+    "**/playwright-report/**": true,
+    "**/tests/e2e/report/**": true,
+    "**/tests/e2e/.user-data*/**": true
+  },
+  "search.exclude": {
+    "**/out": true,
+    "**/.vite": true,
+    "**/test-results": true,
+    "**/tests/e2e/report": true,
+    "**/tests/e2e/.user-data*": true
+  },
+  "files.exclude": {
+    "**/out": true,
+    "**/.vite": true,
+    "**/test-results": true,
+    "**/tests/e2e/report": true,
+    "**/tests/e2e/.user-data": true,
+    "**/tests/e2e/.user-data-run": true,
+    "**/tests/e2e/.user-data-smoke": true
+  }
+}

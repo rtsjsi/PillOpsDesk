@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth, useLicense } from '../App';
 import type { Settings } from '../../shared/types';
+import { AppIcon } from './AppIcon';
 
 const NAV = [
   { to: '/', label: 'Dashboard', end: true, icon: '🏠' },
@@ -38,11 +39,7 @@ export function Layout() {
       <aside className="flex w-60 flex-col bg-brand-800 text-brand-50">
         <div className="border-b border-brand-700 px-5 py-4">
           <div className="flex items-center gap-3">
-            <img
-              src="/icon.png"
-              alt=""
-              className="h-9 w-9 shrink-0 rounded-lg"
-            />
+            <AppIcon className="h-9 w-9 shrink-0" />
             <div className="min-w-0">
               <div className="truncate text-lg font-bold leading-tight">
                 {settings?.store_name || 'PillOpsDesk'}

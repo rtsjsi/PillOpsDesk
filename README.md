@@ -61,7 +61,15 @@ npm run make
 ```
 
 The installer (`PillOpsDeskSetup.exe`) and packaged app are produced under
-the `out/` directory.
+the `out/` directory. Clear build/test junk anytime with `npm run clean`.
+
+## Tests
+
+```bash
+npm test            # unit tests (Vitest)
+npm run package     # package the app (required once before e2e)
+npm run test:e2e    # Playwright end-to-end tests
+```
 
 ## Project structure
 

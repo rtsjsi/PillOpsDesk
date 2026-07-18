@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
+import { AppIcon } from '../components/AppIcon';
 import { useToast, errMsg } from '../components/ui';
 
 export function LoginPage() {
@@ -57,11 +58,7 @@ export function LoginPage() {
     <div className="flex h-full items-center justify-center bg-gradient-to-br from-brand-700 to-brand-900 p-4">
       <div className="card w-full max-w-md p-8">
         <div className="mb-6 text-center">
-          <img
-            src="/icon.png"
-            alt="PillOpsDesk"
-            className="mx-auto mb-3 h-16 w-16 rounded-2xl shadow-sm"
-          />
+          <AppIcon className="mx-auto mb-3 h-16 w-16 shadow-sm" />
           <h1 className="text-2xl font-bold text-slate-800">PillOpsDesk</h1>
           <p className="text-sm text-slate-500">
             {firstRun
