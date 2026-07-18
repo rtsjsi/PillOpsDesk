@@ -21,6 +21,7 @@ import type {
   DashboardStats,
   SalesReportRow,
   GstSummaryRow,
+  LicenseStatus,
 } from './types';
 
 export interface PharmacyApi {
@@ -89,6 +90,11 @@ export interface PharmacyApi {
   print: {
     invoice: (saleId: number) => Promise<boolean>;
   };
+  license: {
+    getStatus: () => Promise<LicenseStatus>;
+    getMachineId: () => Promise<string>;
+    activate: (licenseKey: string) => Promise<LicenseStatus>;
+  };
 }
 
 export const IPC = {
@@ -145,4 +151,8 @@ export const IPC = {
   backupRestore: 'backup:restore',
 
   printInvoice: 'print:invoice',
+
+  licenseGetStatus: 'license:getStatus',
+  licenseGetMachineId: 'license:getMachineId',
+  licenseActivate: 'license:activate',
 } as const;

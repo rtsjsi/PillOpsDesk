@@ -8,3 +8,4 @@ Thumbs.db
 *.db
 *.db-wal
 *.db-shm
+scripts/keys/

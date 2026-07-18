@@ -71,6 +71,11 @@ const api: PharmacyApi = {
   print: {
     invoice: (saleId) => invoke(IPC.printInvoice, saleId),
   },
+  license: {
+    getStatus: () => invoke(IPC.licenseGetStatus),
+    getMachineId: () => invoke(IPC.licenseGetMachineId),
+    activate: (licenseKey) => invoke(IPC.licenseActivate, licenseKey),
+  },
 };
 
 contextBridge.exposeInMainWorld('pharmacy', api);

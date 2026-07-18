@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from '../App';
+import { useAuth, useLicense } from '../App';
 import type { Settings } from '../../shared/types';
 
 const NAV = [
@@ -17,6 +17,7 @@ const NAV = [
 
 export function Layout() {
   const { user, logout } = useAuth();
+  const { status: licenseStatus } = useLicense();
   const navigate = useNavigate();
   const [settings, setSettings] = useState<Settings | null>(null);
 
@@ -74,6 +75,11 @@ export function Layout() {
         </div>
       </aside>
       <main className="flex-1 overflow-y-auto">
+        {licenseStatus?.state === 'grace' && (
+          <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-900">
+            <strong>Subscription expired.</strong> {licenseStatus.message}
+          </div>
+        )}
         <div className="mx-auto max-w-7xl p-6">
           <Outlet />
         </div>

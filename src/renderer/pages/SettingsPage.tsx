@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import type { Settings, User } from '../../shared/types';
 import { Modal } from '../components/Modal';
 import { Spinner, useToast, errMsg, Badge } from '../components/ui';
-import { useAuth } from '../App';
+import { useAuth, useLicense } from '../App';
+import { formatDate } from '../lib/format';
 
 export function SettingsPage() {
   const toast = useToast();
@@ -124,6 +125,8 @@ export function SettingsPage() {
 
       <UsersSection currentUserId={user?.id ?? 0} />
 
+      <SubscriptionSection />
+
       <div className="card p-5">
         <h2 className="mb-2 text-lg font-semibold text-slate-700">Backup &amp; Restore</h2>
         <p className="mb-4 text-sm text-slate-500">
@@ -136,6 +139,98 @@ export function SettingsPage() {
           </button>
           <button className="btn-secondary" onClick={restore}>
             Restore from Backup
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SubscriptionSection() {
+  const toast = useToast();
+  const { status, refreshLicense } = useLicense();
+  const [licenseKey, setLicenseKey] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  if (!status) return null;
+
+  const tone =
+    status.state === 'active' ? 'green' : status.state === 'grace' ? 'amber' : 'red';
+
+  const copyMachineId = async () => {
+    try {
+      await navigator.clipboard.writeText(status.machineId);
+      setCopied(true);
+      toast.success('Machine ID copied.');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Could not copy Machine ID.');
+    }
+  };
+
+  const renew = async () => {
+    if (!licenseKey.trim()) return toast.error('Paste your new license key.');
+    setBusy(true);
+    try {
+      await window.pharmacy.license.activate(licenseKey.trim());
+      await refreshLicense();
+      setLicenseKey('');
+      toast.success('Subscription updated.');
+    } catch (e) {
+      toast.error(errMsg(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="card p-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-slate-700">Subscription</h2>
+        <Badge tone={tone}>{status.state}</Badge>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <div className="text-xs uppercase text-slate-500">Pharmacy</div>
+          <div className="font-medium text-slate-800">
+            {status.pharmacyName || '—'}
+            {status.pharmacyId ? ` (${status.pharmacyId})` : ''}
+          </div>
+        </div>
+        <div>
+          <div className="text-xs uppercase text-slate-500">Paid Through</div>
+          <div className="font-medium text-slate-800">
+            {status.expires ? formatDate(status.expires) : '—'}
+          </div>
+        </div>
+        <div className="col-span-2">
+          <div className="text-xs uppercase text-slate-500">Machine ID</div>
+          <div className="mt-1 flex items-start gap-3">
+            <code className="flex-1 break-all rounded bg-slate-50 px-2 py-1 text-xs text-slate-800">
+              {status.machineId}
+            </code>
+            <button type="button" className="btn-secondary shrink-0 px-3 py-1" onClick={copyMachineId}>
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <p className="mt-4 text-sm text-slate-500">{status.message}</p>
+
+      <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
+        <label className="label">Renew License Key</label>
+        <textarea
+          className="input min-h-[96px] font-mono text-xs"
+          value={licenseKey}
+          onChange={(e) => setLicenseKey(e.target.value)}
+          placeholder="Paste the renewed license key from support"
+        />
+        <div className="flex justify-end">
+          <button className="btn-primary" onClick={renew} disabled={busy}>
+            {busy ? 'Updating…' : 'Update License'}
           </button>
         </div>
       </div>
