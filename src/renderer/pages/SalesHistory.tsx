@@ -162,10 +162,15 @@ export function SalesHistory() {
               </tbody>
             </table>
             <div className="ml-auto w-64 space-y-1 text-sm">
-              <Row label="Taxable" value={inr(selected.subtotal)} />
+              {selected.discount_percent > 0 && (
+                <Row
+                  label={`Invoice Discount (${selected.discount_percent}%)`}
+                  value={`- ${inr(selected.discount)}`}
+                />
+              )}
+              <Row label="Taxable Value" value={inr(selected.subtotal)} />
               <Row label="CGST" value={inr(selected.cgst)} />
               <Row label="SGST" value={inr(selected.sgst)} />
-              <Row label="Discount" value={`- ${inr(selected.discount)}`} />
               <div className="flex justify-between border-t border-slate-200 pt-1 text-base font-bold">
                 <span>Total</span>
                 <span className="text-brand-700">{inr(selected.total)}</span>

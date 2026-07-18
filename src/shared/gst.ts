@@ -2,7 +2,6 @@
 // Sale prices are MRP-inclusive; tax is split evenly into CGST + SGST.
 
 export interface GstLineInput {
-  /** Line amount after line-level discount, before bill-level discount share. */
   gross: number;
   gst_rate: number;
 }
@@ -12,6 +11,17 @@ export interface GstLineAmounts {
   taxable: number;
   cgst: number;
   sgst: number;
+}
+
+export interface InvoiceGstResult {
+  lines: GstLineAmounts[];
+  subtotal: number;
+  cgst: number;
+  sgst: number;
+  total: number;
+  /** Rupee amount saved by the invoice discount. */
+  discountAmount: number;
+  discountPercent: number;
 }
 
 export function round2(n: number): number {
@@ -32,26 +42,53 @@ export function lineGstFromGross(gross: number, gstRate: number): GstLineAmounts
 }
 
 /**
- * Pro-rates a bill-level discount across lines (by pre-discount gross share),
- * then recomputes taxable value and tax per line. Matches CGST Act s.15(3)(a):
- * discounts at the time of supply recorded on the invoice reduce value of supply.
+ * Applies an invoice-level discount percentage to taxable value, then derives
+ * CGST/SGST from the discounted taxable amount (MRP-inclusive prices).
+ * Matches typical POS billing and CGST Act s.15(3)(a) for at-supply discounts.
  */
-export function allocateOverallDiscount(
+export function applyInvoiceDiscountPercent(
   lines: GstLineInput[],
-  overallDiscount: number
-): GstLineAmounts[] {
-  const totalGross = lines.reduce((sum, line) => sum + Math.max(0, line.gross), 0);
-  const discount = Math.min(Math.max(0, overallDiscount ?? 0), totalGross);
+  discountPercent: number
+): InvoiceGstResult {
+  const pct = Math.min(Math.max(0, discountPercent ?? 0), 100);
+  const factor = 1 - pct / 100;
 
-  if (totalGross <= 0 || discount <= 0) {
-    return lines.map((line) => lineGstFromGross(line.gross, line.gst_rate));
+  const preLines = lines.map((line) => lineGstFromGross(line.gross, line.gst_rate));
+  const preTotal = preLines.reduce((sum, line) => sum + line.gross, 0);
+
+  if (pct <= 0 || preTotal <= 0) {
+    const totals = sumGstLines(preLines);
+    return {
+      lines: preLines,
+      ...totals,
+      discountAmount: 0,
+      discountPercent: 0,
+    };
   }
 
-  return lines.map((line) => {
-    const lineGross = Math.max(0, line.gross);
-    const share = discount * (lineGross / totalGross);
-    return lineGstFromGross(lineGross - share, line.gst_rate);
+  const discountedLines = preLines.map((line, index) => {
+    const rate = lines[index].gst_rate ?? 0;
+    const discountedTaxable = round2(line.taxable * factor);
+    const discountedGross =
+      rate > 0 ? round2(discountedTaxable * (1 + rate / 100)) : discountedTaxable;
+    const tax = discountedGross - discountedTaxable;
+    return {
+      gross: discountedGross,
+      taxable: discountedTaxable,
+      cgst: round2(tax / 2),
+      sgst: round2(tax / 2),
+    };
   });
+
+  const totals = sumGstLines(discountedLines);
+  const discountAmount = round2(preTotal - totals.total);
+
+  return {
+    lines: discountedLines,
+    ...totals,
+    discountAmount,
+    discountPercent: pct,
+  };
 }
 
 export function sumGstLines(lines: GstLineAmounts[]): {

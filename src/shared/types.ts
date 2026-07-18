@@ -88,7 +88,8 @@ export interface Sale {
   customer_id: number | null;
   sale_date: string;
   subtotal: number;
-  discount: number;
+  discount: number; // rupee amount saved by invoice discount
+  discount_percent: number;
   cgst: number;
   sgst: number;
   total: number;
@@ -98,13 +99,12 @@ export interface Sale {
 export interface SaleItemInput {
   batch_id: number;
   quantity: number;
-  discount: number; // absolute rupee discount for the line
 }
 
 export interface SaleInput {
   customer_id: number | null;
   items: SaleItemInput[];
-  overall_discount: number;
+  discount_percent: number;
 }
 
 export interface SaleItem {

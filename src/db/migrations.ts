@@ -119,6 +119,10 @@ const MIGRATIONS: string[] = [
     value INTEGER NOT NULL DEFAULT 0
   );
   `,
+  // v2: invoice-level discount percentage on sales
+  `
+  ALTER TABLE sales ADD COLUMN discount_percent REAL NOT NULL DEFAULT 0;
+  `,
 ];
 
 export function runMigrations(db: Database.Database): void {
