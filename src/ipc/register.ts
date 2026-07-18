@@ -17,10 +17,10 @@ import * as sales from '../db/services/sales';
 import * as reports from '../db/services/reports';
 import * as settings from '../db/services/settings';
 import * as auth from '../db/services/auth';
+import * as licensing from '../db/services/licensing';
 import { backupDatabase, restoreDatabase, exportCsv } from './backup';
 import { printInvoice } from './invoice';
 
-// Wraps a handler so thrown errors surface with a clean message in the renderer.
 function handle<T extends unknown[], R>(
   channel: string,
   fn: (...args: T) => R
@@ -30,85 +30,110 @@ function handle<T extends unknown[], R>(
   });
 }
 
+function handleRead<T extends unknown[], R>(
+  channel: string,
+  fn: (...args: T) => R
+): void {
+  ipcMain.handle(channel, async (_event, ...args: unknown[]) => {
+    licensing.assertAppUsable();
+    return fn(...(args as T));
+  });
+}
+
+function handleWrite<T extends unknown[], R>(
+  channel: string,
+  fn: (...args: T) => R
+): void {
+  ipcMain.handle(channel, async (_event, ...args: unknown[]) => {
+    licensing.assertWriteAllowed();
+    return fn(...(args as T));
+  });
+}
+
 export function registerIpc(): void {
-  // Auth
-  handle(IPC.authHasUsers, () => auth.hasUsers());
-  handle(IPC.authRegister, (username: string, pin: string, role: 'owner' | 'staff') =>
+  // Licensing (always available)
+  handle(IPC.licenseGetStatus, () => licensing.getLicenseStatus());
+  handle(IPC.licenseGetMachineId, () => licensing.getMachineId());
+  handle(IPC.licenseActivate, (licenseKey: string) => licensing.activateLicense(licenseKey));
+
+  // Auth — login/list allowed in read-only; account changes require write access
+  handleRead(IPC.authHasUsers, () => auth.hasUsers());
+  handleWrite(IPC.authRegister, (username: string, pin: string, role: 'owner' | 'staff') =>
     auth.registerUser(username, pin, role)
   );
-  handle(IPC.authLogin, (username: string, pin: string) => auth.login(username, pin));
-  handle(IPC.authGetUser, (id: number) => auth.getUser(id));
-  handle(IPC.authListUsers, () => auth.listUsers());
-  handle(IPC.authDeleteUser, (id: number) => auth.deleteUser(id));
+  handleRead(IPC.authLogin, (username: string, pin: string) => auth.login(username, pin));
+  handleRead(IPC.authGetUser, (id: number) => auth.getUser(id));
+  handleRead(IPC.authListUsers, () => auth.listUsers());
+  handleWrite(IPC.authDeleteUser, (id: number) => auth.deleteUser(id));
 
   // Medicines
-  handle(IPC.medicinesList, (search?: string) => medicines.listMedicines(search));
-  handle(IPC.medicinesGet, (id: number) => medicines.getMedicine(id));
-  handle(IPC.medicinesCreate, (input: MedicineInput) => medicines.createMedicine(input));
-  handle(IPC.medicinesUpdate, (id: number, input: MedicineInput) =>
+  handleRead(IPC.medicinesList, (search?: string) => medicines.listMedicines(search));
+  handleRead(IPC.medicinesGet, (id: number) => medicines.getMedicine(id));
+  handleWrite(IPC.medicinesCreate, (input: MedicineInput) => medicines.createMedicine(input));
+  handleWrite(IPC.medicinesUpdate, (id: number, input: MedicineInput) =>
     medicines.updateMedicine(id, input)
   );
-  handle(IPC.medicinesRemove, (id: number) => medicines.removeMedicine(id));
+  handleWrite(IPC.medicinesRemove, (id: number) => medicines.removeMedicine(id));
 
   // Batches
-  handle(IPC.batchesListByMedicine, (id: number) => batches.listBatchesByMedicine(id));
-  handle(IPC.batchesCreate, (input: BatchInput) => batches.createBatch(input));
-  handle(IPC.batchesUpdate, (id: number, input: BatchInput) =>
+  handleRead(IPC.batchesListByMedicine, (id: number) => batches.listBatchesByMedicine(id));
+  handleWrite(IPC.batchesCreate, (input: BatchInput) => batches.createBatch(input));
+  handleWrite(IPC.batchesUpdate, (id: number, input: BatchInput) =>
     batches.updateBatch(id, input)
   );
-  handle(IPC.batchesRemove, (id: number) => batches.removeBatch(id));
-  handle(IPC.batchesStock, (search?: string) => batches.listStock(search));
+  handleWrite(IPC.batchesRemove, (id: number) => batches.removeBatch(id));
+  handleRead(IPC.batchesStock, (search?: string) => batches.listStock(search));
 
   // Suppliers
-  handle(IPC.suppliersList, (search?: string) => parties.listSuppliers(search));
-  handle(IPC.suppliersCreate, (input: SupplierInput) => parties.createSupplier(input));
-  handle(IPC.suppliersUpdate, (id: number, input: SupplierInput) =>
+  handleRead(IPC.suppliersList, (search?: string) => parties.listSuppliers(search));
+  handleWrite(IPC.suppliersCreate, (input: SupplierInput) => parties.createSupplier(input));
+  handleWrite(IPC.suppliersUpdate, (id: number, input: SupplierInput) =>
     parties.updateSupplier(id, input)
   );
-  handle(IPC.suppliersRemove, (id: number) => parties.removeSupplier(id));
+  handleWrite(IPC.suppliersRemove, (id: number) => parties.removeSupplier(id));
 
   // Customers
-  handle(IPC.customersList, (search?: string) => parties.listCustomers(search));
-  handle(IPC.customersCreate, (input: CustomerInput) => parties.createCustomer(input));
-  handle(IPC.customersUpdate, (id: number, input: CustomerInput) =>
+  handleRead(IPC.customersList, (search?: string) => parties.listCustomers(search));
+  handleWrite(IPC.customersCreate, (input: CustomerInput) => parties.createCustomer(input));
+  handleWrite(IPC.customersUpdate, (id: number, input: CustomerInput) =>
     parties.updateCustomer(id, input)
   );
-  handle(IPC.customersRemove, (id: number) => parties.removeCustomer(id));
+  handleWrite(IPC.customersRemove, (id: number) => parties.removeCustomer(id));
 
   // Purchases
-  handle(IPC.purchasesCreate, (input: PurchaseInput) => purchases.createPurchase(input));
-  handle(IPC.purchasesList, (search?: string) => purchases.listPurchases(search));
+  handleWrite(IPC.purchasesCreate, (input: PurchaseInput) => purchases.createPurchase(input));
+  handleRead(IPC.purchasesList, (search?: string) => purchases.listPurchases(search));
 
   // Sales
-  handle(IPC.salesSearchSellable, (search: string) => sales.searchSellable(search));
-  handle(IPC.salesCreate, (input: SaleInput) => sales.createSale(input));
-  handle(IPC.salesList, (from?: string, to?: string) => sales.listSales(from, to));
-  handle(IPC.salesGet, (id: number) => sales.getSale(id));
+  handleRead(IPC.salesSearchSellable, (search: string) => sales.searchSellable(search));
+  handleWrite(IPC.salesCreate, (input: SaleInput) => sales.createSale(input));
+  handleRead(IPC.salesList, (from?: string, to?: string) => sales.listSales(from, to));
+  handleRead(IPC.salesGet, (id: number) => sales.getSale(id));
 
-  // Reports
-  handle(IPC.reportsDashboard, () => reports.getDashboard());
-  handle(IPC.reportsLowStock, () => reports.getLowStock());
-  handle(IPC.reportsExpiring, (withinDays?: number) => reports.getExpiring(withinDays));
-  handle(IPC.reportsExpiredInStock, () => reports.getExpiredInStock());
-  handle(IPC.reportsSalesReport, (from: string, to: string) =>
+  // Reports (read-only friendly)
+  handleRead(IPC.reportsDashboard, () => reports.getDashboard());
+  handleRead(IPC.reportsLowStock, () => reports.getLowStock());
+  handleRead(IPC.reportsExpiring, (withinDays?: number) => reports.getExpiring(withinDays));
+  handleRead(IPC.reportsExpiredInStock, () => reports.getExpiredInStock());
+  handleRead(IPC.reportsSalesReport, (from: string, to: string) =>
     reports.getSalesReport(from, to)
   );
-  handle(IPC.reportsGstSummary, (from: string, to: string) =>
+  handleRead(IPC.reportsGstSummary, (from: string, to: string) =>
     reports.getGstSummary(from, to)
   );
-  handle(IPC.reportsStockValuation, () => reports.getStockValuation());
-  handle(IPC.reportsExportCsv, (filename: string, csv: string) =>
+  handleRead(IPC.reportsStockValuation, () => reports.getStockValuation());
+  handleRead(IPC.reportsExportCsv, (filename: string, csv: string) =>
     exportCsv(filename, csv)
   );
 
   // Settings
-  handle(IPC.settingsGet, () => settings.getSettings());
-  handle(IPC.settingsSave, (input: Settings) => settings.saveSettings(input));
+  handleRead(IPC.settingsGet, () => settings.getSettings());
+  handleWrite(IPC.settingsSave, (input: Settings) => settings.saveSettings(input));
 
-  // Backup
-  handle(IPC.backupBackup, () => backupDatabase());
-  handle(IPC.backupRestore, () => restoreDatabase());
+  // Backup — export allowed in read-only; restore replaces all data
+  handleRead(IPC.backupBackup, () => backupDatabase());
+  handleWrite(IPC.backupRestore, () => restoreDatabase());
 
-  // Print
-  handle(IPC.printInvoice, (saleId: number) => printInvoice(saleId));
+  // Reprinting past invoices is allowed in read-only
+  handleRead(IPC.printInvoice, (saleId: number) => printInvoice(saleId));
 }

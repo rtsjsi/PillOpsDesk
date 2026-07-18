@@ -12,7 +12,9 @@
     "make": "electron-forge make",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "postinstall": "electron-rebuild -f -w better-sqlite3",
-    "lint": "eslint --ext .ts,.tsx ."
+    "lint": "eslint --ext .ts,.tsx .",
+    "license:keypair": "node scripts/generate-keypair.cjs",
+    "license:generate": "node scripts/generate-license.cjs"
   },
   "dependencies": {
     "better-sqlite3": "^12.11.1",

@@ -189,3 +189,28 @@ export interface GstSummaryRow {
   sgst: number;
   total_tax: number;
 }
+
+export interface LicensePayload {
+  pharmacy_id: string;
+  pharmacy_name: string;
+  machine_id: string;
+  issued: string;
+  expires: string;
+  grace_days: number;
+}
+
+export type LicenseState = 'active' | 'grace' | 'readonly' | 'blocked' | 'unlicensed';
+
+export interface LicenseStatus {
+  state: LicenseState;
+  machineId: string;
+  pharmacyId?: string;
+  pharmacyName?: string;
+  expires?: string;
+  graceEnds?: string;
+  daysRemaining?: number;
+  message: string;
+  clockTampered?: boolean;
+  /** True when subscription is past expiry + grace; viewing allowed, writes blocked. */
+  readOnly?: boolean;
+}

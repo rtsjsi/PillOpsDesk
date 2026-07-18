@@ -3,6 +3,8 @@ import type { SellableBatch, Customer } from '../../shared/types';
 import { applyInvoiceDiscountPercent } from '../../shared/gst';
 import { inr, formatDate } from '../lib/format';
 import { useToast, errMsg, EmptyState } from '../components/ui';
+import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
+import { useWriteAllowed } from '../App';
 
 interface CartLine {
   batch: SellableBatch;
@@ -11,6 +13,7 @@ interface CartLine {
 
 export function Billing() {
   const toast = useToast();
+  const canWrite = useWriteAllowed();
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<SellableBatch[]>([]);
   const [showResults, setShowResults] = useState(false);
@@ -41,6 +44,10 @@ export function Billing() {
   }, [search]);
 
   const addToCart = (batch: SellableBatch) => {
+    if (!canWrite) {
+      toast.error('Billing is disabled until the subscription is renewed.');
+      return;
+    }
     setCart((prev) => {
       const idx = prev.findIndex((l) => l.batch.batch_id === batch.batch_id);
       if (idx >= 0) {
@@ -108,6 +115,7 @@ export function Billing() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold text-slate-800">Billing</h1>
+      <ReadOnlyNotice />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
@@ -265,14 +273,14 @@ export function Billing() {
           <div className="grid grid-cols-2 gap-2">
             <button
               className="btn-secondary"
-              disabled={busy}
+              disabled={busy || !canWrite}
               onClick={() => checkout(false)}
             >
               Save
             </button>
             <button
               className="btn-primary"
-              disabled={busy}
+              disabled={busy || !canWrite}
               onClick={() => checkout(true)}
             >
               Save & Print

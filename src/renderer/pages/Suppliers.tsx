@@ -2,11 +2,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 import type { Supplier, SupplierInput } from '../../shared/types';
 import { Modal } from '../components/Modal';
 import { Spinner, EmptyState, useToast, errMsg } from '../components/ui';
+import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
+import { useWriteAllowed } from '../App';
 
 const empty: SupplierInput = { name: '', phone: '', address: '', gstin: '' };
 
 export function Suppliers() {
   const toast = useToast();
+  const canWrite = useWriteAllowed();
   const [search, setSearch] = useState('');
   const [list, setList] = useState<Supplier[] | null>(null);
   const [modal, setModal] = useState(false);
@@ -59,9 +62,10 @@ export function Suppliers() {
 
   return (
     <div className="space-y-4">
+      <ReadOnlyNotice />
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">Suppliers</h1>
-        <button className="btn-primary" onClick={openNew}>
+        <button className="btn-primary" onClick={openNew} disabled={!canWrite}>
           + Add Supplier
         </button>
       </div>

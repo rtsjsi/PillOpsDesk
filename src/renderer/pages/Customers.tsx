@@ -2,11 +2,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 import type { Customer, CustomerInput } from '../../shared/types';
 import { Modal } from '../components/Modal';
 import { Spinner, EmptyState, useToast, errMsg } from '../components/ui';
+import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
+import { useWriteAllowed } from '../App';
 
 const empty: CustomerInput = { name: '', phone: '', address: '' };
 
 export function Customers() {
   const toast = useToast();
+  const canWrite = useWriteAllowed();
   const [search, setSearch] = useState('');
   const [list, setList] = useState<Customer[] | null>(null);
   const [modal, setModal] = useState(false);
@@ -54,9 +57,10 @@ export function Customers() {
 
   return (
     <div className="space-y-4">
+      <ReadOnlyNotice />
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">Customers</h1>
-        <button className="btn-primary" onClick={openNew}>
+        <button className="btn-primary" onClick={openNew} disabled={!canWrite}>
           + Add Customer
         </button>
       </div>
