@@ -28,6 +28,7 @@ export interface PharmacyApi {
     hasUsers: () => Promise<boolean>;
     register: (username: string, pin: string, role: 'owner' | 'staff') => Promise<User>;
     login: (username: string, pin: string) => Promise<User | null>;
+    getUser: (id: number) => Promise<User | null>;
     listUsers: () => Promise<User[]>;
     deleteUser: (id: number) => Promise<void>;
   };
@@ -71,6 +72,7 @@ export interface PharmacyApi {
     dashboard: () => Promise<DashboardStats>;
     lowStock: () => Promise<StockRow[]>;
     expiring: (withinDays?: number) => Promise<StockRow[]>;
+    expiredInStock: () => Promise<StockRow[]>;
     salesReport: (from: string, to: string) => Promise<SalesReportRow[]>;
     gstSummary: (from: string, to: string) => Promise<GstSummaryRow[]>;
     stockValuation: () => Promise<StockRow[]>;
@@ -93,6 +95,7 @@ export const IPC = {
   authHasUsers: 'auth:hasUsers',
   authRegister: 'auth:register',
   authLogin: 'auth:login',
+  authGetUser: 'auth:getUser',
   authListUsers: 'auth:listUsers',
   authDeleteUser: 'auth:deleteUser',
 
@@ -129,6 +132,7 @@ export const IPC = {
   reportsDashboard: 'reports:dashboard',
   reportsLowStock: 'reports:lowStock',
   reportsExpiring: 'reports:expiring',
+  reportsExpiredInStock: 'reports:expiredInStock',
   reportsSalesReport: 'reports:salesReport',
   reportsGstSummary: 'reports:gstSummary',
   reportsStockValuation: 'reports:stockValuation',

@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { SellableBatch, Customer } from '../../shared/types';
+import { applyInvoiceDiscountPercent } from '../../shared/gst';
 import { inr, formatDate } from '../lib/format';
 import { useToast, errMsg, EmptyState } from '../components/ui';
 
 interface CartLine {
   batch: SellableBatch;
   quantity: number;
-  discount: number;
 }
 
 export function Billing() {
@@ -17,7 +17,7 @@ export function Billing() {
   const [cart, setCart] = useState<CartLine[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [customerId, setCustomerId] = useState<number | null>(null);
-  const [overallDiscount, setOverallDiscount] = useState(0);
+  const [discountPercent, setDiscountPercent] = useState(0);
   const [busy, setBusy] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -49,7 +49,7 @@ export function Billing() {
         copy[idx] = { ...copy[idx], quantity: nextQty };
         return copy;
       }
-      return [...prev, { batch, quantity: 1, discount: 0 }];
+      return [...prev, { batch, quantity: 1 }];
     });
     setSearch('');
     setResults([]);
@@ -68,23 +68,12 @@ export function Billing() {
   };
 
   const totals = useMemo(() => {
-    let subtotal = 0;
-    let cgst = 0;
-    let sgst = 0;
-    let gross = 0;
-    for (const l of cart) {
-      const lineGross = l.batch.sale_price * l.quantity - l.discount;
-      const rate = l.batch.gst_rate ?? 0;
-      const taxable = rate > 0 ? lineGross / (1 + rate / 100) : lineGross;
-      const tax = lineGross - taxable;
-      subtotal += taxable;
-      cgst += tax / 2;
-      sgst += tax / 2;
-      gross += lineGross;
-    }
-    const total = gross - overallDiscount;
-    return { subtotal, cgst, sgst, total: total < 0 ? 0 : total };
-  }, [cart, overallDiscount]);
+    const lines = cart.map((l) => ({
+      gross: l.batch.sale_price * l.quantity,
+      gst_rate: l.batch.gst_rate ?? 0,
+    }));
+    return applyInvoiceDiscountPercent(lines, discountPercent);
+  }, [cart, discountPercent]);
 
   const checkout = async (print: boolean) => {
     if (cart.length === 0) {
@@ -95,11 +84,10 @@ export function Billing() {
     try {
       const sale = await window.pharmacy.sales.create({
         customer_id: customerId,
-        overall_discount: overallDiscount,
+        discount_percent: discountPercent,
         items: cart.map((l) => ({
           batch_id: l.batch.batch_id,
           quantity: l.quantity,
-          discount: l.discount,
         })),
       });
       toast.success(`Invoice ${sale.invoice_no} saved.`);
@@ -107,7 +95,7 @@ export function Billing() {
         await window.pharmacy.print.invoice(sale.id);
       }
       setCart([]);
-      setOverallDiscount(0);
+      setDiscountPercent(0);
       setCustomerId(null);
       searchRef.current?.focus();
     } catch (e) {
@@ -122,7 +110,6 @@ export function Billing() {
       <h1 className="text-2xl font-bold text-slate-800">Billing</h1>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* Left: search + cart */}
         <div className="space-y-4 lg:col-span-2">
           <div className="relative">
             <input
@@ -168,14 +155,13 @@ export function Billing() {
                     <th className="th">Item</th>
                     <th className="th text-center">Qty</th>
                     <th className="th text-right">Rate</th>
-                    <th className="th text-right">Disc</th>
                     <th className="th text-right">Total</th>
                     <th className="th"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {cart.map((l) => {
-                    const lineTotal = l.batch.sale_price * l.quantity - l.discount;
+                    const lineTotal = l.batch.sale_price * l.quantity;
                     return (
                       <tr key={l.batch.batch_id} className="border-t border-slate-100">
                         <td className="td">
@@ -205,20 +191,6 @@ export function Billing() {
                           />
                         </td>
                         <td className="td text-right">{inr(l.batch.sale_price)}</td>
-                        <td className="td text-right">
-                          <input
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            value={l.discount}
-                            onChange={(e) =>
-                              updateLine(l.batch.batch_id, {
-                                discount: Math.max(0, Number(e.target.value)),
-                              })
-                            }
-                            className="input w-20 px-2 py-1 text-right"
-                          />
-                        </td>
                         <td className="td text-right font-medium">{inr(lineTotal)}</td>
                         <td className="td text-right">
                           <button
@@ -237,7 +209,6 @@ export function Billing() {
           </div>
         </div>
 
-        {/* Right: summary */}
         <div className="space-y-4">
           <div className="card p-4">
             <label className="label">Customer</label>
@@ -258,17 +229,28 @@ export function Billing() {
           </div>
 
           <div className="card space-y-2 p-4">
+            {totals.discountPercent > 0 && (
+              <Row
+                label={`Invoice Discount (${totals.discountPercent}%)`}
+                value={`- ${inr(totals.discountAmount)}`}
+              />
+            )}
             <Row label="Taxable Value" value={inr(totals.subtotal)} />
             <Row label="CGST" value={inr(totals.cgst)} />
             <Row label="SGST" value={inr(totals.sgst)} />
             <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-600">Overall Discount</span>
+              <span className="text-sm text-slate-600">Invoice Discount (%)</span>
               <input
                 type="number"
                 min={0}
+                max={100}
                 step="0.01"
-                value={overallDiscount}
-                onChange={(e) => setOverallDiscount(Math.max(0, Number(e.target.value)))}
+                value={discountPercent}
+                onChange={(e) =>
+                  setDiscountPercent(
+                    Math.min(100, Math.max(0, Number(e.target.value) || 0))
+                  )
+                }
                 className="input w-28 px-2 py-1 text-right"
               />
             </div>

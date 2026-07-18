@@ -17,11 +17,18 @@ export function registerUser(
   role: 'owner' | 'staff'
 ): User {
   const db = getDb();
+  const trimmed = username.trim();
+  if (!trimmed) throw new Error('Username is required.');
+  const existing = db
+    .prepare('SELECT id FROM users WHERE username = ?')
+    .get(trimmed) as { id: number } | undefined;
+  if (existing) throw new Error(`Username "${trimmed}" is already taken.`);
+
   const salt = crypto.randomBytes(16).toString('hex');
   const pinHash = hashPin(pin, salt);
   const info = db
     .prepare('INSERT INTO users (username, pin_hash, salt, role) VALUES (?, ?, ?, ?)')
-    .run(username.trim(), pinHash, salt, role);
+    .run(trimmed, pinHash, salt, role);
   return db
     .prepare('SELECT id, username, role, created_at FROM users WHERE id = ?')
     .get(Number(info.lastInsertRowid)) as User;
@@ -52,6 +59,13 @@ export function listUsers(): User[] {
   return getDb()
     .prepare('SELECT id, username, role, created_at FROM users ORDER BY username')
     .all() as User[];
+}
+
+export function getUser(id: number): User | null {
+  const row = getDb()
+    .prepare('SELECT id, username, role, created_at FROM users WHERE id = ?')
+    .get(id) as User | undefined;
+  return row ?? null;
 }
 
 export function deleteUser(id: number): void {

@@ -37,6 +37,7 @@ export function registerIpc(): void {
     auth.registerUser(username, pin, role)
   );
   handle(IPC.authLogin, (username: string, pin: string) => auth.login(username, pin));
+  handle(IPC.authGetUser, (id: number) => auth.getUser(id));
   handle(IPC.authListUsers, () => auth.listUsers());
   handle(IPC.authDeleteUser, (id: number) => auth.deleteUser(id));
 
@@ -88,6 +89,7 @@ export function registerIpc(): void {
   handle(IPC.reportsDashboard, () => reports.getDashboard());
   handle(IPC.reportsLowStock, () => reports.getLowStock());
   handle(IPC.reportsExpiring, (withinDays?: number) => reports.getExpiring(withinDays));
+  handle(IPC.reportsExpiredInStock, () => reports.getExpiredInStock());
   handle(IPC.reportsSalesReport, (from: string, to: string) =>
     reports.getSalesReport(from, to)
   );

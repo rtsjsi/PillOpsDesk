@@ -35,21 +35,32 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function RequireOwner({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (user?.role !== 'owner') return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Restore session from this window's sessionStorage (per-launch only).
-    const cached = sessionStorage.getItem('user');
-    if (cached) {
-      try {
-        setUser(JSON.parse(cached));
-      } catch {
-        /* ignore */
+    async function restoreSession() {
+      const cached = sessionStorage.getItem('user');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached) as User;
+          const live = await window.pharmacy.auth.getUser(parsed.id);
+          if (live) setUser(live);
+          else sessionStorage.removeItem('user');
+        } catch {
+          sessionStorage.removeItem('user');
+        }
       }
+      setReady(true);
     }
-    setReady(true);
+    restoreSession();
   }, []);
 
   const handleSetUser = (u: User | null) => {
@@ -83,7 +94,14 @@ export default function App() {
             <Route path="customers" element={<Customers />} />
             <Route path="suppliers" element={<Suppliers />} />
             <Route path="reports" element={<Reports />} />
-            <Route path="settings" element={<SettingsPage />} />
+            <Route
+              path="settings"
+              element={
+                <RequireOwner>
+                  <SettingsPage />
+                </RequireOwner>
+              }
+            />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

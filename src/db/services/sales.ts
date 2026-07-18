@@ -1,5 +1,6 @@
 import { getDb } from '../index';
 import { getSettings } from './settings';
+import { applyInvoiceDiscountPercent, round2 } from '@shared/gst';
 import type {
   SaleInput,
   SaleWithItems,
@@ -48,11 +49,6 @@ export function createSale(input: SaleInput): SaleWithItems {
     const saleDate = now.toISOString();
     const invoiceNo = nextInvoiceNo();
 
-    let subtotal = 0; // taxable value
-    let cgst = 0;
-    let sgst = 0;
-    let grossTotal = 0;
-
     const getBatch = db.prepare(
       `SELECT b.*, m.name AS medicine_name, m.gst_rate AS gst_rate, m.hsn_code AS hsn_code
        FROM batches b JOIN medicines m ON m.id = b.medicine_id WHERE b.id = ?`
@@ -63,8 +59,8 @@ export function createSale(input: SaleInput): SaleWithItems {
 
     const saleInfo = db
       .prepare(
-        `INSERT INTO sales (invoice_no, customer_id, sale_date, subtotal, discount, cgst, sgst, total)
-         VALUES (?, ?, ?, 0, 0, 0, 0, 0)`
+        `INSERT INTO sales (invoice_no, customer_id, sale_date, subtotal, discount, discount_percent, cgst, sgst, total)
+         VALUES (?, ?, ?, 0, 0, 0, 0, 0, 0)`
       )
       .run(invoiceNo, data.customer_id ?? null, saleDate);
     const saleId = Number(saleInfo.lastInsertRowid);
@@ -72,8 +68,23 @@ export function createSale(input: SaleInput): SaleWithItems {
     const insertItem = db.prepare(
       `INSERT INTO sale_items
         (sale_id, batch_id, medicine_id, medicine_name, batch_no, hsn_code, quantity, price, gst_rate, discount, line_total)
-       VALUES (@sale_id, @batch_id, @medicine_id, @medicine_name, @batch_no, @hsn_code, @quantity, @price, @gst_rate, @discount, @line_total)`
+       VALUES (@sale_id, @batch_id, @medicine_id, @medicine_name, @batch_no, @hsn_code, @quantity, @price, @gst_rate, 0, @line_total)`
     );
+
+    const resolved: {
+      item: (typeof data.items)[number];
+      batch: {
+        id: number;
+        medicine_id: number;
+        medicine_name: string;
+        batch_no: string;
+        hsn_code: string | null;
+        sale_price: number;
+        gst_rate: number;
+        quantity_in_stock: number;
+      };
+      lineGross: number;
+    }[] = [];
 
     for (const item of data.items) {
       const b = getBatch.get(item.batch_id) as
@@ -96,44 +107,44 @@ export function createSale(input: SaleInput): SaleWithItems {
         );
       }
 
-      const gross = b.sale_price * item.quantity - (item.discount ?? 0);
-      const rate = b.gst_rate ?? 0;
-      const taxable = rate > 0 ? gross / (1 + rate / 100) : gross;
-      const tax = gross - taxable;
-
-      subtotal += taxable;
-      cgst += tax / 2;
-      sgst += tax / 2;
-      grossTotal += gross;
-
-      insertItem.run({
-        sale_id: saleId,
-        batch_id: b.id,
-        medicine_id: b.medicine_id,
-        medicine_name: b.medicine_name,
-        batch_no: b.batch_no,
-        hsn_code: b.hsn_code,
-        quantity: item.quantity,
-        price: b.sale_price,
-        gst_rate: rate,
-        discount: item.discount ?? 0,
-        line_total: round2(gross),
+      resolved.push({
+        item,
+        batch: b,
+        lineGross: b.sale_price * item.quantity,
       });
-
-      decStock.run(item.quantity, b.id);
     }
 
-    const overallDiscount = data.overall_discount ?? 0;
-    const total = round2(grossTotal - overallDiscount);
+    const invoice = applyInvoiceDiscountPercent(
+      resolved.map((row) => ({ gross: row.lineGross, gst_rate: row.batch.gst_rate ?? 0 })),
+      data.discount_percent ?? 0
+    );
+
+    resolved.forEach((row, index) => {
+      const amounts = invoice.lines[index];
+      insertItem.run({
+        sale_id: saleId,
+        batch_id: row.batch.id,
+        medicine_id: row.batch.medicine_id,
+        medicine_name: row.batch.medicine_name,
+        batch_no: row.batch.batch_no,
+        hsn_code: row.batch.hsn_code,
+        quantity: row.item.quantity,
+        price: row.batch.sale_price,
+        gst_rate: row.batch.gst_rate ?? 0,
+        line_total: amounts.gross,
+      });
+      decStock.run(row.item.quantity, row.batch.id);
+    });
 
     db.prepare(
-      `UPDATE sales SET subtotal = ?, discount = ?, cgst = ?, sgst = ?, total = ? WHERE id = ?`
+      `UPDATE sales SET subtotal = ?, discount = ?, discount_percent = ?, cgst = ?, sgst = ?, total = ? WHERE id = ?`
     ).run(
-      round2(subtotal),
-      round2(overallDiscount),
-      round2(cgst),
-      round2(sgst),
-      total,
+      invoice.subtotal,
+      invoice.discountAmount,
+      round2(data.discount_percent ?? 0),
+      invoice.cgst,
+      invoice.sgst,
+      invoice.total,
       saleId
     );
 
@@ -156,7 +167,12 @@ export function getSale(id: number): SaleWithItems | null {
         | { name: string }
         | undefined)
     : undefined;
-  return { ...sale, items, customer_name: customer?.name ?? null };
+  return {
+    ...sale,
+    discount_percent: sale.discount_percent ?? 0,
+    items,
+    customer_name: customer?.name ?? null,
+  };
 }
 
 export function listSales(from?: string, to?: string): SaleWithItems[] {
@@ -175,8 +191,4 @@ export function listSales(from?: string, to?: string): SaleWithItems[] {
       .all() as Sale[];
   }
   return rows.map((r) => getSale(r.id)!);
-}
-
-function round2(n: number): number {
-  return Math.round((n + Number.EPSILON) * 100) / 100;
 }
