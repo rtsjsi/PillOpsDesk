@@ -1,4 +1,4 @@
-# Pharmacy Store (Offline Desktop App)
+# PillOpsDesk (Offline Desktop App)
 
 A fully offline Windows desktop application for a small-town pharmacy / medical store.
 Built with **Electron + React + TypeScript** and a local **SQLite** database
@@ -60,7 +60,7 @@ On first launch you will be asked to create the **owner** account.
 npm run make
 ```
 
-The installer (`PharmacyStoreSetup.exe`) and packaged app are produced under
+The installer (`PillOpsDeskSetup.exe`) and packaged app are produced under
 the `out/` directory.
 
 ## Project structure

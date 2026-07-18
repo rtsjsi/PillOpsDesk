@@ -38,7 +38,7 @@ export function Layout() {
       <aside className="flex w-60 flex-col bg-brand-800 text-brand-50">
         <div className="border-b border-brand-700 px-5 py-4">
           <div className="text-lg font-bold leading-tight">
-            {settings?.store_name || 'Pharmacy Store'}
+            {settings?.store_name || 'PillOpsDesk'}
           </div>
           <div className="text-xs text-brand-200">Offline Management</div>
         </div>

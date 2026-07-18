@@ -237,7 +237,7 @@ export function getLicenseStatus(): LicenseStatus {
     }
     return buildStatus(
       'unlicensed',
-      'Enter your license key to activate Pharmacy Store on this computer.'
+      'Enter your license key to activate PillOpsDesk on this computer.'
     );
   }
 

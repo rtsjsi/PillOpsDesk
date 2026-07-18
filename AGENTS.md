@@ -1,4 +1,4 @@
-# AGENTS.md — Project Context for Pharmacy Store (Offline Desktop App)
+# AGENTS.md — Project Context for PillOpsDesk (Offline Desktop App)
 
 This file gives AI agents and IDEs the full working context for this repository.
 It is intentionally detailed so any tool can be productive immediately and avoid
@@ -113,7 +113,7 @@ tsconfig.json             # @shared/* path alias -> src/shared/*
 ```bash
 npm install     # installs deps; postinstall rebuilds better-sqlite3 for Electron
 npm start       # run the app in development (Vite dev server + Electron)
-npm run make    # build the Windows installer (out/make/.../PharmacyStoreSetup.exe)
+npm run make    # build the Windows installer (out/make/.../PillOpsDeskSetup.exe)
 npm run rebuild # manually rebuild better-sqlite3 against Electron if needed
 npx tsc --noEmit  # typecheck (no emit; Vite/Forge does the actual build)
 ```
@@ -186,7 +186,7 @@ existing migration in place) so existing installs upgrade cleanly.
 
 ## 9. Repository
 
-- Remote: `origin` → https://github.com/rtsjsi/PharmacyStoreOffline.git
+- Remote: `origin` → https://github.com/rtsjsi/PillOpsDesk.git
 - Default branch: `main`.
 - Only source + config are tracked; `node_modules/`, `out/`, `.vite/`, and
   `*.db*` are ignored.

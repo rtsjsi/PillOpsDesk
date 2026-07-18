@@ -9,14 +9,14 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    name: 'Pharmacy Store',
-    executableName: 'pharmacy-store',
+    name: 'PillOpsDesk',
+    executableName: 'pillopsdesk',
   },
   rebuildConfig: {},
   makers: [
     new MakerSquirrel({
-      name: 'pharmacy_store',
-      setupExe: 'PharmacyStoreSetup.exe',
+      name: 'pillopsdesk',
+      setupExe: 'PillOpsDeskSetup.exe',
     }),
     new MakerZIP({}, ['darwin']),
   ],

@@ -58,7 +58,7 @@ export function LoginPage() {
       <div className="card w-full max-w-md p-8">
         <div className="mb-6 text-center">
           <div className="mb-2 text-4xl">💊</div>
-          <h1 className="text-2xl font-bold text-slate-800">Pharmacy Store</h1>
+          <h1 className="text-2xl font-bold text-slate-800">PillOpsDesk</h1>
           <p className="text-sm text-slate-500">
             {firstRun
               ? 'Create the owner account to get started'

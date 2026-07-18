@@ -9,7 +9,7 @@ interface Props {
   title?: string;
 }
 
-export function ActivatePage({ status, onActivated, title = 'Activate Pharmacy Store' }: Props) {
+export function ActivatePage({ status, onActivated, title = 'Activate PillOpsDesk' }: Props) {
   const toast = useToast();
   const [licenseKey, setLicenseKey] = useState('');
   const [busy, setBusy] = useState(false);
