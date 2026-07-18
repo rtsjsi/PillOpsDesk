@@ -90,10 +90,24 @@ export function getExpiring(withinDays = 90): StockRow[] {
     .prepare(
       `SELECT b.*, m.name AS medicine_name, m.gst_rate AS gst_rate, m.reorder_level AS reorder_level
        FROM batches b JOIN medicines m ON m.id = b.medicine_id
-       WHERE m.is_active = 1 AND b.quantity_in_stock > 0 AND b.expiry_date <= ?
+       WHERE m.is_active = 1 AND b.quantity_in_stock > 0
+         AND b.expiry_date >= ? AND b.expiry_date <= ?
        ORDER BY b.expiry_date`
     )
-    .all(addDays(withinDays)) as StockRow[];
+    .all(today, addDays(withinDays)) as StockRow[];
+}
+
+export function getExpiredInStock(): StockRow[] {
+  const db = getDb();
+  const today = new Date().toISOString().slice(0, 10);
+  return db
+    .prepare(
+      `SELECT b.*, m.name AS medicine_name, m.gst_rate AS gst_rate, m.reorder_level AS reorder_level
+       FROM batches b JOIN medicines m ON m.id = b.medicine_id
+       WHERE m.is_active = 1 AND b.quantity_in_stock > 0 AND b.expiry_date < ?
+       ORDER BY b.expiry_date DESC`
+    )
+    .all(today) as StockRow[];
 }
 
 export function getSalesReport(from: string, to: string): SalesReportRow[] {

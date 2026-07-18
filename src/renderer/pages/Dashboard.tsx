@@ -34,7 +34,10 @@ export function Dashboard() {
 
   useEffect(() => {
     window.pharmacy.reports.dashboard().then(setStats);
-    window.pharmacy.reports.expiring(90).then(setExpiring);
+    Promise.all([
+      window.pharmacy.reports.expiring(90),
+      window.pharmacy.reports.expiredInStock(),
+    ]).then(([soon, expired]) => setExpiring([...expired, ...soon]));
     window.pharmacy.reports.lowStock().then(setLowStock);
   }, []);
 

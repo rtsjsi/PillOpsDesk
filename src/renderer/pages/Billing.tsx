@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { SellableBatch, Customer } from '../../shared/types';
+import { allocateOverallDiscount, sumGstLines } from '../../shared/gst';
 import { inr, formatDate } from '../lib/format';
 import { useToast, errMsg, EmptyState } from '../components/ui';
 
@@ -68,22 +69,18 @@ export function Billing() {
   };
 
   const totals = useMemo(() => {
-    let subtotal = 0;
-    let cgst = 0;
-    let sgst = 0;
-    let gross = 0;
-    for (const l of cart) {
-      const lineGross = l.batch.sale_price * l.quantity - l.discount;
-      const rate = l.batch.gst_rate ?? 0;
-      const taxable = rate > 0 ? lineGross / (1 + rate / 100) : lineGross;
-      const tax = lineGross - taxable;
-      subtotal += taxable;
-      cgst += tax / 2;
-      sgst += tax / 2;
-      gross += lineGross;
-    }
-    const total = gross - overallDiscount;
-    return { subtotal, cgst, sgst, total: total < 0 ? 0 : total };
+    const lines = cart.map((l) => ({
+      gross: l.batch.sale_price * l.quantity - l.discount,
+      gst_rate: l.batch.gst_rate ?? 0,
+    }));
+    const gstLines = allocateOverallDiscount(lines, overallDiscount);
+    const sums = sumGstLines(gstLines);
+    return {
+      subtotal: sums.subtotal,
+      cgst: sums.cgst,
+      sgst: sums.sgst,
+      total: sums.total,
+    };
   }, [cart, overallDiscount]);
 
   const checkout = async (print: boolean) => {

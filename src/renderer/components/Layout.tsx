@@ -20,6 +20,9 @@ export function Layout() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState<Settings | null>(null);
 
+  const navItems =
+    user?.role === 'owner' ? NAV : NAV.filter((item) => item.to !== '/settings');
+
   useEffect(() => {
     window.pharmacy.settings.get().then(setSettings);
   }, []);
@@ -39,7 +42,7 @@ export function Layout() {
           <div className="text-xs text-brand-200">Offline Management</div>
         </div>
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-          {NAV.map((item) => (
+          {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
