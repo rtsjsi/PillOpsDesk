@@ -22,6 +22,9 @@ import type {
   SalesReportRow,
   GstSummaryRow,
   LicenseStatus,
+  DriveBackupSettings,
+  DriveBackupStatus,
+  DriveBackupFile,
 } from './types';
 
 export interface PharmacyApi {
@@ -87,6 +90,15 @@ export interface PharmacyApi {
     backup: () => Promise<string | null>;
     restore: () => Promise<boolean>;
   };
+  drive: {
+    getStatus: () => Promise<DriveBackupStatus>;
+    connect: () => Promise<DriveBackupStatus>;
+    disconnect: () => Promise<DriveBackupStatus>;
+    saveSettings: (settings: DriveBackupSettings) => Promise<DriveBackupStatus>;
+    backupNow: () => Promise<{ started: boolean }>;
+    listBackups: () => Promise<DriveBackupFile[]>;
+    restore: (fileId: string) => Promise<boolean>;
+  };
   print: {
     invoice: (saleId: number) => Promise<boolean>;
   };
@@ -149,6 +161,14 @@ export const IPC = {
 
   backupBackup: 'backup:backup',
   backupRestore: 'backup:restore',
+
+  driveGetStatus: 'drive:getStatus',
+  driveConnect: 'drive:connect',
+  driveDisconnect: 'drive:disconnect',
+  driveSaveSettings: 'drive:saveSettings',
+  driveBackupNow: 'drive:backupNow',
+  driveListBackups: 'drive:listBackups',
+  driveRestore: 'drive:restore',
 
   printInvoice: 'print:invoice',
 

@@ -1,7 +1,15 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import { getDb, closeDb } from './db';
 import { registerIpc } from './ipc/register';
+import {
+  needsExitDriveBackup,
+  runExitDriveBackupIfNeeded,
+  startDriveBackupScheduler,
+} from './main/drive-backup-scheduler';
 
 // These are injected by the Electron Forge Vite plugin.
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
@@ -49,6 +57,7 @@ app.whenReady().then(() => {
   // Initialise DB (runs migrations) before wiring handlers.
   getDb();
   registerIpc();
+  startDriveBackupScheduler();
   createWindow();
 
   app.on('activate', () => {
@@ -56,13 +65,26 @@ app.whenReady().then(() => {
   });
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+let quitting = false;
+
+app.on('before-quit', (e) => {
+  if (quitting) return;
+  if (!needsExitDriveBackup()) {
+    closeDb();
+    return;
+  }
+
+  e.preventDefault();
+  quitting = true;
+  void runExitDriveBackupIfNeeded().finally(() => {
     closeDb();
     app.quit();
-  }
+  });
 });
 
-app.on('before-quit', () => {
-  closeDb();
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    if (!quitting) closeDb();
+    app.quit();
+  }
 });

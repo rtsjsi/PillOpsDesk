@@ -8,6 +8,7 @@ import type {
   PurchaseInput,
   SaleInput,
   Settings,
+  DriveBackupSettings,
 } from '@shared/types';
 import * as medicines from '../db/services/medicines';
 import * as batches from '../db/services/batches';
@@ -19,6 +20,15 @@ import * as settings from '../db/services/settings';
 import * as auth from '../db/services/auth';
 import * as licensing from '../db/services/licensing';
 import { backupDatabase, restoreDatabase, exportCsv } from './backup';
+import {
+  backupToDriveNow,
+  connectDrive,
+  disconnectDrive,
+  getDriveStatus,
+  listCloudBackups,
+  restoreFromDrive,
+  saveDriveSettings,
+} from './google-drive';
 import { printInvoice } from './invoice';
 
 function handle<T extends unknown[], R>(
@@ -133,6 +143,15 @@ export function registerIpc(): void {
   // Backup — export allowed in read-only; restore replaces all data
   handleRead(IPC.backupBackup, () => backupDatabase());
   handleWrite(IPC.backupRestore, () => restoreDatabase());
+
+  // Google Drive backup — backup/export allowed in read-only; connect/restore need write access
+  handleRead(IPC.driveGetStatus, () => getDriveStatus());
+  handleWrite(IPC.driveConnect, () => connectDrive());
+  handleWrite(IPC.driveDisconnect, () => disconnectDrive());
+  handleWrite(IPC.driveSaveSettings, (input: DriveBackupSettings) => saveDriveSettings(input));
+  handleRead(IPC.driveBackupNow, () => backupToDriveNow());
+  handleRead(IPC.driveListBackups, () => listCloudBackups());
+  handleWrite(IPC.driveRestore, (fileId: string) => restoreFromDrive(fileId));
 
   // Reprinting past invoices is allowed in read-only
   handleRead(IPC.printInvoice, (saleId: number) => printInvoice(saleId));
