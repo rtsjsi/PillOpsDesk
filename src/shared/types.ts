@@ -1,5 +1,8 @@
 // Domain types shared between the Electron main process and the React renderer.
 
+export type MedicineSchedule = 'OTC' | 'H' | 'H1' | 'X';
+export type MedicineStorageType = 'room' | 'refrigerated';
+
 export interface Medicine {
   id: number;
   name: string;
@@ -8,6 +11,9 @@ export interface Medicine {
   hsn_code: string | null;
   gst_rate: number; // percent, e.g. 5, 12, 18
   category: string | null;
+  pack_size: string | null; // e.g. "15", "100ml"
+  schedule: MedicineSchedule | null;
+  storage_type: MedicineStorageType | null;
   rack: string | null;
   reorder_level: number;
   is_active: number; // 0 | 1

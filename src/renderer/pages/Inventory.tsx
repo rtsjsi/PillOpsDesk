@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import type { Medicine, MedicineInput, Batch, BatchInput } from '../../shared/types';
+import type { Medicine, MedicineInput, MedicineSchedule, MedicineStorageType, Batch, BatchInput } from '../../shared/types';
 import { inr, formatDate, daysUntil, todayIso } from '../lib/format';
 import { Modal } from '../components/Modal';
 import { Spinner, EmptyState, Badge, useToast, errMsg } from '../components/ui';
@@ -8,6 +8,28 @@ import { useWriteAllowed } from '../App';
 
 const GST_RATES = [0, 5, 12, 18, 28];
 
+const SCHEDULE_OPTIONS: { value: MedicineSchedule | ''; label: string }[] = [
+  { value: '', label: 'Not set' },
+  { value: 'OTC', label: 'OTC (over the counter)' },
+  { value: 'H', label: 'Schedule H (Rx)' },
+  { value: 'H1', label: 'Schedule H1 (Rx + record)' },
+  { value: 'X', label: 'Schedule X (controlled)' },
+];
+
+const STORAGE_OPTIONS: { value: MedicineStorageType | ''; label: string }[] = [
+  { value: '', label: 'Not set' },
+  { value: 'room', label: 'Room temperature' },
+  { value: 'refrigerated', label: 'Refrigerated' },
+];
+
+function scheduleLabel(schedule: MedicineSchedule | null | undefined): string {
+  return SCHEDULE_OPTIONS.find((o) => o.value === schedule)?.label ?? '-';
+}
+
+function storageLabel(storage: MedicineStorageType | null | undefined): string {
+  return STORAGE_OPTIONS.find((o) => o.value === storage)?.label ?? '-';
+}
+
 const emptyMedicine: MedicineInput = {
   name: '',
   generic_name: '',
@@ -15,6 +37,9 @@ const emptyMedicine: MedicineInput = {
   hsn_code: '',
   gst_rate: 12,
   category: '',
+  pack_size: '',
+  schedule: null,
+  storage_type: null,
   rack: '',
   reorder_level: 10,
 };
@@ -66,6 +91,9 @@ export function Inventory() {
       hsn_code: m.hsn_code ?? '',
       gst_rate: m.gst_rate,
       category: m.category ?? '',
+      pack_size: m.pack_size ?? '',
+      schedule: m.schedule,
+      storage_type: m.storage_type,
       rack: m.rack ?? '',
       reorder_level: m.reorder_level,
     });
@@ -131,6 +159,8 @@ export function Inventory() {
               <tr>
                 <th className="th">Medicine</th>
                 <th className="th">Manufacturer</th>
+                <th className="th">Pack</th>
+                <th className="th">Schedule</th>
                 <th className="th">HSN</th>
                 <th className="th text-center">GST</th>
                 <th className="th text-center">Rack</th>
@@ -150,6 +180,16 @@ export function Inventory() {
                       )}
                     </td>
                     <td className="td">{m.manufacturer || '-'}</td>
+                    <td className="td">{m.pack_size || '-'}</td>
+                    <td className="td">
+                      {m.schedule ? (
+                        <Badge tone={m.schedule === 'OTC' ? 'green' : 'amber'}>
+                          {m.schedule}
+                        </Badge>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
                     <td className="td">{m.hsn_code || '-'}</td>
                     <td className="td text-center">{m.gst_rate}%</td>
                     <td className="td text-center">{m.rack || '-'}</td>
@@ -268,6 +308,53 @@ export function Inventory() {
             />
           </div>
           <div>
+            <label className="label">Pack Size</label>
+            <input
+              className="input"
+              placeholder='e.g. 15, 100ml, 1×5ml'
+              value={form.pack_size ?? ''}
+              onChange={(e) => setForm({ ...form, pack_size: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="label">Schedule</label>
+            <select
+              className="input"
+              value={form.schedule ?? ''}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  schedule: (e.target.value || null) as MedicineSchedule | null,
+                })
+              }
+            >
+              {SCHEDULE_OPTIONS.map((o) => (
+                <option key={o.label} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label">Storage Type</label>
+            <select
+              className="input"
+              value={form.storage_type ?? ''}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  storage_type: (e.target.value || null) as MedicineStorageType | null,
+                })
+              }
+            >
+              {STORAGE_OPTIONS.map((o) => (
+                <option key={o.label} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="label">Rack / Shelf</label>
             <input
               className="input"
@@ -341,6 +428,18 @@ export function Inventory() {
             <div>
               <dt className="text-slate-500">Category</dt>
               <dd className="font-medium text-slate-800">{viewing.category || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Pack Size</dt>
+              <dd className="font-medium text-slate-800">{viewing.pack_size || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Schedule</dt>
+              <dd className="font-medium text-slate-800">{scheduleLabel(viewing.schedule)}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Storage Type</dt>
+              <dd className="font-medium text-slate-800">{storageLabel(viewing.storage_type)}</dd>
             </div>
             <div>
               <dt className="text-slate-500">Rack / Shelf</dt>
