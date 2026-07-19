@@ -214,3 +214,25 @@ export interface LicenseStatus {
   /** True when subscription is past expiry + grace; viewing allowed, writes blocked. */
   readOnly?: boolean;
 }
+
+export interface DriveBackupSettings {
+  auto_enabled: boolean;
+  /** Daily backup time in 24h HH:mm format. */
+  auto_time: string;
+}
+
+export interface DriveBackupStatus extends DriveBackupSettings {
+  configured: boolean;
+  connected: boolean;
+  accountEmail: string | null;
+  lastBackupAt: string | null;
+  lastError: string | null;
+  backupInProgress: boolean;
+}
+
+export interface DriveBackupFile {
+  id: string;
+  name: string;
+  createdAt: string;
+  size: number;
+}

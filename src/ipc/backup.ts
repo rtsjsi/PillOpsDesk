@@ -1,12 +1,10 @@
 import { app, dialog } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
-import { closeDb, getDb, getDbPath } from '../db';
+import { closeDb, getDbPath } from '../db';
+import { copyDatabaseToPath } from '../db/backup-utils';
 
 export async function backupDatabase(): Promise<string | null> {
-  // Ensure any pending WAL data is written to the main db file.
-  getDb().pragma('wal_checkpoint(TRUNCATE)');
-
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   const result = await dialog.showSaveDialog({
     title: 'Save Database Backup',
@@ -18,8 +16,22 @@ export async function backupDatabase(): Promise<string | null> {
   });
 
   if (result.canceled || !result.filePath) return null;
-  fs.copyFileSync(getDbPath(), result.filePath);
+  copyDatabaseToPath(result.filePath);
   return result.filePath;
+}
+
+export function restoreDatabaseFromPath(source: string): never {
+  const dbPath = getDbPath();
+  closeDb();
+  for (const ext of ['', '-wal', '-shm']) {
+    const p = dbPath + ext;
+    if (fs.existsSync(p)) fs.rmSync(p);
+  }
+  fs.copyFileSync(source, dbPath);
+
+  app.relaunch();
+  app.exit(0);
+  throw new Error('App is restarting.');
 }
 
 export async function restoreDatabase(): Promise<boolean> {
@@ -43,18 +55,7 @@ export async function restoreDatabase(): Promise<boolean> {
   });
   if (confirm.response !== 1) return false;
 
-  const dbPath = getDbPath();
-  closeDb();
-  // Remove WAL/SHM side files so the restored db is authoritative.
-  for (const ext of ['', '-wal', '-shm']) {
-    const p = dbPath + ext;
-    if (fs.existsSync(p)) fs.rmSync(p);
-  }
-  fs.copyFileSync(source, dbPath);
-
-  app.relaunch();
-  app.exit(0);
-  return true;
+  restoreDatabaseFromPath(source);
 }
 
 export async function exportCsv(filename: string, csv: string): Promise<boolean> {
