@@ -119,13 +119,19 @@ function GoogleDriveSection({ readOnly }: { readOnly: boolean }) {
     }
   };
 
-  const restore = async (file: DriveBackupFile) => {
-    if (!confirm(`Restore "${file.name}" from Google Drive? All current data will be replaced.`)) {
+  const restoreLatest = async () => {
+    const latest = backups?.[0];
+    if (!latest) return toast.error('No cloud backups found on Google Drive.');
+    if (
+      !confirm(
+        `Restore the latest cloud backup "${latest.name}"? All current data will be replaced.`
+      )
+    ) {
       return;
     }
     setBusy('restore');
     try {
-      await window.pharmacy.drive.restore(file.id);
+      await window.pharmacy.drive.restore();
     } catch (e) {
       toast.error(errMsg(e));
       setBusy(null);
@@ -192,6 +198,13 @@ function GoogleDriveSection({ readOnly }: { readOnly: boolean }) {
             <button className="btn-primary" onClick={backupNow} disabled={busy !== null}>
               {busy === 'backup' ? 'Starting…' : 'Backup to Drive Now'}
             </button>
+            <button
+              className="btn-secondary"
+              onClick={restoreLatest}
+              disabled={readOnly || busy !== null || !backups?.length}
+            >
+              {busy === 'restore' ? 'Restoring…' : 'Restore Latest Backup'}
+            </button>
           </>
         )}
       </div>
@@ -251,23 +264,16 @@ function GoogleDriveSection({ readOnly }: { readOnly: boolean }) {
                 <tr>
                   <th className="th">File</th>
                   <th className="th">Created</th>
-                  <th className="th text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {backups.map((file) => (
+                {backups.map((file, index) => (
                   <tr key={file.id} className="border-t border-slate-100">
-                    <td className="td font-medium">{file.name}</td>
-                    <td className="td">{formatDateTime(file.createdAt)}</td>
-                    <td className="td text-right">
-                      <button
-                        className="btn-secondary px-2 py-1"
-                        onClick={() => restore(file)}
-                        disabled={readOnly || busy !== null}
-                      >
-                        Restore
-                      </button>
+                    <td className="td font-medium">
+                      {file.name}
+                      {index === 0 && <Badge tone="green">Latest</Badge>}
                     </td>
+                    <td className="td">{formatDateTime(file.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>

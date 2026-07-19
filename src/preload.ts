@@ -75,7 +75,7 @@ const api: PharmacyApi = {
     saveSettings: (settings) => invoke(IPC.driveSaveSettings, settings),
     backupNow: () => invoke(IPC.driveBackupNow),
     listBackups: () => invoke(IPC.driveListBackups),
-    restore: (fileId) => invoke(IPC.driveRestore, fileId),
+    restore: () => invoke(IPC.driveRestore),
   },
   print: {
     invoice: (saleId) => invoke(IPC.printInvoice, saleId),

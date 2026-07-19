@@ -167,6 +167,15 @@ export async function listDriveBackups(): Promise<DriveBackupFile[]> {
   return files.slice(0, DRIVE_RETENTION_COUNT);
 }
 
+export async function getLatestDriveBackup(): Promise<DriveBackupFile> {
+  const backups = await listDriveBackups();
+  const latest = backups[0];
+  if (!latest) {
+    throw new Error('No cloud backups found on Google Drive.');
+  }
+  return latest;
+}
+
 export async function downloadDriveBackup(fileId: string, destPath: string): Promise<void> {
   const client = await getAuthorizedClient();
   const res = await driveFetch(client, `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);

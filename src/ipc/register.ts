@@ -151,7 +151,7 @@ export function registerIpc(): void {
   handleWrite(IPC.driveSaveSettings, (input: DriveBackupSettings) => saveDriveSettings(input));
   handleRead(IPC.driveBackupNow, () => backupToDriveNow());
   handleRead(IPC.driveListBackups, () => listCloudBackups());
-  handleWrite(IPC.driveRestore, (fileId: string) => restoreFromDrive(fileId));
+  handleWrite(IPC.driveRestore, () => restoreFromDrive());
 
   // Reprinting past invoices is allowed in read-only
   handleRead(IPC.printInvoice, (saleId: number) => printInvoice(saleId));

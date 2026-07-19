@@ -5,6 +5,7 @@ import {
   connectDriveAccount,
   disconnectDriveAccount,
   downloadDriveBackup,
+  getLatestDriveBackup,
   listDriveBackups,
   startDriveBackup,
 } from '../db/services/google-drive';
@@ -46,19 +47,19 @@ export function listCloudBackups() {
   return listDriveBackups();
 }
 
-export async function restoreFromDrive(fileId: string): Promise<boolean> {
+export async function restoreFromDrive(): Promise<boolean> {
+  const latest = await getLatestDriveBackup();
   const confirm = await dialog.showMessageBox({
     type: 'warning',
     buttons: ['Cancel', 'Restore & Restart'],
     defaultId: 1,
     cancelId: 0,
-    message: 'Restore from Google Drive?',
-    detail:
-      'This will replace all current data with the selected cloud backup. The app will restart. This cannot be undone.',
+    message: 'Restore latest Google Drive backup?',
+    detail: `This will replace all current data with "${latest.name}" (${latest.createdAt}). The app will restart. This cannot be undone.`,
   });
   if (confirm.response !== 1) return false;
 
   const tempPath = buildRestoreTempPath();
-  await downloadDriveBackup(fileId, tempPath);
+  await downloadDriveBackup(latest.id, tempPath);
   restoreDatabaseFromPath(tempPath);
 }

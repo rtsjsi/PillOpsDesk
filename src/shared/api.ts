@@ -97,7 +97,7 @@ export interface PharmacyApi {
     saveSettings: (settings: DriveBackupSettings) => Promise<DriveBackupStatus>;
     backupNow: () => Promise<{ started: boolean }>;
     listBackups: () => Promise<DriveBackupFile[]>;
-    restore: (fileId: string) => Promise<boolean>;
+    restore: () => Promise<boolean>;
   };
   print: {
     invoice: (saleId: number) => Promise<boolean>;
