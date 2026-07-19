@@ -34,6 +34,14 @@ export function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** First day of the current calendar month as yyyy-mm-dd (local). */
+export function monthStartIso(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}-01`;
+}
+
 // Days until (or since, if negative) the given expiry date.
 export function daysUntil(iso: string): number {
   const d = new Date(iso + 'T00:00:00');

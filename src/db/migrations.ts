@@ -129,6 +129,12 @@ const MIGRATIONS: string[] = [
   ALTER TABLE medicines ADD COLUMN schedule TEXT;
   ALTER TABLE medicines ADD COLUMN storage_type TEXT;
   `,
+  // v4: split former free-text category (Tablet/Capsule/…) into dosage_form;
+  // category becomes therapeutic class (Anti-Diabetic, Cardiovascular, …)
+  `
+  ALTER TABLE medicines RENAME COLUMN category TO dosage_form;
+  ALTER TABLE medicines ADD COLUMN category TEXT;
+  `,
 ];
 
 export function runMigrations(db: Database.Database): void {

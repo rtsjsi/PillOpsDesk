@@ -4,12 +4,12 @@ A fully offline Windows desktop application for a small-town pharmacy / medical 
 Built with **Electron + React + TypeScript** and a local **SQLite** database
 (`better-sqlite3`). All data stays on the store PC — no internet required.
 
-Designed for India: GST-aware billing (CGST + SGST), rupee currency, and
+Designed for India: GST-aware sales (CGST + SGST), rupee currency, and
 batch + expiry tracking.
 
 ## Features
 
-- **Billing / POS** — fast search-and-add (barcode-scanner friendly), automatic
+- **Sales / POS** — fast search-and-add (barcode-scanner friendly), automatic
   GST split, per-line and overall discounts, walk-in or saved customers,
   sequential invoice numbers, and print / PDF invoices.
 - **Inventory** — medicines with salt, manufacturer, HSN, GST rate, rack location
@@ -90,7 +90,7 @@ src/
   renderer/
     App.tsx             # routing + auth
     components/         # Layout, Modal, UI primitives
-    pages/              # Dashboard, Billing, Inventory, Reports, ...
+    pages/              # Dashboard, Sales, Inventory, Purchases, Reports, ...
 ```
 
 ## Notes

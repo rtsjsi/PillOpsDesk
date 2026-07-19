@@ -8,6 +8,7 @@ export function medicineInput(overrides: Partial<MedicineInput> & Pick<MedicineI
     manufacturer: '',
     hsn_code: '',
     gst_rate: 12,
+    dosage_form: '',
     category: '',
     pack_size: '',
     schedule: null,
@@ -73,7 +74,7 @@ export function seedMedicineWithBatch(
       manufacturer: 'Test Pharma',
       hsn_code: '3004',
       gst_rate: opts.gst_rate ?? 12,
-      category: 'Tablet',
+      dosage_form: 'Tablet',
       rack: 'A1',
       reorder_level: 10,
     })

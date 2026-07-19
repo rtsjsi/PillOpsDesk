@@ -65,7 +65,7 @@ export interface PharmacyApi {
   };
   purchases: {
     create: (input: PurchaseInput) => Promise<Purchase>;
-    list: (search?: string) => Promise<Purchase[]>;
+    list: (from?: string, to?: string) => Promise<Purchase[]>;
     get: (id: number) => Promise<PurchaseWithItems | null>;
     update: (id: number, input: PurchaseInput) => Promise<PurchaseWithItems>;
   };

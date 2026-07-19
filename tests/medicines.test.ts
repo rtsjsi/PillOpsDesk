@@ -43,15 +43,19 @@ describe('medicines', () => {
     expect(listMedicines('azi')).toHaveLength(1);
   });
 
-  it('persists pack size, schedule, and storage type', () => {
+  it('persists pack size, schedule, storage type, dosage form, and category', () => {
     const med = createMedicine(
       medicineInput({
         name: 'Insulin Glargine',
+        dosage_form: 'Injection',
+        category: 'Anti-Diabetic',
         pack_size: '3ml',
         schedule: 'H1',
         storage_type: 'refrigerated',
       })
     );
+    expect(med.dosage_form).toBe('Injection');
+    expect(med.category).toBe('Anti-Diabetic');
     expect(med.pack_size).toBe('3ml');
     expect(med.schedule).toBe('H1');
     expect(med.storage_type).toBe('refrigerated');

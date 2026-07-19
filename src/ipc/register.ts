@@ -112,7 +112,9 @@ export function registerIpc(): void {
 
   // Purchases
   handleWrite(IPC.purchasesCreate, (input: PurchaseInput) => purchases.createPurchase(input));
-  handleRead(IPC.purchasesList, (search?: string) => purchases.listPurchases(search));
+  handleRead(IPC.purchasesList, (from?: string, to?: string) =>
+    purchases.listPurchases(from, to)
+  );
   handleRead(IPC.purchasesGet, (id: number) => purchases.getPurchase(id));
   handleWrite(IPC.purchasesUpdate, (id: number, input: PurchaseInput) =>
     purchases.updatePurchase(id, input)

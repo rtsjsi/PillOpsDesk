@@ -1,0 +1,1841 @@
+{
+  "source": "https://anetapharma.com/products",
+  "manufacturer": "Aneta Pharmaceuticals Pvt. Ltd.",
+  "scraped_at": "2026-07-19",
+  "notes": [
+    "Data scraped from category listing pages on anetapharma.com.",
+    "Some product detail pages have mismatched/template content; listing compositions are preferred.",
+    "Pack sizes and strengths are as published on the site (may contain typos mirrored from source).",
+    "Prices and GST rates are not published on the product listings."
+  ],
+  "categories": [
+    "Lipid Lowering",
+    "Cardiovascular",
+    "Anti-Histamines - Cold & Cough",
+    "Anti-Diabetic",
+    "Pain & Fever Management",
+    "Hematinic + Multi Vitamins + Nutrition",
+    "Gastro Anti-Ulcerant",
+    "Anti-Infective",
+    "Anti-Fungal",
+    "Other Therapy",
+    "Neuropathy Pain Management",
+    "OTC Range",
+    "Urology"
+  ],
+  "medicines": [
+    {
+      "brand_name": "TORNETA 10",
+      "composition": "Atorvastatin 10 mg",
+      "pack": "10 TAB",
+      "category": "Lipid Lowering",
+      "url": "https://anetapharma.com/products/lipid-lowering/torneta-10/"
+    },
+    {
+      "brand_name": "TORNETA F",
+      "composition": "Atorvastatin 10 mg + Fenofibrate 160 mg",
+      "pack": "10 TAB",
+      "category": "Lipid Lowering",
+      "url": "https://anetapharma.com/products/lipid-lowering/torneta-f/"
+    },
+    {
+      "brand_name": "ROSUNETA ASP",
+      "composition": "Rosuvastatin 10 mg + Aspirin 75 mg",
+      "pack": "10 CAP",
+      "category": "Lipid Lowering",
+      "url": null
+    },
+    {
+      "brand_name": "ROSUNETA GOLD 20",
+      "composition": "Rosuvastatin 20 mg + Aspirin 75 mg + Clopidogrel 75 mg",
+      "pack": "10 CAP",
+      "category": "Lipid Lowering",
+      "url": null
+    },
+    {
+      "brand_name": "TORNETA 20",
+      "composition": "Atorvastatin 20 mg",
+      "pack": "10 TAB",
+      "category": "Lipid Lowering",
+      "url": "https://anetapharma.com/products/lipid-lowering/torneta-20/"
+    },
+    {
+      "brand_name": "ROSUNETA 10",
+      "composition": "Rosuvastatin 10 mg",
+      "pack": "10 TAB",
+      "category": "Lipid Lowering",
+      "url": "https://anetapharma.com/products/lipid-lowering/rosuneta-10/"
+    },
+    {
+      "brand_name": "ROSUNETA CL",
+      "composition": "Rosuvastatin 10 mg + Clopidogrel 75 mg",
+      "pack": "10 CAP",
+      "category": "Lipid Lowering",
+      "url": null
+    },
+    {
+      "brand_name": "TORNETA EZ",
+      "composition": "Atorvastatin 10 mg + Ezetimibe 10 mg",
+      "pack": "10 TAB",
+      "category": "Lipid Lowering",
+      "url": null
+    },
+    {
+      "brand_name": "ROSUNETA 20",
+      "composition": "Rosuvastatin 20 mg",
+      "pack": "10 TAB",
+      "category": "Lipid Lowering",
+      "url": "https://anetapharma.com/products/lipid-lowering/rosuneta-20/"
+    },
+    {
+      "brand_name": "ROSUNETA GOLD 10",
+      "composition": "Rosuvastatin 10 mg + Aspirin 75 mg + Clopidogrel 75 mg",
+      "pack": "10 TAB",
+      "category": "Lipid Lowering",
+      "url": null
+    },
+
+    {
+      "brand_name": "NETASARTAN 25",
+      "composition": "Losartan Potassium 25 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "NETASARTAN HC",
+      "composition": "Losartan Potassium 50 mg + Hydrochlorothiazide 12.5 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": "https://anetapharma.com/products/cardiovascular/netasartan-hc/"
+    },
+    {
+      "brand_name": "NETAPROLOL AM 50",
+      "composition": "Metoprolol Succinate PR 50 mg + Amlodipine Besilate 5 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "TELMANETA 40",
+      "composition": "Telmisartan 40 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "TELMANETA CD",
+      "composition": "Telmisartan 40 mg + Cilnidipine 10 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": "https://anetapharma.com/products/cardiovascular/telmaneta-cd/"
+    },
+    {
+      "brand_name": "AMLONETA AT",
+      "composition": "Amlodipine Besilate 5 mg + Atenolol 50 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": "https://anetapharma.com/products/cardiovascular/amloneta-at-tablet/"
+    },
+    {
+      "brand_name": "ATENETA 25",
+      "composition": "Atenolol 25 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "NETADECA 25",
+      "composition": "Nandrolone Decanoate 25 mg",
+      "pack": "10x1x1 ml Ampoule",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "ENOXINETA 40",
+      "composition": "Enoxaparin Sodium 40 mg",
+      "pack": "0.4 ml PFS",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "NETAPARIN 25K",
+      "composition": "Heparin Sodium 25000 IU/5 ml",
+      "pack": "5 ml Vial",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "NETASARTAN 50",
+      "composition": "Losartan Potassium 50 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "NETAPROLOL 25",
+      "composition": "Metoprolol Succinate PR 25 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "NETAPROLOL AM 25",
+      "composition": "Metoprolol Succinate PR 25 mg + Amlodipine Besilate 5 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "TELMANETA AM",
+      "composition": "Telmisartan 40 mg + Amlodipine 5 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": "https://anetapharma.com/products/cardiovascular/telmaneta-am/"
+    },
+    {
+      "brand_name": "AMLONETA",
+      "composition": "Amlodipine Besilate 5 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "NETARMIN",
+      "composition": "Mephentermine 300 mg/10 ml",
+      "pack": "10 ml Vial",
+      "category": "Cardiovascular",
+      "url": "https://anetapharma.com/products/cardiovascular/netarmin/"
+    },
+    {
+      "brand_name": "ATENETA 50",
+      "composition": "Atenolol 50 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "NETADECA 50",
+      "composition": "Nandrolone Decanoate 50 mg",
+      "pack": "10x1x1 ml Ampoule",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "ENOXINETA 60",
+      "composition": "Enoxaparin Sodium 60 mg",
+      "pack": "0.6 ml PFS",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "LABNETA",
+      "composition": "Labetalol Hydrochloride 20 mg/4 ml",
+      "pack": "4 ml Ampoule",
+      "category": "Cardiovascular",
+      "url": "https://anetapharma.com/products/cardiovascular/labneta/"
+    },
+    {
+      "brand_name": "NETASARTAN AM",
+      "composition": "Losartan Potassium 50 mg + Amlodipine Besilate 5 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": "https://anetapharma.com/products/cardiovascular/netasartan-am/"
+    },
+    {
+      "brand_name": "NETAPROLOL 50",
+      "composition": "Metoprolol Succinate PR 50 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "TELMANETA 20",
+      "composition": "Telmisartan 20 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "TELMANETA CH",
+      "composition": "Telmisartan 40 mg + Chlorthalidone 12.5 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": "https://anetapharma.com/products/cardiovascular/telmaneta-ch/"
+    },
+    {
+      "brand_name": "NORNETA",
+      "composition": "Telmisartan 40 mg + Chlorthalidone 12.5 mg",
+      "pack": "10 TAB",
+      "category": "Cardiovascular",
+      "url": "https://anetapharma.com/products/cardiovascular/norneta/",
+      "note": "Listing composition may conflict with Other Therapy NORNETA (Norethisterone); verify before import."
+    },
+    {
+      "brand_name": "NETADECA 100",
+      "composition": "Nandrolone Decanoate 100 mg",
+      "pack": "10x1x1 ml Ampoule",
+      "category": "Cardiovascular",
+      "url": null
+    },
+    {
+      "brand_name": "NETAPARIN 5K",
+      "composition": "Heparin Sodium 5000 IU/5 ml",
+      "pack": "5 ml Vial",
+      "category": "Cardiovascular",
+      "url": null
+    },
+
+    {
+      "brand_name": "L-CITAZIN",
+      "composition": "Levocetirizine Hydrochloride 5 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Histamines - Cold & Cough",
+      "url": "https://anetapharma.com/products/anti-histamines-cold-and-cough/l-citazin/"
+    },
+    {
+      "brand_name": "L-CITAZIN M",
+      "composition": "Levocetirizine Hydrochloride 5 mg + Montelukast 10 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Histamines - Cold & Cough",
+      "url": "https://anetapharma.com/products/anti-histamines-cold-and-cough/l-citazin-m/"
+    },
+    {
+      "brand_name": "KOFNETA",
+      "composition": "Terbutaline Sulphate, Guaiphenesin, Bromhexine Hydrochloride & Menthol Syrup",
+      "pack": "100ml",
+      "category": "Anti-Histamines - Cold & Cough",
+      "url": "https://anetapharma.com/products/anti-histamines-cold-and-cough/kofneta/"
+    },
+    {
+      "brand_name": "NETADEX",
+      "composition": "Dextromethorphan Hydrobromide, Chlorpheniramine Maleate & Phenylephrine Hydrochloride Syrup",
+      "pack": "100ml",
+      "category": "Anti-Histamines - Cold & Cough",
+      "url": "https://anetapharma.com/products/anti-histamines-cold-and-cough/netadex/"
+    },
+    {
+      "brand_name": "KOFNETA - A",
+      "composition": "Ambroxol Hydrochloride, Terbutaline Sulphate, Guaiphenesin & Menthol Syrup",
+      "pack": "100ml",
+      "category": "Anti-Histamines - Cold & Cough",
+      "url": "https://anetapharma.com/products/anti-histamines-cold-and-cough/kofneta-a-syrup/"
+    },
+    {
+      "brand_name": "NETACOF",
+      "composition": "Levosalbutamol Sulphate, Ambroxol Hydrochloride & Guaiphenesin Syrup",
+      "pack": "100ml",
+      "category": "Anti-Histamines - Cold & Cough",
+      "url": "https://anetapharma.com/products/anti-histamines-cold-and-cough/netacof/"
+    },
+
+    {
+      "brand_name": "DAPNETA S",
+      "composition": "Dapagliflozin 10 mg + Sitagliptin 100 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": null
+    },
+    {
+      "brand_name": "DAPNETA M FORTE",
+      "composition": "Dapagliflozin 5 mg + Metformin 1000 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": null
+    },
+    {
+      "brand_name": "GLINETA 1",
+      "composition": "Glimepiride 1 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": null
+    },
+    {
+      "brand_name": "GLINETA M1 PR FORTE",
+      "composition": "Glimepiride 1 mg + Metformin Hydrochloride PR 1000 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": "https://anetapharma.com/products/anti-diabetic/glineta-m1-pr-forte/"
+    },
+    {
+      "brand_name": "GLINETA M2",
+      "composition": "Glimepiride 2 mg + Metformin 500 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": "https://anetapharma.com/products/anti-diabetic/glineta-m2/"
+    },
+    {
+      "brand_name": "NETABOSE 0.3",
+      "composition": "Voglibose 0.3 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": "https://anetapharma.com/products/anti-diabetic/netabose-03/",
+      "note": "Composition inferred from brand family; listing showed brand only."
+    },
+    {
+      "brand_name": "VIDNETA M 500",
+      "composition": "Vildagliptin 50 mg + Metformin 500 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": "https://anetapharma.com/products/anti-diabetic/vidneta-m-500/",
+      "note": "Site listing pack text said '10 ml Vial'; treated as tablet pack typo."
+    },
+    {
+      "brand_name": "NETABOSE 0.2 M 500",
+      "composition": "Voglibose 0.2 mg + Metformin 500 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": null
+    },
+    {
+      "brand_name": "SITNETA 50",
+      "composition": "Sitagliptin 50 mg",
+      "pack": "7 TAB",
+      "category": "Anti-Diabetic",
+      "url": null
+    },
+    {
+      "brand_name": "SITNETA 50 M FORTE",
+      "composition": "Sitagliptin 50 mg + Metformin 1000 mg",
+      "pack": "15 TAB",
+      "category": "Anti-Diabetic",
+      "url": null
+    },
+    {
+      "brand_name": "DAPNETA SM 500",
+      "composition": "Dapagliflozin 10 mg + Sitagliptin 100 mg + Metformin 500 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": null
+    },
+    {
+      "brand_name": "4MINETA SR 500",
+      "composition": "Metformin 500 mg SR",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": "https://anetapharma.com/products/anti-diabetic/4mineta-sr-500-tablet/"
+    },
+    {
+      "brand_name": "GLINETA 2",
+      "composition": "Glimepiride 2 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": null
+    },
+    {
+      "brand_name": "GLINETA M2 PR",
+      "composition": "Glimepiride 2 mg + Metformin Hydrochloride PR 500 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": "https://anetapharma.com/products/anti-diabetic/glineta-m2-pr"
+    },
+    {
+      "brand_name": "NETABOSE 0.2",
+      "composition": "Voglibose 0.2 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": "https://anetapharma.com/products/anti-diabetic/netabose-02"
+    },
+    {
+      "brand_name": "NETABOSE 0.3 M 500",
+      "composition": "Voglibose 0.3 mg + Metformin 500 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": null
+    },
+    {
+      "brand_name": "SITNETA 100",
+      "composition": "Sitagliptin 100 mg",
+      "pack": "7 TAB",
+      "category": "Anti-Diabetic",
+      "url": null
+    },
+    {
+      "brand_name": "SITNETA 100 M FORTE",
+      "composition": "Sitagliptin 100 mg + Metformin 1000 mg",
+      "pack": "15 TAB",
+      "category": "Anti-Diabetic",
+      "url": null
+    },
+    {
+      "brand_name": "DAPNETA SM FORTE",
+      "composition": "Dapagliflozin 10 mg + Sitagliptin 100 mg + Metformin 1000 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": null
+    },
+    {
+      "brand_name": "4MINETA SR FORTE",
+      "composition": "Metformin 1000 mg SR",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": "https://anetapharma.com/products/anti-diabetic/4mineta-sr-forte-tablet/"
+    },
+    {
+      "brand_name": "GLINETA M1 PR",
+      "composition": "Glimepiride 1 mg + Metformin Hydrochloride PR 500 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": "https://anetapharma.com/products/anti-diabetic/glineta-m1-pr/"
+    },
+    {
+      "brand_name": "GLINETA M2 PR FORTE",
+      "composition": "Glimepiride 2 mg + Metformin Hydrochloride PR 1000 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Diabetic",
+      "url": "https://anetapharma.com/products/anti-diabetic/glineta-m2-pr-forte/"
+    },
+    {
+      "brand_name": "SITNETA 50 M 500",
+      "composition": "Sitagliptin 50 mg + Metformin 500 mg",
+      "pack": "15 TAB",
+      "category": "Anti-Diabetic",
+      "url": null
+    },
+
+    {
+      "brand_name": "ACENETA SP 10",
+      "composition": "Aceclofenac 100 mg + Paracetamol 325 mg + Serratiopeptidase 10 mg",
+      "pack": "10 TAB",
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/aceneta-sp-10-tablet/"
+    },
+    {
+      "brand_name": "NETAMOL 500",
+      "composition": "Paracetamol 500 mg",
+      "pack": "10 TAB",
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/netamol-500/"
+    },
+    {
+      "brand_name": "NETAFENAC P",
+      "composition": "Diclofenac 50 mg + Paracetamol 325 mg",
+      "pack": "10 TAB",
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/netafenac-p/"
+    },
+    {
+      "brand_name": "NETAGEL",
+      "composition": "Diclofenac Diethylamine 1.16% w/w + Linseed Oil 3% w/w + Methyl Salicylate 10% w/w + Menthol 5% w/w + Benzyl Alcohol 1% w/w",
+      "pack": "30g / 50g Lami Tube",
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/netagel/"
+    },
+    {
+      "brand_name": "NETASULID P",
+      "composition": "Nimesulide 100 mg + Paracetamol 325 mg",
+      "pack": "10 Tab",
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/netasulid-p/"
+    },
+    {
+      "brand_name": "NETACOX 90",
+      "composition": null,
+      "pack": null,
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/netacox-90/",
+      "note": "Composition not listed; likely Etoricoxib 90 mg (unconfirmed)."
+    },
+    {
+      "brand_name": "ACENETA 200 SR",
+      "composition": "Aceclofenac 200 mg SR",
+      "pack": "10 TAB",
+      "category": "Pain & Fever Management",
+      "url": null
+    },
+    {
+      "brand_name": "ACENETA SP 15",
+      "composition": "Aceclofenac 100 mg + Paracetamol 325 mg + Serratiopeptidase 15 mg",
+      "pack": "10 TAB",
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/aceneta-sp-15-tablet/"
+    },
+    {
+      "brand_name": "NETAMOL 650",
+      "composition": "Paracetamol 650 mg",
+      "pack": "15 TAB",
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/netamol-650/"
+    },
+    {
+      "brand_name": "NETAFENAC SP 10",
+      "composition": "Diclofenac Potassium 50 mg + Paracetamol 325 mg + Serratiopeptidase 10 mg",
+      "pack": "10 TAB",
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/netafenac-sp/"
+    },
+    {
+      "brand_name": "NETAFENAC",
+      "composition": "Diclofenac Sodium 75 mg/ml",
+      "pack": "1 ml Ampoule",
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/netafenac/"
+    },
+    {
+      "brand_name": "NETASULID",
+      "composition": "Nimesulide 100 mg",
+      "pack": "10 Tab",
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/netasulid/"
+    },
+    {
+      "brand_name": "NETACOX MR",
+      "composition": null,
+      "pack": null,
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/netacox-mr/",
+      "note": "Composition not listed on category page."
+    },
+    {
+      "brand_name": "ACENETA P",
+      "composition": "Aceclofenac 100 mg + Paracetamol 325 mg",
+      "pack": "10 TAB",
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/aceneta-p-tablet/"
+    },
+    {
+      "brand_name": "ACENETA MR",
+      "composition": "Aceclofenac 100 mg + Paracetamol 325 mg + Chlorzoxazone 250 mg",
+      "pack": "10 TAB",
+      "category": "Pain & Fever Management",
+      "url": null
+    },
+    {
+      "brand_name": "NETAMOL 1%",
+      "composition": "Paracetamol 1% w/v",
+      "pack": "100 ml Pl. Bottle",
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/netamol/"
+    },
+    {
+      "brand_name": "NETAFENAC MR",
+      "composition": "Diclofenac 50 mg + Paracetamol 325 mg + Chlorzoxazone 250 mg",
+      "pack": "10 TAB",
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/netafenac-mr/"
+    },
+    {
+      "brand_name": "DICYCLONETA P",
+      "composition": "Dicyclomine 20 mg + Paracetamol 500 mg",
+      "pack": "10 TAB",
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/dicycloneta-p/"
+    },
+    {
+      "brand_name": "DEFLONETA",
+      "composition": "Deflazacort 6 mg",
+      "pack": "10 TAB",
+      "category": "Pain & Fever Management",
+      "url": null,
+      "note": "Site listing pack text said '10 ml Vial'; treated as tablet pack typo."
+    },
+    {
+      "brand_name": "NETACOX 120",
+      "composition": null,
+      "pack": null,
+      "category": "Pain & Fever Management",
+      "url": "https://anetapharma.com/products/pain-and-fever-management/netacox-120/",
+      "note": "Composition not listed; likely Etoricoxib 120 mg (unconfirmed)."
+    },
+
+    {
+      "brand_name": "VINETA PLUS",
+      "composition": "Methylcobalamin 1500 mcg + Alpha Lipoic Acid 100 mg + Pyridoxine 3 mg + Folic Acid 1.5 mg",
+      "pack": "10 Cap",
+      "category": "Hematinic + Multi Vitamins + Nutrition",
+      "url": "https://anetapharma.com/products/hematinic-multi-vitamins-nutrition/vineta-plus/"
+    },
+    {
+      "brand_name": "VINETA MV",
+      "composition": "Vitamin C 150 mg (Part 1); Vitamin B12 2500 mcg, Folic Acid 0.7 mg, Niacinamide 12 mg (Part 2)",
+      "pack": "Part 1 – 1.5 ml Ampoule, Part 2 – 1 ml Ampoule",
+      "category": "Hematinic + Multi Vitamins + Nutrition",
+      "url": "https://anetapharma.com/products/hematinic-multi-vitamins-nutrition/vineta-mv/"
+    },
+    {
+      "brand_name": "NETAFOL",
+      "composition": "Folic Acid 5 mg",
+      "pack": "15 Tab",
+      "category": "Hematinic + Multi Vitamins + Nutrition",
+      "url": "https://anetapharma.com/products/hematinic-multi-vitamins-nutrition/netafol/"
+    },
+    {
+      "brand_name": "VINETA E",
+      "composition": "Vitamin E 400 mg",
+      "pack": "10 Cap",
+      "category": "Hematinic + Multi Vitamins + Nutrition",
+      "url": null
+    },
+    {
+      "brand_name": "CALNETA D3",
+      "composition": "Calcium Carbonate 500 mg + Vitamin D3 500 IU",
+      "pack": "15 TAB",
+      "category": "Hematinic + Multi Vitamins + Nutrition",
+      "url": "https://anetapharma.com/products/hematinic-multi-vitamins-nutrition/calneta-d3/"
+    },
+    {
+      "brand_name": "VINETA 12 1500 mcg",
+      "composition": "Methylcobalamin 1500 mcg",
+      "pack": "2 ml Ampoule",
+      "category": "Hematinic + Multi Vitamins + Nutrition",
+      "url": "https://anetapharma.com/products/hematinic-multi-vitamins-nutrition/vineta-121500mcg/",
+      "note": "Site listing said 2500 mg; corrected from brand name strength."
+    },
+    {
+      "brand_name": "VINETA 12 2500 mcg",
+      "composition": "Methylcobalamin 2500 mcg",
+      "pack": "2 ml Ampoule",
+      "category": "Hematinic + Multi Vitamins + Nutrition",
+      "url": "https://anetapharma.com/products/hematinic-multi-vitamins-nutrition/vineta-12-2500-mcg/",
+      "note": "Site listing said 2500 mg; treated as mcg."
+    },
+    {
+      "brand_name": "NETACAL",
+      "composition": "Calcitriol 0.25 mcg + Calcium Carbonate 500 mg (Elemental Calcium 200 mg) + Zinc 7.5 mg",
+      "pack": "10 Cap",
+      "category": "Hematinic + Multi Vitamins + Nutrition",
+      "url": null
+    },
+    {
+      "brand_name": "VINETA M",
+      "composition": "Zinc + Vitamin E + Calcium + Magnesium + Thiamine + Riboflavin + Iron + Copper + Potassium + Folic Acid + Vitamin A + Vitamin D3 + Selenium + Iodine + Sodium + Chromium",
+      "pack": "15 Tab",
+      "category": "Hematinic + Multi Vitamins + Nutrition",
+      "url": null
+    },
+    {
+      "brand_name": "NETAFER XT",
+      "composition": "Ferrous Ascorbate 100 mg + Folic Acid 1.5 mg + Zinc 22.5 mg",
+      "pack": "10 TAB",
+      "category": "Hematinic + Multi Vitamins + Nutrition",
+      "url": "https://anetapharma.com/products/hematinic-multi-vitamins-nutrition/netafer-xt/"
+    },
+    {
+      "brand_name": "NETAFER",
+      "composition": "Ferric Hydroxide sucrose complex (Elemental Iron 20 mg)",
+      "pack": "5 ml Ampoule",
+      "category": "Hematinic + Multi Vitamins + Nutrition",
+      "url": "https://anetapharma.com/products/hematinic-multi-vitamins-nutrition/netafer/"
+    },
+    {
+      "brand_name": "VINETAPLEX",
+      "composition": "Thiamine (B1) + Riboflavin (B2) + Niacin (B3) + Calcium Pantothenate (B5) + Pyridoxine (B6) + Biotin (B7) + Folic Acid (B9) + Cobalamin (B12)",
+      "pack": "10 Cap",
+      "category": "Hematinic + Multi Vitamins + Nutrition",
+      "url": null
+    },
+    {
+      "brand_name": "VINETA D3",
+      "composition": "Cholecalciferol 60000 IU",
+      "pack": "4 TAB",
+      "category": "Hematinic + Multi Vitamins + Nutrition",
+      "url": null
+    },
+
+    {
+      "brand_name": "PPNETA",
+      "composition": "Pantoprazole 40 mg",
+      "pack": "10 TAB",
+      "category": "Gastro Anti-Ulcerant",
+      "url": "https://anetapharma.com/products/gastro-anti-ulcerant/ppneta/"
+    },
+    {
+      "brand_name": "PPNETA DSR",
+      "composition": "Pantoprazole 40 mg + Domperidone 30 mg SR",
+      "pack": "10 Cap",
+      "category": "Gastro Anti-Ulcerant",
+      "url": "https://anetapharma.com/products/gastro-anti-ulcerant/ppneta-dsr/"
+    },
+    {
+      "brand_name": "OMNETA D",
+      "composition": "Omeprazole 20 mg + Domperidone 10 mg",
+      "pack": "10 Cap",
+      "category": "Gastro Anti-Ulcerant",
+      "url": "https://anetapharma.com/products/gastro-anti-ulcerant/omneta-d/"
+    },
+    {
+      "brand_name": "OMNETA",
+      "composition": "Omeprazole 20 mg",
+      "pack": "10 Cap",
+      "category": "Gastro Anti-Ulcerant",
+      "url": null
+    },
+    {
+      "brand_name": "PPNETA D 10",
+      "composition": "Pantoprazole 40 mg + Domperidone 10 mg",
+      "pack": "10 TAB",
+      "category": "Gastro Anti-Ulcerant",
+      "url": "https://anetapharma.com/products/gastro-anti-ulcerant/ppneta-d-10/"
+    },
+    {
+      "brand_name": "RPNETA DSR",
+      "composition": "Rabeprazole 20 mg + Domperidone 30 mg SR",
+      "pack": "10 Cap",
+      "category": "Gastro Anti-Ulcerant",
+      "url": "https://anetapharma.com/products/gastro-anti-ulcerant/rpneta-dsr/"
+    },
+    {
+      "brand_name": "PPNETA (Vial)",
+      "composition": "Pantoprazole 40 mg",
+      "pack": "Vial + WFI",
+      "category": "Gastro Anti-Ulcerant",
+      "url": "https://anetapharma.com/products/gastro-anti-ulcerant/ppneta-vial/"
+    },
+    {
+      "brand_name": "PPNETA LSR",
+      "composition": "Pantoprazole 40 mg + Levosulpiride 75 mg SR",
+      "pack": "10 Cap",
+      "category": "Gastro Anti-Ulcerant",
+      "url": null
+    },
+    {
+      "brand_name": "RPNETA D",
+      "composition": "Rabeprazole 20 mg + Domperidone 10 mg",
+      "pack": "10 Tab",
+      "category": "Gastro Anti-Ulcerant",
+      "url": null
+    },
+    {
+      "brand_name": "RPNETA",
+      "composition": "Rabeprazole 20 mg",
+      "pack": "20 mg Vial-WFI",
+      "category": "Gastro Anti-Ulcerant",
+      "url": "https://anetapharma.com/products/gastro-anti-ulcerant/RPNETA/"
+    },
+    {
+      "brand_name": "SORDYNE",
+      "composition": "Choline Salicylate 8.7% w/w + Lignocaine HCl 0.01% w/w + Benzalkonium Chloride 2% w/w",
+      "pack": "10g Lami Tube",
+      "category": "Gastro Anti-Ulcerant",
+      "url": "https://anetapharma.com/products/gastro-anti-ulcerant/sordyne/"
+    },
+    {
+      "brand_name": "PPNETA D 30",
+      "composition": "Pantoprazole 40 mg + Domperidone 30 mg",
+      "pack": "10 TAB",
+      "category": "Gastro Anti-Ulcerant",
+      "url": null
+    },
+    {
+      "brand_name": "RPNETA LSR",
+      "composition": "Rabeprazole 20 mg + Levosulpiride 75 mg SR",
+      "pack": "10 Cap",
+      "category": "Gastro Anti-Ulcerant",
+      "url": null
+    },
+
+    {
+      "brand_name": "AZINETA 250",
+      "composition": "Azithromycin 250 mg",
+      "pack": "6 TAB",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/azineta-250-tablet/"
+    },
+    {
+      "brand_name": "AMOXINETA 500 (Capsule)",
+      "composition": "Amoxicillin 500 mg",
+      "pack": "10 Cap",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/amoxineta-500-capsule/"
+    },
+    {
+      "brand_name": "AMOXINETA CV 1.2",
+      "composition": "Amoxicillin 1 g + Clavulanic Acid 200 mg",
+      "pack": "1.2 g Vial",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/amoxineta-cv-12/"
+    },
+    {
+      "brand_name": "CEFNETA O",
+      "composition": "Cefixime 200 mg + Ofloxacin 200 mg",
+      "pack": "10 Tab",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/cefneta-o/"
+    },
+    {
+      "brand_name": "NETADINE (Ointment)",
+      "composition": "Povidone-Iodine Ointment 5% w/w",
+      "pack": "10/20/30 g Lami Tube",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/netadine/"
+    },
+    {
+      "brand_name": "NETAXON",
+      "composition": "Ceftriaxone 1 g",
+      "pack": "1 g Vial-WFI",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/netaxon/"
+    },
+    {
+      "brand_name": "NETAPIPTAZ",
+      "composition": "Piperacillin 4 g + Tazobactam 500 mg",
+      "pack": "4.5 g Vial-WFI",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/netapiptaz/"
+    },
+    {
+      "brand_name": "FUSINETA",
+      "composition": "Fusidic Acid Cream 2% w/w",
+      "pack": "10 g Lami Tube",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/fusineta/"
+    },
+    {
+      "brand_name": "NETALINOZ 600",
+      "composition": "Linezolid 600 mg",
+      "pack": "10 Tab",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/netalinoz-600/"
+    },
+    {
+      "brand_name": "AMOXINETA 500 (Tablet)",
+      "composition": "Amoxicillin 500 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Infective",
+      "url": null
+    },
+    {
+      "brand_name": "NETADOXIM CV",
+      "composition": "Cefpodoxime 200 mg + Clavulanic Acid 125 mg",
+      "pack": "6 Tab",
+      "category": "Anti-Infective",
+      "url": null
+    },
+    {
+      "brand_name": "CIFNETA (IV)",
+      "composition": "Ciprofloxacin 0.2% w/v",
+      "pack": "100 ml Pl. Bottle",
+      "category": "Anti-Infective",
+      "url": null
+    },
+    {
+      "brand_name": "NETAROXIM 250",
+      "composition": "Cefuroxime 250 mg",
+      "pack": "10 Tab",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/netaroxim-250/",
+      "note": "Site listing said Cefpodoxime 100 mg; brand suggests Cefuroxime 250 — verify."
+    },
+    {
+      "brand_name": "NETALINOZ 300 ML",
+      "composition": "Linezolid 0.2% w/v",
+      "pack": "300 ml",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/netalinoz-300/"
+    },
+    {
+      "brand_name": "AMOXINETA 250 (Tablet)",
+      "composition": "Amoxicillin 250 mg",
+      "pack": "10 TAB",
+      "category": "Anti-Infective",
+      "url": null
+    },
+    {
+      "brand_name": "NETACLIN",
+      "composition": "Clindamycin 600 mg",
+      "pack": "4 ml Ampoule",
+      "category": "Anti-Infective",
+      "url": null
+    },
+    {
+      "brand_name": "CEFPONETA 100",
+      "composition": null,
+      "pack": null,
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/cefponeta-100/",
+      "note": "Composition not listed on category page."
+    },
+    {
+      "brand_name": "AZINETA 500",
+      "composition": "Azithromycin 500 mg",
+      "pack": "3 TAB",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/azineta-500-tablet/"
+    },
+    {
+      "brand_name": "AMOXINETA CV 375",
+      "composition": "Amoxicillin 250 mg + Clavulanic Acid 125 mg",
+      "pack": "6 TAB",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/amoxineta-cv-375-tablet/"
+    },
+    {
+      "brand_name": "OFNETA 200",
+      "composition": "Ofloxacin 200 mg",
+      "pack": "10 Tab",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/ofneta-200/"
+    },
+    {
+      "brand_name": "LEVONETA 250",
+      "composition": "Levofloxacin 250 mg",
+      "pack": "10 Tab",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/levoneta-250"
+    },
+    {
+      "brand_name": "CEFNETA 100 DT",
+      "composition": "Cefixime 100 mg DT",
+      "pack": "10 Tab",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/cefneta-100-dt/"
+    },
+    {
+      "brand_name": "MUPINETA",
+      "composition": "Mupirocin Ointment 2% w/w",
+      "pack": "10 g Lami Tube",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/mupineta/"
+    },
+    {
+      "brand_name": "NETAXON SB",
+      "composition": "Ceftriaxone 1 g + Sulbactam 500 mg",
+      "pack": "1.5 g Vial-WFI",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/netaxon-sb/"
+    },
+    {
+      "brand_name": "NETA-CPZ",
+      "composition": "Cefoperazone 1 g + Sulbactam 500 mg",
+      "pack": "1.5 g Vial-WFI",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/neta-cpz/"
+    },
+    {
+      "brand_name": "NETAMIKA",
+      "composition": "Amikacin Sulphate 500 mg",
+      "pack": "2 ml Vial",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/netamika/"
+    },
+    {
+      "brand_name": "CIFNETA 250",
+      "composition": "Ciprofloxacin 250 mg",
+      "pack": "10 Tab",
+      "category": "Anti-Infective",
+      "url": null
+    },
+    {
+      "brand_name": "NETADOXIM 100",
+      "composition": "Cefpodoxime 100 mg",
+      "pack": "10 Tab",
+      "category": "Anti-Infective",
+      "url": null
+    },
+    {
+      "brand_name": "NETAGYL",
+      "composition": "Metronidazole 0.5% w/v",
+      "pack": "100 ml Pl. Bottle",
+      "category": "Anti-Infective",
+      "url": null
+    },
+    {
+      "brand_name": "NETAROXIM 500",
+      "composition": "Cefuroxime 500 mg",
+      "pack": "10 Tab",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/netaroxim-500/",
+      "note": "Site listing said Cefpodoxime 100 mg; brand suggests Cefuroxime 500 — verify."
+    },
+    {
+      "brand_name": "NETADOXY",
+      "composition": "Doxycycline 100 mg",
+      "pack": "100 mg Vial-WFI",
+      "category": "Anti-Infective",
+      "url": null
+    },
+    {
+      "brand_name": "OFNETA",
+      "composition": "Ofloxacin 0.2% w/v",
+      "pack": "100 ml Pl. Bottle",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/ofneta/"
+    },
+    {
+      "brand_name": "NETADINE (Jar)",
+      "composition": "Povidone-Iodine Ointment 5% w/w",
+      "pack": "250 g Jar",
+      "category": "Anti-Infective",
+      "url": null
+    },
+    {
+      "brand_name": "CEFPONETA 200",
+      "composition": null,
+      "pack": null,
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/cefponeta-200/",
+      "note": "Composition not listed on category page."
+    },
+    {
+      "brand_name": "AMOXINETA 250 (Capsule)",
+      "composition": "Amoxicillin 250 mg",
+      "pack": "10 Cap",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/amoxineta-250-capsule/"
+    },
+    {
+      "brand_name": "AMOXINETA CV 625",
+      "composition": "Amoxicillin 500 mg + Clavulanic Acid 125 mg",
+      "pack": "6 Tab",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/amoxineta-cv-625-tablet/"
+    },
+    {
+      "brand_name": "OFNETA O",
+      "composition": "Ofloxacin 200 mg + Ornidazole 500 mg",
+      "pack": "10 Tab",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/ofneta-o"
+    },
+    {
+      "brand_name": "LEVONETA 500",
+      "composition": "Levofloxacin 500 mg",
+      "pack": "10 Tab",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/levoneta-500/"
+    },
+    {
+      "brand_name": "CEFNETA 200 DT",
+      "composition": "Cefixime 200 mg DT",
+      "pack": "10 Tab",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/cefneta-200-dt/"
+    },
+    {
+      "brand_name": "GENTANETA",
+      "composition": "Gentamicin 40 mg/ml",
+      "pack": "10/20/30 ml Vial",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/gentaneta/"
+    },
+    {
+      "brand_name": "NETAPENEM",
+      "composition": "Meropenem 1 g",
+      "pack": "1 g Vial-WFI",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/netapenem/"
+    },
+    {
+      "brand_name": "NETALINOZ",
+      "composition": "Linezolid 0.2% w/v",
+      "pack": "300 ml Pl. Bottle",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/netalinoz/"
+    },
+    {
+      "brand_name": "LEVONETA (IV)",
+      "composition": "Levofloxacin 0.5% w/v",
+      "pack": "100 ml Pl. Bottle",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/levoneta/"
+    },
+    {
+      "brand_name": "CIFNETA 500",
+      "composition": "Ciprofloxacin 500 mg",
+      "pack": "10 Tab",
+      "category": "Anti-Infective",
+      "url": null
+    },
+    {
+      "brand_name": "NETADOXIM 200",
+      "composition": "Cefpodoxime 200 mg",
+      "pack": "10 Tab",
+      "category": "Anti-Infective",
+      "url": null
+    },
+    {
+      "brand_name": "AMOXINETA 250 DT",
+      "composition": "Amoxicillin 250 mg DT",
+      "pack": "10 TAB",
+      "category": "Anti-Infective",
+      "url": null
+    },
+    {
+      "brand_name": "NETALINOZ 100 ML",
+      "composition": "Linezolid 0.2% w/v",
+      "pack": "100 ml",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/netalinoz-100/"
+    },
+    {
+      "brand_name": "NETAROXIM 100",
+      "composition": "Cefuroxime 100 mg",
+      "pack": "10 Tab",
+      "category": "Anti-Infective",
+      "url": null,
+      "note": "Site listing said Cefpodoxime 100 mg; brand suggests Cefuroxime — verify."
+    },
+    {
+      "brand_name": "NETAXON TZ",
+      "composition": "Ceftriaxone 1 g + Tazobactam 125 mg",
+      "pack": "1.5 g Vial-WFI",
+      "category": "Anti-Infective",
+      "url": null
+    },
+    {
+      "brand_name": "NETAPENEM SB",
+      "composition": "Meropenem 1 g + Sulbactam",
+      "pack": "1 g Vial-WFI",
+      "category": "Anti-Infective",
+      "url": "https://anetapharma.com/products/anti-infective/netapenem-sb/",
+      "note": "Site listing omitted sulbactam strength; brand implies SB combo — verify."
+    },
+    {
+      "brand_name": "TICONETA",
+      "composition": "Teicoplanin 400 mg",
+      "pack": "400 mg Vial-WFI",
+      "category": "Anti-Infective",
+      "url": null
+    },
+
+    {
+      "brand_name": "LUNETA",
+      "composition": "Luliconazole 1% w/w",
+      "pack": "20/30/50 g Cream",
+      "category": "Anti-Fungal",
+      "url": "https://anetapharma.com/products/anti-fungal/luneta/"
+    },
+    {
+      "brand_name": "TORBINETA",
+      "composition": "Terbinafine HCl 1% w/w",
+      "pack": "15/20 g Cream",
+      "category": "Anti-Fungal",
+      "url": "https://anetapharma.com/products/anti-fungal/torbineta/"
+    },
+    {
+      "brand_name": "BECLONETA",
+      "composition": "Clotrimazole 1% w/w + Beclomethasone Dipropionate 0.025% w/w",
+      "pack": "30 g Cream",
+      "category": "Anti-Fungal",
+      "url": "https://anetapharma.com/products/anti-fungal/belconeta/"
+    },
+    {
+      "brand_name": "NETAZOL 400",
+      "composition": "Fluconazole 400 mg",
+      "pack": "1 TAB",
+      "category": "Anti-Fungal",
+      "url": null
+    },
+    {
+      "brand_name": "ICNETA PLUS",
+      "composition": "Itraconazole 1% w/w + Ofloxacin 0.75% w/w + Ornidazole 2% w/w + Clobetasol Propionate 0.05% w/w",
+      "pack": "15/20 g Cream",
+      "category": "Anti-Fungal",
+      "url": null
+    },
+    {
+      "brand_name": "NETAZOL 150",
+      "composition": "Fluconazole 150 mg",
+      "pack": "1 TAB",
+      "category": "Anti-Fungal",
+      "url": "https://anetapharma.com/products/anti-fungal/netazol-150/"
+    },
+    {
+      "brand_name": "ICNETA 100",
+      "composition": "Itraconazole 100 mg",
+      "pack": "10 Cap",
+      "category": "Anti-Fungal",
+      "url": "https://anetapharma.com/products/anti-fungal/icneta-100/"
+    },
+    {
+      "brand_name": "CLOBENETA MN",
+      "composition": "Clobetasol Propionate 0.05% w/w + Miconazole Nitrate 2% w/w + Neomycin 0.5% w/w",
+      "pack": "10/20 g Cream",
+      "category": "Anti-Fungal",
+      "url": "https://anetapharma.com/products/anti-fungal/clobeneta-mn/"
+    },
+    {
+      "brand_name": "KCNETA",
+      "composition": "Ketoconazole Cream 2% w/w",
+      "pack": "15/20 g Cream",
+      "category": "Anti-Fungal",
+      "url": null
+    },
+    {
+      "brand_name": "NETAZOL 200",
+      "composition": "Fluconazole 200 mg",
+      "pack": "1 TAB",
+      "category": "Anti-Fungal",
+      "url": "https://anetapharma.com/products/anti-fungal/netazol-200/"
+    },
+    {
+      "brand_name": "ICNETA 200",
+      "composition": "Itraconazole 200 mg",
+      "pack": "10 Cap",
+      "category": "Anti-Fungal",
+      "url": "https://anetapharma.com/products/anti-fungal/icneta-200/"
+    },
+    {
+      "brand_name": "BECLONETA KN",
+      "composition": "Ketoconazole 2% w/w + Beclomethasone Dipropionate 0.025% w/w + Neomycin Sulphate 0.5% w/w",
+      "pack": "15/20 g Cream",
+      "category": "Anti-Fungal",
+      "url": null
+    },
+    {
+      "brand_name": "NETAZOL 100",
+      "composition": "Fluconazole 100 mg",
+      "pack": "5 Tab",
+      "category": "Anti-Fungal",
+      "url": null
+    },
+    {
+      "brand_name": "NETAZOL IV 100ml",
+      "composition": "Fluconazole 200 mg",
+      "pack": "20x100 ml",
+      "category": "Anti-Fungal",
+      "url": "https://anetapharma.com/products/anti-fungal/netazol-100ml/"
+    },
+
+    {
+      "brand_name": "NETASUNATE 60",
+      "composition": "Artesunate 60 mg",
+      "pack": "1 Vial",
+      "category": "Other Therapy",
+      "url": "https://anetapharma.com/products/other-therapy/netasunate-60/"
+    },
+    {
+      "brand_name": "DEXONETA",
+      "composition": "Dexamethasone 4 mg/ml",
+      "pack": "2/20/30 ml Vial",
+      "category": "Other Therapy",
+      "url": "https://anetapharma.com/products/other-therapy/dexoneta/"
+    },
+    {
+      "brand_name": "ANETALON",
+      "composition": "Triamcinolone Acetonide 40 mg/ml",
+      "pack": "1 ml Vial",
+      "category": "Other Therapy",
+      "url": "https://anetapharma.com/products/other-therapy/anetalon/"
+    },
+    {
+      "brand_name": "HEPNETA",
+      "composition": "Cyproheptadine 2 mg",
+      "pack": "10 TAB",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "LIGNETA OINTMENT",
+      "composition": "Lignocaine HCl 5% w/w",
+      "pack": "30 g Tube",
+      "category": "Other Therapy",
+      "url": "https://anetapharma.com/products/other-therapy/ligneta-ointment/"
+    },
+    {
+      "brand_name": "LOPNETA 4",
+      "composition": "Loperamide 4 mg",
+      "pack": "10 TAB",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "PREDNETA 4",
+      "composition": "Methylprednisolone 4 mg",
+      "pack": "10 TAB",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "NETAGEST 200 (Cap)",
+      "composition": "Natural Micronized Progesterone 200 mg",
+      "pack": "10 Cap",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "NETAGEST 300 (Ampoule)",
+      "composition": "Hydroxyprogesterone 300 mg",
+      "pack": "1 ml Ampoule",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "ZENETA",
+      "composition": "Albendazole 400 mg",
+      "pack": "1 Tab",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "NETACLOT",
+      "composition": "Tranexamic acid 500 mg/5 ml",
+      "pack": "5 ml Ampoule",
+      "category": "Other Therapy",
+      "url": "https://anetapharma.com/products/other-therapy/netaclot/"
+    },
+    {
+      "brand_name": "NETACORT",
+      "composition": "Hydrocortisone Sodium Succinate 100 mg",
+      "pack": "100 mg Vial",
+      "category": "Other Therapy",
+      "url": "https://anetapharma.com/products/other-therapy/netacort/"
+    },
+    {
+      "brand_name": "NETASET 2",
+      "composition": "Ondansetron 2 mg",
+      "pack": "2 ml Ampoule",
+      "category": "Other Therapy",
+      "url": "https://anetapharma.com/products/other-therapy/netaset-2/"
+    },
+    {
+      "brand_name": "SIDAFIL 50",
+      "composition": "Sildenafil Citrate 50 mg",
+      "pack": "4 TAB",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "NETACETAM 400",
+      "composition": "Piracetam 400 mg",
+      "pack": "10 TAB",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "PREDNETA 40",
+      "composition": "Methylprednisolone Sodium Succinate 40 mg",
+      "pack": "40 mg Vial-WFI",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "NETAGEST 300 (Cap)",
+      "composition": "Natural Micronized Progesterone 300 mg",
+      "pack": "10 Cap",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "NETASYLAT 250",
+      "composition": "Etamsylate 250 mg",
+      "pack": "10 Tab",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "DEXONETA AMPOULES",
+      "composition": "Dexamethasone Phosphate 4 mg",
+      "pack": "2 ml",
+      "category": "Other Therapy",
+      "url": "https://anetapharma.com/products/other-therapy/dexoneta-ampoules/"
+    },
+    {
+      "brand_name": "NETASYLAT 500",
+      "composition": "Etamsylate 500 mg",
+      "pack": "10 Tab",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "SIDAFIL 100",
+      "composition": "Sildenafil Citrate 100 mg",
+      "pack": "4 TAB",
+      "category": "Other Therapy",
+      "url": "https://anetapharma.com/products/other-therapy/sidafil-100/"
+    },
+    {
+      "brand_name": "LIGNETA JELLY",
+      "composition": "Lignocaine HCl 2% w/w",
+      "pack": "30 g Gel Lami Tube",
+      "category": "Other Therapy",
+      "url": "https://anetapharma.com/products/other-therapy/ligneta/"
+    },
+    {
+      "brand_name": "ARTEENETA",
+      "composition": "Alpha Beta Arteether 150 mg",
+      "pack": "2 ml Ampoule",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "NORNETA (Norethisterone)",
+      "composition": "Norethisterone 5 mg",
+      "pack": "10 TAB",
+      "category": "Other Therapy",
+      "url": null,
+      "note": "Distinct from Cardiovascular NORNETA brand listing."
+    },
+    {
+      "brand_name": "PREDNETA 125",
+      "composition": "Methylprednisolone Sodium Succinate 125 mg",
+      "pack": "125 mg Vial",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "NETAGEST 200 (Ampoule)",
+      "composition": "Hydroxyprogesterone 200 mg",
+      "pack": "1 ml Ampoule",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "NETACLOT 500",
+      "composition": "Tranexamic Acid 500 mg",
+      "pack": "10 Tab",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "NETASET 30",
+      "composition": "Ondansetron 2 mg/ml",
+      "pack": "30 ml Vial",
+      "category": "Other Therapy",
+      "url": null
+    },
+    {
+      "brand_name": "DEXONETA VIAL",
+      "composition": "Dexamethasone Phosphate 4 mg",
+      "pack": "2 ml",
+      "category": "Other Therapy",
+      "url": "https://anetapharma.com/products/other-therapy/dexoneta-vial/"
+    },
+
+    {
+      "brand_name": "PREGANETA",
+      "composition": "Pregabalin 75 mg",
+      "pack": "10 Cap",
+      "category": "Neuropathy Pain Management",
+      "url": "https://anetapharma.com/products/neuropathy-pain-management/preganeta/"
+    },
+    {
+      "brand_name": "PREGANETA N",
+      "composition": "Pregabalin 75 mg + Nortriptyline 10 mg",
+      "pack": "10 Cap",
+      "category": "Neuropathy Pain Management",
+      "url": null
+    },
+    {
+      "brand_name": "NETACOLIN PT 400",
+      "composition": "Citicoline 500 mg + Piracetam 400 mg",
+      "pack": "10 Tab",
+      "category": "Neuropathy Pain Management",
+      "url": null
+    },
+    {
+      "brand_name": "PREGANETA M",
+      "composition": "Pregabalin 75 mg + Methylcobalamin 750 mcg",
+      "pack": "10 Cap",
+      "category": "Neuropathy Pain Management",
+      "url": "https://anetapharma.com/products/neuropathy-pain-management/preganeta-m/",
+      "note": "Site listing said Methylcobalamin 75 mcg; common strength is 750 mcg — verify."
+    },
+    {
+      "brand_name": "LEVITACETAM",
+      "composition": "Levetiracetam 500 mg",
+      "pack": "10 Tab",
+      "category": "Neuropathy Pain Management",
+      "url": null
+    },
+    {
+      "brand_name": "NETACOLIN PT 800",
+      "composition": "Citicoline 500 mg + Piracetam 800 mg",
+      "pack": "10 Tab",
+      "category": "Neuropathy Pain Management",
+      "url": null
+    },
+    {
+      "brand_name": "PREGANETA MN",
+      "composition": "Pregabalin 75 mg + Methylcobalamin 1500 mcg + Nortriptyline 10 mg",
+      "pack": "10 Cap",
+      "category": "Neuropathy Pain Management",
+      "url": null
+    },
+    {
+      "brand_name": "NETACOLIN",
+      "composition": "Citicoline 500 mg",
+      "pack": "10 Tab",
+      "category": "Neuropathy Pain Management",
+      "url": null
+    },
+    {
+      "brand_name": "NETAPENTIN NR",
+      "composition": "Gabapentin 400 mg + Nortriptyline 10 mg",
+      "pack": "10 Tab",
+      "category": "Neuropathy Pain Management",
+      "url": null
+    },
+
+    {
+      "brand_name": "NETA BALM",
+      "composition": "Amrutanjal Balm",
+      "pack": null,
+      "category": "OTC Range",
+      "url": "https://anetapharma.com/products/otc-range/neta-bam/"
+    },
+    {
+      "brand_name": "NETAGEL (OTC listing)",
+      "composition": "Diclofenac Diethylamine 1.16% w/w + Linseed Oil 3% w/w + Methyl Salicylate 10% w/w + Menthol 5% w/w + Benzyl Alcohol 1% w/w",
+      "pack": "30g / 50g Lami Tube",
+      "category": "OTC Range",
+      "url": "https://anetapharma.com/products/otc-range/netagel/"
+    },
+    {
+      "brand_name": "PREGANETA (HCG Kit)",
+      "composition": "HCG Pregnancy Test Kit",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "NETAKRAK",
+      "composition": "Foot Care Cream",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "GERMINETA",
+      "composition": "Chloroxylenol, Terpineol & Alcohol (Denatured) Antiseptic Liquid",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "NETASPORYN",
+      "composition": "Neomycin Sulphate, Polymyxin B Sulfate & Bacitracin Zinc Powder",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "Netaskab",
+      "composition": "Gamma Benzene Hexachloride & Cetrimide Lotion",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "MINOXINETA F",
+      "composition": "Minoxidil & Finasteride Scalp Topical Solution",
+      "pack": "Spray & Dropper",
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "NETA OIL",
+      "composition": "Ayurvedic Pain Relief Oil",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "NETA SPRAY",
+      "composition": "Pain Relief Spray",
+      "pack": null,
+      "category": "OTC Range",
+      "url": "https://anetapharma.com/products/otc-range/netaspray/"
+    },
+    {
+      "brand_name": "NETADINE (Gargle)",
+      "composition": "Povidone Iodine Gargle",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "NETASHINE",
+      "composition": "Skin Shine Cream",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "KOOLKLIN",
+      "composition": "Chlorhexidine Gluconate & Cetrimide Solution",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "NETADINE (Powder)",
+      "composition": "Povidone Iodine Powder 5%",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "NETADINE (Solution)",
+      "composition": "Povidone Iodine Solution 4%",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "NETA WASH",
+      "composition": "Intimate Wash",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "MOONEX Chocolate",
+      "composition": "Chocolate Condom",
+      "pack": null,
+      "category": "OTC Range",
+      "url": "https://anetapharma.com/products/otc-range/moonex-chocolate/"
+    },
+    {
+      "brand_name": "MOONEX Strawberry",
+      "composition": "Strawberry Condom",
+      "pack": null,
+      "category": "OTC Range",
+      "url": "https://anetapharma.com/products/otc-range/moonex-strawberry/"
+    },
+    {
+      "brand_name": "NETAFRESH",
+      "composition": "Chlorhexidine Gluconate Gargle",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "PILENETA",
+      "composition": "Calcium Dobesilate, Lignocaine Hydrochloride, Hydrocortisone Acetate & Zinc Oxide Cream",
+      "pack": "With Applicator",
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "NETRIWIN",
+      "composition": "Xylometazoline Hydrochloride Nasal Solution",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "KANDINETA",
+      "composition": "Clotrimazole 1% Dusting Powder",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "MINOXINETA",
+      "composition": "Minoxidil Scalp Topical Solution",
+      "pack": "Spray & Dropper",
+      "category": "OTC Range",
+      "url": null
+    },
+    {
+      "brand_name": "NETA MOS",
+      "composition": "Mosquito Repellent Cream",
+      "pack": null,
+      "category": "OTC Range",
+      "url": null
+    },
+
+    {
+      "brand_name": "SILAQUA",
+      "composition": null,
+      "pack": null,
+      "category": "Urology",
+      "url": null,
+      "note": "Only marketing tagline on site; likely Silodosin."
+    },
+    {
+      "brand_name": "NEUTAM D",
+      "composition": "Tamsulosin 0.4 mg + Dutasteride 0.5 mg",
+      "pack": "Tablets",
+      "category": "Urology",
+      "url": null
+    },
+    {
+      "brand_name": "CLEARSTON B6",
+      "composition": null,
+      "pack": null,
+      "category": "Urology",
+      "url": null,
+      "note": "Only marketing tagline: reduces recurrence of urinary stones."
+    },
+    {
+      "brand_name": "UTIKILL",
+      "composition": null,
+      "pack": null,
+      "category": "Urology",
+      "url": null
+    },
+    {
+      "brand_name": "TADACIRCA 5",
+      "composition": null,
+      "pack": null,
+      "category": "Urology",
+      "url": null,
+      "note": "Likely Tadalafil 5 mg (unconfirmed from listing)."
+    },
+    {
+      "brand_name": "SILAQUA D",
+      "composition": null,
+      "pack": null,
+      "category": "Urology",
+      "url": null,
+      "note": "Marketing: combined force to manage BPH."
+    },
+    {
+      "brand_name": "CPNETA",
+      "composition": "Curcumin 500 mg + Piperine 10 mg",
+      "pack": "Tablets",
+      "category": "Urology",
+      "url": null
+    },
+    {
+      "brand_name": "OABCARE",
+      "composition": null,
+      "pack": null,
+      "category": "Urology",
+      "url": null
+    },
+    {
+      "brand_name": "NEUTAM DF",
+      "composition": null,
+      "pack": null,
+      "category": "Urology",
+      "url": null,
+      "note": "Marketing: expels urinary stones."
+    },
+    {
+      "brand_name": "ERADUTI",
+      "composition": "Cefuroxime Axetil 500 mg + Clavulanic Acid 125 mg",
+      "pack": null,
+      "category": "Urology",
+      "url": null
+    },
+    {
+      "brand_name": "NEUTAM T",
+      "composition": "Tamsulosin 0.4 mg + Tolterodine 4 mg",
+      "pack": null,
+      "category": "Urology",
+      "url": null
+    },
+    {
+      "brand_name": "SILAQUA SF",
+      "composition": "Silodosin 8 mg + Solifenacin 5 mg",
+      "pack": "Tablets",
+      "category": "Urology",
+      "url": null
+    },
+    {
+      "brand_name": "BEGCIN 50",
+      "composition": "Mirabegron 25 mg + Solifenacin 5 mg / Mirabegron 50 mg",
+      "pack": null,
+      "category": "Urology",
+      "url": null,
+      "note": "Listing shows two strength variants in one product card."
+    },
+    {
+      "brand_name": "PREVSTON",
+      "composition": null,
+      "pack": null,
+      "category": "Urology",
+      "url": null
+    },
+    {
+      "brand_name": "ERADCATE",
+      "composition": null,
+      "pack": null,
+      "category": "Urology",
+      "url": null
+    }
+  ]
+}

@@ -28,9 +28,9 @@ export function createMedicine(input: MedicineInput): Medicine {
   const info = db
     .prepare(
       `INSERT INTO medicines
-        (name, generic_name, manufacturer, hsn_code, gst_rate, category,
+        (name, generic_name, manufacturer, hsn_code, gst_rate, dosage_form, category,
          pack_size, schedule, storage_type, rack, reorder_level, is_active)
-       VALUES (@name, @generic_name, @manufacturer, @hsn_code, @gst_rate, @category,
+       VALUES (@name, @generic_name, @manufacturer, @hsn_code, @gst_rate, @dosage_form, @category,
          @pack_size, @schedule, @storage_type, @rack, @reorder_level, @is_active)`
     )
     .run({
@@ -39,6 +39,7 @@ export function createMedicine(input: MedicineInput): Medicine {
       manufacturer: input.manufacturer ?? null,
       hsn_code: input.hsn_code ?? null,
       gst_rate: input.gst_rate,
+      dosage_form: input.dosage_form ?? null,
       category: input.category ?? null,
       pack_size: input.pack_size ?? null,
       schedule: input.schedule ?? null,
@@ -55,9 +56,9 @@ export function updateMedicine(id: number, input: MedicineInput): Medicine {
   db.prepare(
     `UPDATE medicines SET
        name = @name, generic_name = @generic_name, manufacturer = @manufacturer,
-       hsn_code = @hsn_code, gst_rate = @gst_rate, category = @category,
-       pack_size = @pack_size, schedule = @schedule, storage_type = @storage_type,
-       rack = @rack, reorder_level = @reorder_level
+       hsn_code = @hsn_code, gst_rate = @gst_rate, dosage_form = @dosage_form,
+       category = @category, pack_size = @pack_size, schedule = @schedule,
+       storage_type = @storage_type, rack = @rack, reorder_level = @reorder_level
      WHERE id = @id`
   ).run({
     id,
@@ -66,6 +67,7 @@ export function updateMedicine(id: number, input: MedicineInput): Medicine {
     manufacturer: input.manufacturer ?? null,
     hsn_code: input.hsn_code ?? null,
     gst_rate: input.gst_rate,
+    dosage_form: input.dosage_form ?? null,
     category: input.category ?? null,
     pack_size: input.pack_size ?? null,
     schedule: input.schedule ?? null,

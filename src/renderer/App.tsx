@@ -6,14 +6,13 @@ import { Layout } from './components/Layout';
 import { LoginPage } from './pages/LoginPage';
 import { ActivatePage } from './pages/ActivatePage';
 import { Dashboard } from './pages/Dashboard';
-import { Billing } from './pages/Billing';
 import { Inventory } from './pages/Inventory';
 import { Purchases } from './pages/Purchases';
 import { Customers } from './pages/Customers';
 import { Suppliers } from './pages/Suppliers';
 import { Reports } from './pages/Reports';
 import { SettingsPage } from './pages/SettingsPage';
-import { SalesHistory } from './pages/SalesHistory';
+import { Sales } from './pages/Sales';
 
 const SESSION_USER_KEY = 'user';
 const REMEMBERED_USER_KEY = 'rememberedUser';
@@ -166,8 +165,7 @@ export default function App() {
               }
             >
               <Route index element={<Dashboard />} />
-              <Route path="billing" element={<Billing />} />
-              <Route path="sales" element={<SalesHistory />} />
+              <Route path="sales" element={<Sales />} />
               <Route path="inventory" element={<Inventory />} />
               <Route path="purchases" element={<Purchases />} />
               <Route path="customers" element={<Customers />} />

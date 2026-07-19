@@ -275,7 +275,7 @@ export function getLicenseStatus(): LicenseStatus {
     touchLastSeen(today);
     return buildStatus(
       'readonly',
-      'Subscription expired. You can view records and reports, but billing and stock changes are disabled until you renew.',
+      'Subscription expired. You can view records and reports, but sales and stock changes are disabled until you renew.',
       {
         pharmacyId: payload.pharmacy_id,
         pharmacyName: payload.pharmacy_name,
@@ -355,7 +355,7 @@ export function assertWriteAllowed(): void {
   }
   if (status.state === 'readonly') {
     throw new Error(
-      'Subscription expired. Renew your license in Settings to resume billing and stock updates.'
+      'Subscription expired. Renew your license in Settings to resume sales and stock updates.'
     );
   }
 }

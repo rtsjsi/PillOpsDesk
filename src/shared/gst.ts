@@ -1,4 +1,4 @@
-// GST helpers shared by billing UI and the sales service.
+// GST helpers shared by the sales UI and the sales service.
 // Sale prices are MRP-inclusive; tax is split evenly into CGST + SGST.
 
 export interface GstLineInput {
@@ -44,7 +44,7 @@ export function lineGstFromGross(gross: number, gstRate: number): GstLineAmounts
 /**
  * Applies an invoice-level discount percentage to taxable value, then derives
  * CGST/SGST from the discounted taxable amount (MRP-inclusive prices).
- * Matches typical POS billing and CGST Act s.15(3)(a) for at-supply discounts.
+ * Matches typical POS sales and CGST Act s.15(3)(a) for at-supply discounts.
  */
 export function applyInvoiceDiscountPercent(
   lines: GstLineInput[],

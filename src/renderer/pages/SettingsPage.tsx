@@ -145,7 +145,7 @@ function GoogleDriveSection({ readOnly }: { readOnly: boolean }) {
       <h2 className="mb-2 text-lg font-semibold text-slate-700">Google Drive Backup</h2>
       <p className="mb-4 text-sm text-slate-500">
         Back up your database to your own Google Drive account. Scheduled backups run silently in
-        the background. Billing and inventory stay offline.
+        the background. Sales and inventory stay offline.
       </p>
 
       {!status.configured && (

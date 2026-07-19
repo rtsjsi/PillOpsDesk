@@ -42,7 +42,7 @@ const api: PharmacyApi = {
   },
   purchases: {
     create: (input) => invoke(IPC.purchasesCreate, input),
-    list: (search) => invoke(IPC.purchasesList, search),
+    list: (from, to) => invoke(IPC.purchasesList, from, to),
     get: (id) => invoke(IPC.purchasesGet, id),
     update: (id, input) => invoke(IPC.purchasesUpdate, id, input),
   },

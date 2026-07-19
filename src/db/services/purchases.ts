@@ -204,18 +204,16 @@ export function updatePurchase(id: number, input: PurchaseInput): PurchaseWithIt
   return getPurchase(id)!;
 }
 
-export function listPurchases(search?: string): Purchase[] {
+export function listPurchases(from?: string, to?: string): Purchase[] {
   const db = getDb();
-  if (search && search.trim()) {
-    const q = `%${search.trim()}%`;
+  if (from && to) {
     return db
       .prepare(
-        `SELECT p.* FROM purchases p
-         LEFT JOIN suppliers s ON s.id = p.supplier_id
-         WHERE p.invoice_no LIKE ? OR s.name LIKE ?
-         ORDER BY p.purchase_date DESC, p.id DESC LIMIT 200`
+        `SELECT * FROM purchases
+         WHERE date(purchase_date) BETWEEN ? AND ?
+         ORDER BY purchase_date DESC, id DESC LIMIT 500`
       )
-      .all(q, q) as Purchase[];
+      .all(from, to) as Purchase[];
   }
   return db
     .prepare('SELECT * FROM purchases ORDER BY purchase_date DESC, id DESC LIMIT 200')

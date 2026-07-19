@@ -36,6 +36,7 @@ const emptyMedicine: MedicineInput = {
   manufacturer: '',
   hsn_code: '',
   gst_rate: 12,
+  dosage_form: '',
   category: '',
   pack_size: '',
   schedule: null,
@@ -90,6 +91,7 @@ export function Inventory() {
       manufacturer: m.manufacturer ?? '',
       hsn_code: m.hsn_code ?? '',
       gst_rate: m.gst_rate,
+      dosage_form: m.dosage_form ?? '',
       category: m.category ?? '',
       pack_size: m.pack_size ?? '',
       schedule: m.schedule,
@@ -300,9 +302,19 @@ export function Inventory() {
             </select>
           </div>
           <div>
+            <label className="label">Dosage Form</label>
+            <input
+              className="input"
+              placeholder="e.g. Tablet, Capsule, Syrup"
+              value={form.dosage_form ?? ''}
+              onChange={(e) => setForm({ ...form, dosage_form: e.target.value })}
+            />
+          </div>
+          <div>
             <label className="label">Category</label>
             <input
               className="input"
+              placeholder="e.g. Anti-Diabetic, Pain & Fever"
               value={form.category ?? ''}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
             />
@@ -424,6 +436,10 @@ export function Inventory() {
             <div>
               <dt className="text-slate-500">GST Rate</dt>
               <dd className="font-medium text-slate-800">{viewing.gst_rate}%</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Dosage Form</dt>
+              <dd className="font-medium text-slate-800">{viewing.dosage_form || '-'}</dd>
             </div>
             <div>
               <dt className="text-slate-500">Category</dt>

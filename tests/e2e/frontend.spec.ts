@@ -6,19 +6,19 @@ test.describe('Dashboard', () => {
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
     await expect(page.getByText("Today's Sales")).toBeVisible();
     await expect(page.getByText("Today's Invoices")).toBeVisible();
-    await expect(page.getByRole('button', { name: '+ New Bill' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '+ New Sale' })).toBeVisible();
   });
 
-  test('navigates to billing from New Bill', async ({ authedPage: page }) => {
-    await page.getByRole('button', { name: '+ New Bill' }).click();
-    await expect(page.getByRole('heading', { name: 'Billing' })).toBeVisible();
+  test('opens new sale dialog from New Sale', async ({ authedPage: page }) => {
+    await page.getByRole('button', { name: '+ New Sale' }).click();
+    await expect(page.getByRole('heading', { name: 'Sales' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'New Sale' })).toBeVisible();
   });
 });
 
 test.describe('Navigation', () => {
   const pages = [
-    { link: 'Billing', heading: 'Billing' },
-    { link: 'Sales History', heading: 'Sales History' },
+    { link: 'Sales', heading: 'Sales' },
     { link: 'Inventory', heading: 'Inventory' },
     { link: 'Purchases', heading: 'Purchases' },
     { link: 'Customers', heading: 'Customers' },
@@ -48,9 +48,13 @@ test.describe('Navigation', () => {
   });
 });
 
-test.describe('Billing UI', () => {
-  test('shows search, cart, totals, and checkout buttons', async ({ authedPage: page }) => {
-    await navTo(page, 'Billing');
+test.describe('Sales UI', () => {
+  test('shows new sale dialog with search, cart, totals, and checkout', async ({
+    authedPage: page,
+  }) => {
+    await navTo(page, 'Sales');
+    await page.getByRole('button', { name: '+ New Sale' }).click();
+    await expect(page.getByRole('heading', { name: 'New Sale' })).toBeVisible();
     await expect(
       page.getByPlaceholder('Scan barcode or search medicine / batch...')
     ).toBeVisible();
@@ -62,13 +66,14 @@ test.describe('Billing UI', () => {
     await expect(page.getByRole('button', { name: 'Save & Print' })).toBeVisible();
   });
 
-  test('search dropdown appears when typing', async ({ authedPage: page }) => {
-    await navTo(page, 'Billing');
+  test('search dropdown appears when typing in new sale', async ({ authedPage: page }) => {
+    await navTo(page, 'Sales');
+    await page.getByRole('button', { name: '+ New Sale' }).click();
     const search = page.getByPlaceholder('Scan barcode or search medicine / batch...');
     await search.fill('a');
     // Either results appear or empty — UI should not crash.
     await page.waitForTimeout(400);
-    await expect(page.getByRole('heading', { name: 'Billing' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'New Sale' })).toBeVisible();
   });
 });
 

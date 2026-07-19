@@ -8,7 +8,7 @@ common pitfalls. Keep it up to date when architecture or conventions change.
 
 A **fully offline Windows desktop application** for a small-town pharmacy /
 medical store in **India**. All data is stored locally in SQLite — no network,
-no cloud, no external services. Currency is **INR (₹)**; billing is **GST-aware**
+no cloud, no external services. Currency is **INR (₹)**; sales are **GST-aware**
 (CGST + SGST split evenly).
 
 Primary users: pharmacy owner and staff, operating a single store on a single PC.
@@ -82,7 +82,7 @@ src/
       batches.ts          # Batch CRUD + stock listing
       parties.ts          # Suppliers + Customers CRUD
       purchases.ts        # Stock inward; creates/merges batches (transaction)
-      sales.ts            # Billing: sellable search, createSale, invoice numbering
+      sales.ts            # Sales: sellable search, createSale, invoice numbering
       reports.ts          # Dashboard stats + report queries
       settings.ts         # Key/value settings get/save
       auth.ts             # PIN users (scrypt hash), login
@@ -97,9 +97,8 @@ src/
       Modal.tsx           # Reusable modal
       ui.tsx              # Spinner, EmptyState, Badge, Toast system, errMsg()
     lib/format.ts         # inr(), formatDate(), daysUntil(), toCsv(), etc.
-    pages/                # Dashboard, Billing, Inventory, Purchases,
-                          # Customers, Suppliers, Reports, SalesHistory,
-                          # SettingsPage, LoginPage
+    pages/                # Dashboard, Inventory, Purchases, Sales,
+                          # Customers, Suppliers, Reports, SettingsPage, LoginPage
     global.d.ts           # Declares window.pharmacy for the renderer
 forge.config.ts           # Forge: makers, AutoUnpackNatives, Vite, Fuses
 vite.main.config.ts       # Main build: @shared alias + externalize better-sqlite3
@@ -126,8 +125,10 @@ npm run icons     # regenerate app icons from assets/icons/icon.svg
 
 ## 6. Data model (SQLite)
 
-- `medicines` — name, generic_name, manufacturer, hsn_code, gst_rate, category,
-  rack, reorder_level, `is_active` (soft delete), created_at.
+- `medicines` — name, generic_name, manufacturer, hsn_code, gst_rate,
+  dosage_form (Tablet/Capsule/…), category (therapeutic class), pack_size,
+  schedule, storage_type, rack, reorder_level, `is_active` (soft delete),
+  created_at.
 - `batches` — medicine_id (FK), batch_no, expiry_date (yyyy-mm-dd), mrp,
   purchase_price, sale_price, quantity_in_stock.
 - `suppliers`, `customers` — contact info (supplier also has gstin).
@@ -145,8 +146,8 @@ existing migration in place) so existing installs upgrade cleanly.
 
 - **GST**: sale prices are treated as **MRP-inclusive** of GST. Taxable value =
   `gross / (1 + rate/100)`; tax is split evenly into CGST and SGST. This logic
-  exists in both `db/services/sales.ts` (authoritative) and `pages/Billing.tsx`
-  (for live display) — keep them consistent.
+  exists in both `db/services/sales.ts` (authoritative) and `pages/Sales.tsx`
+  (for live display in New Sale / Edit Invoice) — keep them consistent.
 - **Money**: store as REAL; round to 2 decimals with the `round2` helper in
   sales service. Format for display with `inr()` from `renderer/lib/format.ts`.
 - **Dates**: expiry dates are `yyyy-mm-dd` strings; timestamps are ISO strings.

@@ -10,7 +10,8 @@ export interface Medicine {
   manufacturer: string | null;
   hsn_code: string | null;
   gst_rate: number; // percent, e.g. 5, 12, 18
-  category: string | null;
+  dosage_form: string | null; // e.g. Tablet, Capsule, Syrup
+  category: string | null; // therapeutic class, e.g. Anti-Diabetic
   pack_size: string | null; // e.g. "15", "100ml"
   schedule: MedicineSchedule | null;
   storage_type: MedicineStorageType | null;
@@ -153,7 +154,7 @@ export interface SaleWithItems extends Sale {
   customer_name: string | null;
 }
 
-// A sellable line as shown in the billing screen (a batch joined with its medicine).
+// A sellable line as shown in the sales screen (a batch joined with its medicine).
 export interface SellableBatch {
   batch_id: number;
   medicine_id: number;

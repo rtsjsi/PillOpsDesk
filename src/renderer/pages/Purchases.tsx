@@ -6,7 +6,7 @@ import type {
   PurchaseItemInput,
   PurchaseWithItems,
 } from '../../shared/types';
-import { inr, formatDate, todayIso } from '../lib/format';
+import { inr, formatDate, todayIso, monthStartIso } from '../lib/format';
 import { Modal } from '../components/Modal';
 import { Spinner, EmptyState, useToast, errMsg } from '../components/ui';
 import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
@@ -19,6 +19,8 @@ interface DraftItem extends PurchaseItemInput {
 export function Purchases() {
   const toast = useToast();
   const canWrite = useWriteAllowed();
+  const [from, setFrom] = useState(monthStartIso());
+  const [to, setTo] = useState(todayIso());
   const [purchases, setPurchases] = useState<Purchase[] | null>(null);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [formOpen, setFormOpen] = useState(false);
@@ -26,13 +28,17 @@ export function Purchases() {
   const [viewing, setViewing] = useState<PurchaseWithItems | null>(null);
 
   const load = useCallback(() => {
-    window.pharmacy.purchases.list().then(setPurchases);
-  }, []);
+    setPurchases(null);
+    window.pharmacy.purchases.list(from, to).then(setPurchases);
+  }, [from, to]);
 
   useEffect(() => {
     load();
-    window.pharmacy.suppliers.list().then(setSuppliers);
   }, [load]);
+
+  useEffect(() => {
+    window.pharmacy.suppliers.list().then(setSuppliers);
+  }, []);
 
   const openNew = () => {
     setEditing(null);
@@ -60,6 +66,8 @@ export function Purchases() {
     }
   };
 
+  const rangeTotal = purchases?.reduce((s, p) => s + p.total_amount, 0) ?? 0;
+
   return (
     <div className="space-y-4">
       <ReadOnlyNotice />
@@ -70,11 +78,39 @@ export function Purchases() {
         </button>
       </div>
 
+      <div className="flex flex-wrap items-end gap-3">
+        <div>
+          <label className="label">From</label>
+          <input
+            type="date"
+            className="input"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label">To</label>
+          <input
+            type="date"
+            className="input"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+          />
+        </div>
+        <button className="btn-primary" onClick={load}>
+          Filter
+        </button>
+        <div className="ml-auto text-right">
+          <div className="text-sm text-slate-500">Total for range</div>
+          <div className="text-xl font-bold text-brand-700">{inr(rangeTotal)}</div>
+        </div>
+      </div>
+
       <div className="card overflow-hidden">
         {!purchases ? (
           <Spinner />
         ) : purchases.length === 0 ? (
-          <EmptyState message="No purchases recorded yet." />
+          <EmptyState message="No purchases in the selected range." />
         ) : (
           <table className="w-full">
             <thead className="bg-slate-50">

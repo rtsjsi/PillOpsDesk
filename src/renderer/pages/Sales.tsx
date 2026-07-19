@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type {
   SaleWithItems,
   Customer,
@@ -6,9 +7,10 @@ import type {
   Batch,
 } from '../../shared/types';
 import { applyInvoiceDiscountPercent } from '../../shared/gst';
-import { inr, formatDateTime, formatDate, todayIso } from '../lib/format';
+import { inr, formatDateTime, formatDate, todayIso, monthStartIso } from '../lib/format';
 import { Modal } from '../components/Modal';
 import { Spinner, EmptyState, useToast, errMsg } from '../components/ui';
+import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
 import { useWriteAllowed } from '../App';
 
 interface CartLine {
@@ -16,14 +18,17 @@ interface CartLine {
   quantity: number;
 }
 
-export function SalesHistory() {
+export function Sales() {
   const toast = useToast();
   const canWrite = useWriteAllowed();
-  const [from, setFrom] = useState(todayIso());
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [from, setFrom] = useState(monthStartIso());
   const [to, setTo] = useState(todayIso());
   const [sales, setSales] = useState<SaleWithItems[] | null>(null);
   const [selected, setSelected] = useState<SaleWithItems | null>(null);
   const [editing, setEditing] = useState<SaleWithItems | null>(null);
+  const [newSaleOpen, setNewSaleOpen] = useState(false);
 
   const load = useCallback(() => {
     setSales(null);
@@ -33,6 +38,14 @@ export function SalesHistory() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const state = location.state as { openNewSale?: boolean } | null;
+    if (state?.openNewSale) {
+      setNewSaleOpen(true);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   const reprint = async (id: number) => {
     try {
@@ -54,7 +67,17 @@ export function SalesHistory() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-slate-800">Sales History</h1>
+      <ReadOnlyNotice />
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-800">Sales</h1>
+        <button
+          className="btn-primary"
+          onClick={() => setNewSaleOpen(true)}
+          disabled={!canWrite}
+        >
+          + New Sale
+        </button>
+      </div>
 
       <div className="flex flex-wrap items-end gap-3">
         <div>
@@ -221,6 +244,18 @@ export function SalesHistory() {
         )}
       </Modal>
 
+      {newSaleOpen && (
+        <NewSaleForm
+          onClose={() => setNewSaleOpen(false)}
+          onSaved={(msg) => {
+            setNewSaleOpen(false);
+            load();
+            toast.success(msg);
+          }}
+          onError={(m) => toast.error(m)}
+        />
+      )}
+
       {editing && (
         <SaleEditForm
           sale={editing}
@@ -234,6 +269,288 @@ export function SalesHistory() {
         />
       )}
     </div>
+  );
+}
+
+function NewSaleForm({
+  onClose,
+  onSaved,
+  onError,
+}: {
+  onClose: () => void;
+  onSaved: (message: string) => void;
+  onError: (m: string) => void;
+}) {
+  const canWrite = useWriteAllowed();
+  const [search, setSearch] = useState('');
+  const [results, setResults] = useState<SellableBatch[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [cart, setCart] = useState<CartLine[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customerId, setCustomerId] = useState<number | null>(null);
+  const [discountPercent, setDiscountPercent] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    window.pharmacy.customers.list().then(setCustomers);
+    searchRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (!search.trim()) {
+      setResults([]);
+      return;
+    }
+    const t = setTimeout(() => {
+      window.pharmacy.sales.searchSellable(search).then((r) => {
+        setResults(r);
+        setShowResults(true);
+      });
+    }, 150);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const addToCart = (batch: SellableBatch) => {
+    if (!canWrite) {
+      onError('Sales is disabled until the subscription is renewed.');
+      return;
+    }
+    setCart((prev) => {
+      const idx = prev.findIndex((l) => l.batch.batch_id === batch.batch_id);
+      if (idx >= 0) {
+        const copy = [...prev];
+        const nextQty = Math.min(copy[idx].quantity + 1, batch.quantity_in_stock);
+        copy[idx] = { ...copy[idx], quantity: nextQty };
+        return copy;
+      }
+      return [...prev, { batch, quantity: 1 }];
+    });
+    setSearch('');
+    setResults([]);
+    setShowResults(false);
+    searchRef.current?.focus();
+  };
+
+  const updateLine = (batchId: number, quantity: number) => {
+    setCart((prev) =>
+      prev.map((l) => {
+        if (l.batch.batch_id !== batchId) return l;
+        return {
+          ...l,
+          quantity: Math.max(1, Math.min(quantity, l.batch.quantity_in_stock)),
+        };
+      })
+    );
+  };
+
+  const removeLine = (batchId: number) => {
+    setCart((prev) => prev.filter((l) => l.batch.batch_id !== batchId));
+  };
+
+  const totals = useMemo(() => {
+    const lines = cart.map((l) => ({
+      gross: l.batch.sale_price * l.quantity,
+      gst_rate: l.batch.gst_rate ?? 0,
+    }));
+    return applyInvoiceDiscountPercent(lines, discountPercent);
+  }, [cart, discountPercent]);
+
+  const checkout = async (print: boolean) => {
+    if (cart.length === 0) {
+      onError('Add at least one item.');
+      return;
+    }
+    setBusy(true);
+    try {
+      const sale = await window.pharmacy.sales.create({
+        customer_id: customerId,
+        discount_percent: discountPercent,
+        items: cart.map((l) => ({
+          batch_id: l.batch.batch_id,
+          quantity: l.quantity,
+        })),
+      });
+      if (print) {
+        await window.pharmacy.print.invoice(sale.id);
+      }
+      onSaved(`Invoice ${sale.invoice_no} saved.`);
+    } catch (e) {
+      onError(errMsg(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal
+      open
+      title="New Sale"
+      onClose={onClose}
+      wide
+      footer={
+        <>
+          <button className="btn-secondary" onClick={onClose} disabled={busy}>
+            Cancel
+          </button>
+          <button
+            className="btn-secondary"
+            disabled={busy || !canWrite}
+            onClick={() => checkout(false)}
+          >
+            Save
+          </button>
+          <button
+            className="btn-primary"
+            disabled={busy || !canWrite}
+            onClick={() => checkout(true)}
+          >
+            Save & Print
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">Customer</label>
+            <select
+              className="input"
+              value={customerId ?? ''}
+              onChange={(e) =>
+                setCustomerId(e.target.value ? Number(e.target.value) : null)
+              }
+            >
+              <option value="">Walk-in Customer</option>
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} {c.phone ? `(${c.phone})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label">Invoice Discount (%)</label>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              step="0.01"
+              className="input"
+              value={discountPercent}
+              onChange={(e) =>
+                setDiscountPercent(
+                  Math.min(100, Math.max(0, Number(e.target.value) || 0))
+                )
+              }
+            />
+          </div>
+        </div>
+
+        <div className="relative">
+          <label className="label">Add Item</label>
+          <input
+            ref={searchRef}
+            className="input"
+            placeholder="Scan barcode or search medicine / batch..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onFocus={() => results.length && setShowResults(true)}
+          />
+          {showResults && results.length > 0 && (
+            <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg">
+              {results.map((r) => (
+                <button
+                  key={r.batch_id}
+                  className="flex w-full items-center justify-between border-b border-slate-100 px-3 py-2 text-left text-sm hover:bg-brand-50"
+                  onClick={() => addToCart(r)}
+                >
+                  <div>
+                    <div className="font-medium text-slate-800">{r.name}</div>
+                    <div className="text-xs text-slate-400">
+                      Batch {r.batch_no} · Exp {formatDate(r.expiry_date)} · Stock{' '}
+                      {r.quantity_in_stock}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold">{inr(r.sale_price)}</div>
+                    <div className="text-xs text-slate-400">{r.gst_rate}% GST</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {cart.length === 0 ? (
+          <EmptyState message="Cart is empty. Search and add medicines above." />
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="th">Item</th>
+                <th className="th text-center">Qty</th>
+                <th className="th text-right">Rate</th>
+                <th className="th text-right">Total</th>
+                <th className="th"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {cart.map((l) => (
+                <tr key={l.batch.batch_id} className="border-t border-slate-100">
+                  <td className="td">
+                    <div className="font-medium">{l.batch.name}</div>
+                    <div className="text-xs text-slate-400">
+                      Batch {l.batch.batch_no} · {l.batch.gst_rate}% GST
+                    </div>
+                  </td>
+                  <td className="td text-center">
+                    <input
+                      type="number"
+                      min={1}
+                      max={l.batch.quantity_in_stock}
+                      value={l.quantity}
+                      onChange={(e) =>
+                        updateLine(l.batch.batch_id, Number(e.target.value))
+                      }
+                      className="input w-16 px-2 py-1 text-center"
+                    />
+                  </td>
+                  <td className="td text-right">{inr(l.batch.sale_price)}</td>
+                  <td className="td text-right font-medium">
+                    {inr(l.batch.sale_price * l.quantity)}
+                  </td>
+                  <td className="td text-right">
+                    <button
+                      className="text-red-500 hover:text-red-700"
+                      onClick={() => removeLine(l.batch.batch_id)}
+                    >
+                      ✕
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        <div className="ml-auto w-64 space-y-1 text-sm">
+          {totals.discountPercent > 0 && (
+            <Row
+              label={`Invoice Discount (${totals.discountPercent}%)`}
+              value={`- ${inr(totals.discountAmount)}`}
+            />
+          )}
+          <Row label="Taxable Value" value={inr(totals.subtotal)} />
+          <Row label="CGST" value={inr(totals.cgst)} />
+          <Row label="SGST" value={inr(totals.sgst)} />
+          <div className="flex justify-between border-t border-slate-200 pt-1 text-base font-bold">
+            <span>Total</span>
+            <span className="text-brand-700">{inr(totals.total)}</span>
+          </div>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
