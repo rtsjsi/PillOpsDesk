@@ -4,6 +4,7 @@ import { Modal } from '../components/Modal';
 import { Spinner, useToast, errMsg, Badge } from '../components/ui';
 import { useAuth, useLicense, useWriteAllowed } from '../App';
 import { formatDate } from '../lib/format';
+import { applyAppTitle } from '../lib/appTitle';
 
 function formatDateTime(iso: string | null): string {
   if (!iso) return 'Never';
@@ -302,6 +303,7 @@ export function SettingsPage() {
     try {
       const updated = await window.pharmacy.settings.save(settings);
       setSettings(updated);
+      applyAppTitle(updated.store_name);
       toast.success('Settings saved.');
     } catch (e) {
       toast.error(errMsg(e));

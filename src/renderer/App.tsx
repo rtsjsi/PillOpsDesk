@@ -13,6 +13,7 @@ import { Suppliers } from './pages/Suppliers';
 import { Reports } from './pages/Reports';
 import { SettingsPage } from './pages/SettingsPage';
 import { Sales } from './pages/Sales';
+import { applyAppTitle } from './lib/appTitle';
 
 const SESSION_USER_KEY = 'user';
 const REMEMBERED_USER_KEY = 'rememberedUser';
@@ -94,6 +95,13 @@ export default function App() {
     async function boot() {
       const status = await window.pharmacy.license.getStatus();
       setLicenseStatus(status);
+
+      try {
+        const settings = await window.pharmacy.settings.get();
+        applyAppTitle(settings.store_name);
+      } catch {
+        applyAppTitle(null);
+      }
 
       if (
         status.state === 'active' ||

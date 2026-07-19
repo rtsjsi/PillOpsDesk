@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth, useLicense } from '../App';
 import type { Settings } from '../../shared/types';
 import { AppIcon } from './AppIcon';
+import { applyAppTitle } from '../lib/appTitle';
 
 const NAV = [
   { to: '/', label: 'Dashboard', end: true, icon: '🏠' },
@@ -25,7 +26,10 @@ export function Layout() {
     user?.role === 'owner' ? NAV : NAV.filter((item) => item.to !== '/settings');
 
   useEffect(() => {
-    window.pharmacy.settings.get().then(setSettings);
+    window.pharmacy.settings.get().then((s) => {
+      setSettings(s);
+      applyAppTitle(s.store_name);
+    });
   }, []);
 
   const handleLogout = () => {
@@ -36,14 +40,13 @@ export function Layout() {
   return (
     <div className="flex h-full">
       <aside className="flex w-60 flex-col bg-brand-800 text-brand-50">
-        <div className="border-b border-brand-700 px-5 py-4">
-          <div className="flex items-center gap-3">
-            <AppIcon className="h-9 w-9 shrink-0" />
-            <div className="min-w-0">
-              <div className="truncate text-lg font-bold leading-tight">
+        <div className="border-b border-brand-700 px-4 py-4">
+          <div className="flex items-start gap-3">
+            <AppIcon className="mt-0.5 h-9 w-9 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="break-words text-base font-bold leading-snug">
                 {settings?.store_name || 'PillOpsDesk'}
               </div>
-              <div className="text-xs text-brand-200">Offline Management</div>
             </div>
           </div>
         </div>
