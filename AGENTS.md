@@ -117,9 +117,68 @@ npm run clean     # delete out/, .vite/
 npm run rebuild   # manually rebuild better-sqlite3 against Electron if needed
 npm run typecheck # TypeScript check (no emit; Vite/Forge does the actual build)
 npm run icons     # regenerate app icons from assets/icons/icon.svg
+npm run license:keypair   # one-time: create RSA key pair (vendor machine only)
+npm run license:generate  # issue a customer license key (see §5a)
 ```
 
 `npm run lint` is an alias for `typecheck` (no ESLint config in this repo).
+
+## 5a. Licensing — generate a key for an app user (vendor)
+
+Licenses are **offline**, signed with RSA, and bound to one PC (`machine_id`).
+The **private key never ships with the app**; only the public key in
+`src/shared/license-public-key.ts` is embedded for verification.
+
+### One-time setup (vendor machine)
+
+1. Generate the key pair (writes `scripts/keys/private.pem` + `public.pem`):
+
+```bash
+npm run license:keypair
+```
+
+2. Copy the PEM contents of `scripts/keys/public.pem` into
+   `src/shared/license-public-key.ts` (`LICENSE_PUBLIC_KEY_PEM`), then rebuild
+   / redistribute the app so installs verify with that public key.
+3. Keep `scripts/keys/private.pem` secret. It is gitignored under `scripts/keys/`.
+   **Do not commit or share the private key.**
+
+### Issue a license for a customer
+
+1. Customer installs PillOpsDesk and opens the **Activate** screen (or Settings →
+   License). They copy their **Machine ID** and send it to you.
+2. On the vendor machine (with `scripts/keys/private.pem` present), run:
+
+```bash
+npm run license:generate -- --pharmacy-id PH-0001 --pharmacy-name "Sharma Medical" --machine-id PASTE_MACHINE_ID_HERE --expires 2027-07-18
+```
+
+PowerShell-friendly form (same args):
+
+```powershell
+npm run license:generate -- --pharmacy-id PH-0001 --pharmacy-name "Sharma Medical" --machine-id PASTE_MACHINE_ID_HERE --expires 2027-07-18
+```
+
+| Flag | Required | Meaning |
+| ---- | -------- | ------- |
+| `--pharmacy-id` | yes | Your internal customer id (e.g. `PH-0042`) |
+| `--pharmacy-name` | yes | Store / pharmacy display name |
+| `--machine-id` | yes | Exact Machine ID from the customer's Activate screen |
+| `--expires` | no | `yyyy-mm-dd` (default: issued + 365 days) |
+| `--issued` | no | `yyyy-mm-dd` (default: today UTC) |
+| `--grace-days` | no | Days after expiry before hard block (default: `7`) |
+| `--private-key` | no | Path to PEM (default: `scripts/keys/private.pem`) |
+
+3. The script prints a long **license key**. Send that string to the customer.
+4. Customer pastes it on Activate / Settings → License and activates.
+
+**Notes**
+
+- Machine ID must match exactly; a key for PC A will not activate on PC B.
+- Regenerating the keypair invalidates all existing licenses unless you keep the
+  same public key embedded in the app.
+- After wipe/reinstall on the same PC, Machine ID is usually the same — re-send
+  the same key or issue a new one with the same `--machine-id`.
 
 ## 6. Data model (SQLite)
 
