@@ -9,12 +9,12 @@ export function listMedicines(search?: string): Medicine[] {
       .prepare(
         `SELECT * FROM medicines
          WHERE is_active = 1 AND (name LIKE ? OR generic_name LIKE ? OR manufacturer LIKE ?)
-         ORDER BY name LIMIT 200`
+         ORDER BY name LIMIT 1000`
       )
       .all(q, q, q) as Medicine[];
   }
   return db
-    .prepare('SELECT * FROM medicines WHERE is_active = 1 ORDER BY name LIMIT 200')
+    .prepare('SELECT * FROM medicines WHERE is_active = 1 ORDER BY name LIMIT 1000')
     .all() as Medicine[];
 }
 
