@@ -13,6 +13,9 @@ export function LoginPage() {
   const [firstRun, setFirstRun] = useState(false);
   const [username, setUsername] = useState('');
   const [pin, setPin] = useState('');
+  const [rememberMe, setRememberMe] = useState(
+    () => localStorage.getItem('rememberMe') !== '0'
+  );
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -33,7 +36,8 @@ export function LoginPage() {
     try {
       if (firstRun) {
         const user = await window.pharmacy.auth.register(username.trim(), pin, 'owner');
-        setUser(user);
+        localStorage.setItem('rememberMe', rememberMe ? '1' : '0');
+        setUser(user, { remember: rememberMe });
         toast.success('Owner account created.');
         navigate('/');
       } else {
@@ -42,7 +46,8 @@ export function LoginPage() {
           toast.error('Invalid username or PIN.');
           return;
         }
-        setUser(user);
+        localStorage.setItem('rememberMe', rememberMe ? '1' : '0');
+        setUser(user, { remember: rememberMe });
         navigate('/');
       }
     } catch (err) {
@@ -87,6 +92,17 @@ export function LoginPage() {
               autoComplete="off"
             />
           </div>
+          {!firstRun && (
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              Remember me on this PC
+            </label>
+          )}
           <button type="submit" className="btn-primary w-full" disabled={busy}>
             {firstRun ? 'Create account' : 'Sign in'}
           </button>

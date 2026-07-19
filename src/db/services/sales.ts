@@ -40,22 +40,105 @@ function nextInvoiceNo(): string {
   return `${settings.invoice_prefix || 'INV'}-${seq}`;
 }
 
+type BatchRow = {
+  id: number;
+  medicine_id: number;
+  medicine_name: string;
+  batch_no: string;
+  hsn_code: string | null;
+  sale_price: number;
+  gst_rate: number;
+  quantity_in_stock: number;
+};
+
+function writeSaleLines(
+  db: ReturnType<typeof getDb>,
+  saleId: number,
+  data: SaleInput
+): void {
+  if (!data.items.length) throw new Error('Cannot create an empty sale.');
+
+  const getBatch = db.prepare(
+    `SELECT b.*, m.name AS medicine_name, m.gst_rate AS gst_rate, m.hsn_code AS hsn_code
+     FROM batches b JOIN medicines m ON m.id = b.medicine_id WHERE b.id = ?`
+  );
+  const decStock = db.prepare(
+    'UPDATE batches SET quantity_in_stock = quantity_in_stock - ? WHERE id = ?'
+  );
+  const insertItem = db.prepare(
+    `INSERT INTO sale_items
+      (sale_id, batch_id, medicine_id, medicine_name, batch_no, hsn_code, quantity, price, gst_rate, discount, line_total)
+     VALUES (@sale_id, @batch_id, @medicine_id, @medicine_name, @batch_no, @hsn_code, @quantity, @price, @gst_rate, 0, @line_total)`
+  );
+
+  const resolved: {
+    item: (typeof data.items)[number];
+    batch: BatchRow;
+    lineGross: number;
+  }[] = [];
+
+  for (const item of data.items) {
+    const b = getBatch.get(item.batch_id) as BatchRow | undefined;
+    if (!b) throw new Error('Selected batch no longer exists.');
+    if (item.quantity <= 0) throw new Error('Quantity must be greater than zero.');
+    if (b.quantity_in_stock < item.quantity) {
+      throw new Error(
+        `Not enough stock for ${b.medicine_name} (batch ${b.batch_no}). Available: ${b.quantity_in_stock}.`
+      );
+    }
+
+    resolved.push({
+      item,
+      batch: b,
+      lineGross: b.sale_price * item.quantity,
+    });
+  }
+
+  const invoice = applyInvoiceDiscountPercent(
+    resolved.map((row) => ({ gross: row.lineGross, gst_rate: row.batch.gst_rate ?? 0 })),
+    data.discount_percent ?? 0
+  );
+
+  resolved.forEach((row, index) => {
+    const amounts = invoice.lines[index];
+    insertItem.run({
+      sale_id: saleId,
+      batch_id: row.batch.id,
+      medicine_id: row.batch.medicine_id,
+      medicine_name: row.batch.medicine_name,
+      batch_no: row.batch.batch_no,
+      hsn_code: row.batch.hsn_code,
+      quantity: row.item.quantity,
+      price: row.batch.sale_price,
+      gst_rate: row.batch.gst_rate ?? 0,
+      line_total: amounts.gross,
+    });
+    decStock.run(row.item.quantity, row.batch.id);
+  });
+
+  db.prepare(
+    `UPDATE sales SET
+      customer_id = ?,
+      subtotal = ?, discount = ?, discount_percent = ?, cgst = ?, sgst = ?, total = ?
+     WHERE id = ?`
+  ).run(
+    data.customer_id ?? null,
+    invoice.subtotal,
+    invoice.discountAmount,
+    round2(data.discount_percent ?? 0),
+    invoice.cgst,
+    invoice.sgst,
+    invoice.total,
+    saleId
+  );
+}
+
 export function createSale(input: SaleInput): SaleWithItems {
   const db = getDb();
   const tx = db.transaction((data: SaleInput) => {
-    if (!data.items.length) throw new Error('Cannot create an empty sale.');
-
     const now = new Date();
     const saleDate = now.toISOString();
     const invoiceNo = nextInvoiceNo();
-
-    const getBatch = db.prepare(
-      `SELECT b.*, m.name AS medicine_name, m.gst_rate AS gst_rate, m.hsn_code AS hsn_code
-       FROM batches b JOIN medicines m ON m.id = b.medicine_id WHERE b.id = ?`
-    );
-    const decStock = db.prepare(
-      'UPDATE batches SET quantity_in_stock = quantity_in_stock - ? WHERE id = ?'
-    );
 
     const saleInfo = db
       .prepare(
@@ -64,94 +147,40 @@ export function createSale(input: SaleInput): SaleWithItems {
       )
       .run(invoiceNo, data.customer_id ?? null, saleDate);
     const saleId = Number(saleInfo.lastInsertRowid);
-
-    const insertItem = db.prepare(
-      `INSERT INTO sale_items
-        (sale_id, batch_id, medicine_id, medicine_name, batch_no, hsn_code, quantity, price, gst_rate, discount, line_total)
-       VALUES (@sale_id, @batch_id, @medicine_id, @medicine_name, @batch_no, @hsn_code, @quantity, @price, @gst_rate, 0, @line_total)`
-    );
-
-    const resolved: {
-      item: (typeof data.items)[number];
-      batch: {
-        id: number;
-        medicine_id: number;
-        medicine_name: string;
-        batch_no: string;
-        hsn_code: string | null;
-        sale_price: number;
-        gst_rate: number;
-        quantity_in_stock: number;
-      };
-      lineGross: number;
-    }[] = [];
-
-    for (const item of data.items) {
-      const b = getBatch.get(item.batch_id) as
-        | {
-            id: number;
-            medicine_id: number;
-            medicine_name: string;
-            batch_no: string;
-            hsn_code: string | null;
-            sale_price: number;
-            gst_rate: number;
-            quantity_in_stock: number;
-          }
-        | undefined;
-      if (!b) throw new Error('Selected batch no longer exists.');
-      if (item.quantity <= 0) throw new Error('Quantity must be greater than zero.');
-      if (b.quantity_in_stock < item.quantity) {
-        throw new Error(
-          `Not enough stock for ${b.medicine_name} (batch ${b.batch_no}). Available: ${b.quantity_in_stock}.`
-        );
-      }
-
-      resolved.push({
-        item,
-        batch: b,
-        lineGross: b.sale_price * item.quantity,
-      });
-    }
-
-    const invoice = applyInvoiceDiscountPercent(
-      resolved.map((row) => ({ gross: row.lineGross, gst_rate: row.batch.gst_rate ?? 0 })),
-      data.discount_percent ?? 0
-    );
-
-    resolved.forEach((row, index) => {
-      const amounts = invoice.lines[index];
-      insertItem.run({
-        sale_id: saleId,
-        batch_id: row.batch.id,
-        medicine_id: row.batch.medicine_id,
-        medicine_name: row.batch.medicine_name,
-        batch_no: row.batch.batch_no,
-        hsn_code: row.batch.hsn_code,
-        quantity: row.item.quantity,
-        price: row.batch.sale_price,
-        gst_rate: row.batch.gst_rate ?? 0,
-        line_total: amounts.gross,
-      });
-      decStock.run(row.item.quantity, row.batch.id);
-    });
-
-    db.prepare(
-      `UPDATE sales SET subtotal = ?, discount = ?, discount_percent = ?, cgst = ?, sgst = ?, total = ? WHERE id = ?`
-    ).run(
-      invoice.subtotal,
-      invoice.discountAmount,
-      round2(data.discount_percent ?? 0),
-      invoice.cgst,
-      invoice.sgst,
-      invoice.total,
-      saleId
-    );
-
+    writeSaleLines(db, saleId, data);
     return saleId;
   });
 
   const id = tx(input);
+  return getSale(id)!;
+}
+
+export function updateSale(id: number, input: SaleInput): SaleWithItems {
+  const db = getDb();
+  const tx = db.transaction((data: SaleInput) => {
+    const sale = db.prepare('SELECT id FROM sales WHERE id = ?').get(id) as
+      | { id: number }
+      | undefined;
+    if (!sale) throw new Error('Sale invoice not found.');
+
+    const oldItems = db
+      .prepare('SELECT batch_id, quantity FROM sale_items WHERE sale_id = ?')
+      .all(id) as { batch_id: number | null; quantity: number }[];
+
+    const incStock = db.prepare(
+      'UPDATE batches SET quantity_in_stock = quantity_in_stock + ? WHERE id = ?'
+    );
+    for (const old of oldItems) {
+      if (old.batch_id != null) {
+        incStock.run(old.quantity, old.batch_id);
+      }
+    }
+
+    db.prepare('DELETE FROM sale_items WHERE sale_id = ?').run(id);
+    writeSaleLines(db, id, data);
+  });
+
+  tx(input);
   return getSale(id)!;
 }
 

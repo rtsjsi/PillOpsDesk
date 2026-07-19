@@ -28,6 +28,7 @@ export function Inventory() {
 
   const [medModal, setMedModal] = useState(false);
   const [editing, setEditing] = useState<Medicine | null>(null);
+  const [viewing, setViewing] = useState<Medicine | null>(null);
   const [form, setForm] = useState<MedicineInput>(emptyMedicine);
 
   const [batchMed, setBatchMed] = useState<Medicine | null>(null);
@@ -163,6 +164,12 @@ export function Inventory() {
                       <div className="flex justify-end gap-2">
                         <button
                           className="btn-secondary px-2 py-1"
+                          onClick={() => setViewing(m)}
+                        >
+                          View
+                        </button>
+                        <button
+                          className="btn-secondary px-2 py-1"
                           onClick={() => setBatchMed(m)}
                         >
                           Batches
@@ -281,6 +288,76 @@ export function Inventory() {
             />
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        open={!!viewing}
+        title={viewing ? viewing.name : ''}
+        onClose={() => setViewing(null)}
+        footer={
+          viewing && (
+            <>
+              <button className="btn-secondary" onClick={() => setViewing(null)}>
+                Close
+              </button>
+              {canWrite && (
+                <button
+                  className="btn-primary"
+                  onClick={() => {
+                    const m = viewing;
+                    setViewing(null);
+                    openEdit(m);
+                  }}
+                >
+                  Edit
+                </button>
+              )}
+            </>
+          )
+        }
+      >
+        {viewing && (
+          <dl className="grid grid-cols-2 gap-3 text-sm">
+            <div className="col-span-2">
+              <dt className="text-slate-500">Name</dt>
+              <dd className="font-medium text-slate-800">{viewing.name}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Generic / Salt</dt>
+              <dd className="font-medium text-slate-800">{viewing.generic_name || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Manufacturer</dt>
+              <dd className="font-medium text-slate-800">{viewing.manufacturer || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">HSN Code</dt>
+              <dd className="font-medium text-slate-800">{viewing.hsn_code || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">GST Rate</dt>
+              <dd className="font-medium text-slate-800">{viewing.gst_rate}%</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Category</dt>
+              <dd className="font-medium text-slate-800">{viewing.category || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Rack / Shelf</dt>
+              <dd className="font-medium text-slate-800">{viewing.rack || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Reorder Level</dt>
+              <dd className="font-medium text-slate-800">{viewing.reorder_level}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Stock on Hand</dt>
+              <dd className="font-medium text-slate-800">
+                {stockMap[viewing.id] ?? 0}
+              </dd>
+            </div>
+          </dl>
+        )}
       </Modal>
 
       {batchMed && (

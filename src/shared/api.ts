@@ -12,6 +12,7 @@ import type {
   CustomerInput,
   PurchaseInput,
   Purchase,
+  PurchaseWithItems,
   SaleInput,
   SaleWithItems,
   SellableBatch,
@@ -65,12 +66,15 @@ export interface PharmacyApi {
   purchases: {
     create: (input: PurchaseInput) => Promise<Purchase>;
     list: (search?: string) => Promise<Purchase[]>;
+    get: (id: number) => Promise<PurchaseWithItems | null>;
+    update: (id: number, input: PurchaseInput) => Promise<PurchaseWithItems>;
   };
   sales: {
     searchSellable: (search: string) => Promise<SellableBatch[]>;
     create: (input: SaleInput) => Promise<SaleWithItems>;
     list: (from?: string, to?: string) => Promise<SaleWithItems[]>;
     get: (id: number) => Promise<SaleWithItems | null>;
+    update: (id: number, input: SaleInput) => Promise<SaleWithItems>;
   };
   reports: {
     dashboard: () => Promise<DashboardStats>;
@@ -141,11 +145,14 @@ export const IPC = {
 
   purchasesCreate: 'purchases:create',
   purchasesList: 'purchases:list',
+  purchasesGet: 'purchases:get',
+  purchasesUpdate: 'purchases:update',
 
   salesSearchSellable: 'sales:searchSellable',
   salesCreate: 'sales:create',
   salesList: 'sales:list',
   salesGet: 'sales:get',
+  salesUpdate: 'sales:update',
 
   reportsDashboard: 'reports:dashboard',
   reportsLowStock: 'reports:lowStock',

@@ -14,6 +14,7 @@ export function Suppliers() {
   const [list, setList] = useState<Supplier[] | null>(null);
   const [modal, setModal] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
+  const [viewing, setViewing] = useState<Supplier | null>(null);
   const [form, setForm] = useState<SupplierInput>(empty);
 
   const load = useCallback(() => {
@@ -102,6 +103,12 @@ export function Suppliers() {
                   <td className="td">{s.address || '-'}</td>
                   <td className="td text-right">
                     <div className="flex justify-end gap-2">
+                      <button
+                        className="btn-secondary px-2 py-1"
+                        onClick={() => setViewing(s)}
+                      >
+                        View
+                      </button>
                       <button className="btn-secondary px-2 py-1" onClick={() => openEdit(s)}>
                         Edit
                       </button>
@@ -170,6 +177,54 @@ export function Suppliers() {
             />
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        open={!!viewing}
+        title={viewing ? viewing.name : ''}
+        onClose={() => setViewing(null)}
+        footer={
+          viewing && (
+            <>
+              <button className="btn-secondary" onClick={() => setViewing(null)}>
+                Close
+              </button>
+              {canWrite && (
+                <button
+                  className="btn-primary"
+                  onClick={() => {
+                    const s = viewing;
+                    setViewing(null);
+                    openEdit(s);
+                  }}
+                >
+                  Edit
+                </button>
+              )}
+            </>
+          )
+        }
+      >
+        {viewing && (
+          <dl className="space-y-3 text-sm">
+            <div>
+              <dt className="text-slate-500">Name</dt>
+              <dd className="font-medium text-slate-800">{viewing.name}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Phone</dt>
+              <dd className="font-medium text-slate-800">{viewing.phone || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">GSTIN</dt>
+              <dd className="font-medium text-slate-800">{viewing.gstin || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Address</dt>
+              <dd className="font-medium text-slate-800">{viewing.address || '-'}</dd>
+            </div>
+          </dl>
+        )}
       </Modal>
     </div>
   );

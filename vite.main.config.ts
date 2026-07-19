@@ -1,5 +1,9 @@
+import dotenv from 'dotenv';
 import { defineConfig } from 'vite';
 import { fileURLToPath, URL } from 'node:url';
+
+// Load .env before baking OAuth vars into the main bundle (define runs at config load).
+dotenv.config({ path: fileURLToPath(new URL('./.env', import.meta.url)) });
 
 // Config for the Electron main process build.
 export default defineConfig({

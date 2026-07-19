@@ -82,6 +82,26 @@ export interface PurchaseInput {
   items: PurchaseItemInput[];
 }
 
+export interface PurchaseItem {
+  id: number;
+  purchase_id: number;
+  batch_id: number;
+  medicine_id: number;
+  medicine_name: string;
+  batch_no: string;
+  expiry_date: string;
+  mrp: number;
+  purchase_price: number;
+  sale_price: number;
+  gst_rate: number;
+  quantity: number;
+}
+
+export interface PurchaseWithItems extends Purchase {
+  items: PurchaseItem[];
+  supplier_name: string | null;
+}
+
 export interface Sale {
   id: number;
   invoice_no: string;
@@ -110,6 +130,7 @@ export interface SaleInput {
 export interface SaleItem {
   id: number;
   sale_id: number;
+  batch_id: number | null;
   medicine_id: number;
   medicine_name: string;
   batch_no: string;

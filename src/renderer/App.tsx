@@ -15,10 +15,31 @@ import { Reports } from './pages/Reports';
 import { SettingsPage } from './pages/SettingsPage';
 import { SalesHistory } from './pages/SalesHistory';
 
+const SESSION_USER_KEY = 'user';
+const REMEMBERED_USER_KEY = 'rememberedUser';
+
 interface AuthState {
   user: User | null;
-  setUser: (u: User | null) => void;
+  setUser: (u: User | null, options?: { remember?: boolean }) => void;
   logout: () => void;
+}
+
+function clearStoredUser(): void {
+  sessionStorage.removeItem(SESSION_USER_KEY);
+  localStorage.removeItem(REMEMBERED_USER_KEY);
+}
+
+function readStoredUser(): User | null {
+  const raw =
+    localStorage.getItem(REMEMBERED_USER_KEY) ??
+    sessionStorage.getItem(SESSION_USER_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as User;
+  } catch {
+    clearStoredUser();
+    return null;
+  }
 }
 
 interface LicenseState {
@@ -80,16 +101,11 @@ export default function App() {
         status.state === 'grace' ||
         status.state === 'readonly'
       ) {
-        const cached = sessionStorage.getItem('user');
+        const cached = readStoredUser();
         if (cached) {
-          try {
-            const parsed = JSON.parse(cached) as User;
-            const live = await window.pharmacy.auth.getUser(parsed.id);
-            if (live) setUser(live);
-            else sessionStorage.removeItem('user');
-          } catch {
-            sessionStorage.removeItem('user');
-          }
+          const live = await window.pharmacy.auth.getUser(cached.id);
+          if (live) setUser(live);
+          else clearStoredUser();
         }
       }
 
@@ -98,10 +114,19 @@ export default function App() {
     boot();
   }, []);
 
-  const handleSetUser = (u: User | null) => {
+  const handleSetUser = (u: User | null, options?: { remember?: boolean }) => {
     setUser(u);
-    if (u) sessionStorage.setItem('user', JSON.stringify(u));
-    else sessionStorage.removeItem('user');
+    if (!u) {
+      clearStoredUser();
+      return;
+    }
+    const payload = JSON.stringify(u);
+    sessionStorage.setItem(SESSION_USER_KEY, payload);
+    if (options?.remember) {
+      localStorage.setItem(REMEMBERED_USER_KEY, payload);
+    } else {
+      localStorage.removeItem(REMEMBERED_USER_KEY);
+    }
   };
 
   const logout = () => handleSetUser(null);

@@ -113,12 +113,17 @@ export function registerIpc(): void {
   // Purchases
   handleWrite(IPC.purchasesCreate, (input: PurchaseInput) => purchases.createPurchase(input));
   handleRead(IPC.purchasesList, (search?: string) => purchases.listPurchases(search));
+  handleRead(IPC.purchasesGet, (id: number) => purchases.getPurchase(id));
+  handleWrite(IPC.purchasesUpdate, (id: number, input: PurchaseInput) =>
+    purchases.updatePurchase(id, input)
+  );
 
   // Sales
   handleRead(IPC.salesSearchSellable, (search: string) => sales.searchSellable(search));
   handleWrite(IPC.salesCreate, (input: SaleInput) => sales.createSale(input));
   handleRead(IPC.salesList, (from?: string, to?: string) => sales.listSales(from, to));
   handleRead(IPC.salesGet, (id: number) => sales.getSale(id));
+  handleWrite(IPC.salesUpdate, (id: number, input: SaleInput) => sales.updateSale(id, input));
 
   // Reports (read-only friendly)
   handleRead(IPC.reportsDashboard, () => reports.getDashboard());

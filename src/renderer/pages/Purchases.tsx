@@ -4,6 +4,7 @@ import type {
   Purchase,
   Medicine,
   PurchaseItemInput,
+  PurchaseWithItems,
 } from '../../shared/types';
 import { inr, formatDate, todayIso } from '../lib/format';
 import { Modal } from '../components/Modal';
@@ -20,7 +21,9 @@ export function Purchases() {
   const canWrite = useWriteAllowed();
   const [purchases, setPurchases] = useState<Purchase[] | null>(null);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [modal, setModal] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<PurchaseWithItems | null>(null);
+  const [viewing, setViewing] = useState<PurchaseWithItems | null>(null);
 
   const load = useCallback(() => {
     window.pharmacy.purchases.list().then(setPurchases);
@@ -31,12 +34,38 @@ export function Purchases() {
     window.pharmacy.suppliers.list().then(setSuppliers);
   }, [load]);
 
+  const openNew = () => {
+    setEditing(null);
+    setFormOpen(true);
+  };
+
+  const openView = async (id: number) => {
+    try {
+      const p = await window.pharmacy.purchases.get(id);
+      if (!p) return toast.error('Purchase not found.');
+      setViewing(p);
+    } catch (e) {
+      toast.error(errMsg(e));
+    }
+  };
+
+  const openEdit = async (id: number) => {
+    try {
+      const p = await window.pharmacy.purchases.get(id);
+      if (!p) return toast.error('Purchase not found.');
+      setEditing(p);
+      setFormOpen(true);
+    } catch (e) {
+      toast.error(errMsg(e));
+    }
+  };
+
   return (
     <div className="space-y-4">
       <ReadOnlyNotice />
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">Purchases</h1>
-        <button className="btn-primary" onClick={() => setModal(true)} disabled={!canWrite}>
+        <button className="btn-primary" onClick={openNew} disabled={!canWrite}>
           + New Purchase
         </button>
       </div>
@@ -55,11 +84,12 @@ export function Purchases() {
                 <th className="th">Supplier</th>
                 <th className="th text-right">Amount</th>
                 <th className="th">Notes</th>
+                <th className="th text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {purchases.map((p) => (
-                <tr key={p.id} className="border-t border-slate-100">
+                <tr key={p.id} className="border-t border-slate-100 hover:bg-slate-50">
                   <td className="td">{formatDate(p.purchase_date)}</td>
                   <td className="td font-medium">{p.invoice_no || '-'}</td>
                   <td className="td">
@@ -67,6 +97,23 @@ export function Purchases() {
                   </td>
                   <td className="td text-right">{inr(p.total_amount)}</td>
                   <td className="td">{p.notes || '-'}</td>
+                  <td className="td text-right">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        className="btn-secondary px-2 py-1"
+                        onClick={() => openView(p.id)}
+                      >
+                        View
+                      </button>
+                      <button
+                        className="btn-secondary px-2 py-1"
+                        onClick={() => openEdit(p.id)}
+                        disabled={!canWrite}
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -74,38 +121,138 @@ export function Purchases() {
         )}
       </div>
 
-      {modal && (
+      {formOpen && (
         <PurchaseForm
           suppliers={suppliers}
-          onClose={() => setModal(false)}
+          initial={editing}
+          onClose={() => {
+            setFormOpen(false);
+            setEditing(null);
+          }}
           onSaved={() => {
-            setModal(false);
+            setFormOpen(false);
+            setEditing(null);
             load();
-            toast.success('Purchase saved and stock updated.');
+            toast.success(
+              editing ? 'Purchase updated and stock adjusted.' : 'Purchase saved and stock updated.'
+            );
           }}
           onError={(m) => toast.error(m)}
         />
       )}
+
+      <Modal
+        open={!!viewing}
+        title={
+          viewing
+            ? `Purchase ${viewing.invoice_no || `#${viewing.id}`}`
+            : ''
+        }
+        onClose={() => setViewing(null)}
+        wide
+        footer={
+          viewing && (
+            <>
+              <button className="btn-secondary" onClick={() => setViewing(null)}>
+                Close
+              </button>
+              {canWrite && (
+                <button
+                  className="btn-primary"
+                  onClick={() => {
+                    const id = viewing.id;
+                    setViewing(null);
+                    openEdit(id);
+                  }}
+                >
+                  Edit
+                </button>
+              )}
+            </>
+          )
+        }
+      >
+        {viewing && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-2 text-sm text-slate-600">
+              <div>Date: {formatDate(viewing.purchase_date)}</div>
+              <div>Supplier: {viewing.supplier_name || '-'}</div>
+              {viewing.notes && <div className="col-span-2">Notes: {viewing.notes}</div>}
+            </div>
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="th">Medicine</th>
+                  <th className="th">Batch</th>
+                  <th className="th">Expiry</th>
+                  <th className="th text-center">Qty</th>
+                  <th className="th text-right">Purch.</th>
+                  <th className="th text-right">MRP</th>
+                  <th className="th text-right">Line</th>
+                </tr>
+              </thead>
+              <tbody>
+                {viewing.items.map((it) => (
+                  <tr key={it.id} className="border-t border-slate-100">
+                    <td className="td">{it.medicine_name}</td>
+                    <td className="td">{it.batch_no}</td>
+                    <td className="td">{formatDate(it.expiry_date)}</td>
+                    <td className="td text-center">{it.quantity}</td>
+                    <td className="td text-right">{inr(it.purchase_price)}</td>
+                    <td className="td text-right">{inr(it.mrp)}</td>
+                    <td className="td text-right">
+                      {inr(it.purchase_price * it.quantity)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="text-right">
+              <div className="text-sm text-slate-500">Total Purchase Value</div>
+              <div className="text-xl font-bold text-brand-700">
+                {inr(viewing.total_amount)}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
 
 function PurchaseForm({
   suppliers,
+  initial,
   onClose,
   onSaved,
   onError,
 }: {
   suppliers: Supplier[];
+  initial: PurchaseWithItems | null;
   onClose: () => void;
   onSaved: () => void;
   onError: (m: string) => void;
 }) {
-  const [supplierId, setSupplierId] = useState<number | null>(null);
-  const [invoiceNo, setInvoiceNo] = useState('');
-  const [date, setDate] = useState(todayIso());
-  const [notes, setNotes] = useState('');
-  const [items, setItems] = useState<DraftItem[]>([]);
+  const [supplierId, setSupplierId] = useState<number | null>(
+    initial?.supplier_id ?? null
+  );
+  const [invoiceNo, setInvoiceNo] = useState(initial?.invoice_no ?? '');
+  const [date, setDate] = useState(initial?.purchase_date ?? todayIso());
+  const [notes, setNotes] = useState(initial?.notes ?? '');
+  const [items, setItems] = useState<DraftItem[]>(
+    () =>
+      initial?.items.map((it) => ({
+        medicine_id: it.medicine_id,
+        medicine_name: it.medicine_name,
+        batch_no: it.batch_no,
+        expiry_date: it.expiry_date,
+        mrp: it.mrp,
+        purchase_price: it.purchase_price,
+        sale_price: it.sale_price,
+        gst_rate: it.gst_rate,
+        quantity: it.quantity,
+      })) ?? []
+  );
   const [busy, setBusy] = useState(false);
 
   const [search, setSearch] = useState('');
@@ -158,15 +305,17 @@ function PurchaseForm({
       }
       if (it.quantity <= 0) return onError(`Quantity must be positive for ${it.medicine_name}.`);
     }
+    const payload = {
+      supplier_id: supplierId,
+      invoice_no: invoiceNo.trim() || null,
+      purchase_date: date,
+      notes: notes.trim() || null,
+      items: items.map(({ medicine_name, ...rest }) => rest),
+    };
     setBusy(true);
     try {
-      await window.pharmacy.purchases.create({
-        supplier_id: supplierId,
-        invoice_no: invoiceNo.trim() || null,
-        purchase_date: date,
-        notes: notes.trim() || null,
-        items: items.map(({ medicine_name, ...rest }) => rest),
-      });
+      if (initial) await window.pharmacy.purchases.update(initial.id, payload);
+      else await window.pharmacy.purchases.create(payload);
       onSaved();
     } catch (e) {
       onError(errMsg(e));
@@ -178,7 +327,7 @@ function PurchaseForm({
   return (
     <Modal
       open
-      title="New Purchase (Stock Inward)"
+      title={initial ? 'Edit Purchase' : 'New Purchase (Stock Inward)'}
       onClose={onClose}
       wide
       footer={
@@ -187,7 +336,7 @@ function PurchaseForm({
             Cancel
           </button>
           <button className="btn-primary" onClick={save} disabled={busy}>
-            Save Purchase
+            {initial ? 'Update Purchase' : 'Save Purchase'}
           </button>
         </>
       }

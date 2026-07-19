@@ -45,7 +45,7 @@ export function Billing() {
 
   const addToCart = (batch: SellableBatch) => {
     if (!canWrite) {
-      toast.error('Billing is disabled until the subscription is renewed.');
+      toast.error('Sales is disabled until the subscription is renewed.');
       return;
     }
     setCart((prev) => {
@@ -114,7 +114,7 @@ export function Billing() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-slate-800">Billing</h1>
+      <h1 className="text-2xl font-bold text-slate-800">Sales</h1>
       <ReadOnlyNotice />
 
       <div className="grid gap-4 lg:grid-cols-3">

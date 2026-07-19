@@ -6,6 +6,7 @@ import {
   createSale,
   getSale,
   searchSellable,
+  updateSale,
 } from '../src/db/services/sales';
 import { saveSettings } from '../src/db/services/settings';
 import { futureExpiry, pastExpiry, saleInput, seedMedicineWithBatch } from './helpers/fixtures';
@@ -138,5 +139,34 @@ describe('sales', () => {
     expect(getDb().prepare('SELECT COUNT(*) AS c FROM sales').get()).toMatchObject({
       c: 0,
     });
+  });
+
+  it('updates a sale keeping invoice number and adjusting stock', () => {
+    const { batch } = seedMedicineWithBatch({ quantity: 20, sale_price: 50 });
+    const sale = createSale(saleInput([{ batch_id: batch.id, quantity: 5 }]));
+    expect(sale.invoice_no).toBe('INV-00001');
+    expect(listBatchesByMedicine(batch.medicine_id)[0].quantity_in_stock).toBe(15);
+
+    const updated = updateSale(
+      sale.id,
+      saleInput([{ batch_id: batch.id, quantity: 2 }])
+    );
+
+    expect(updated.invoice_no).toBe('INV-00001');
+    expect(updated.total).toBe(100);
+    expect(updated.items[0].quantity).toBe(2);
+    expect(listBatchesByMedicine(batch.medicine_id)[0].quantity_in_stock).toBe(18);
+  });
+
+  it('rejects sale update when new qty exceeds available stock', () => {
+    const { batch } = seedMedicineWithBatch({ quantity: 5, sale_price: 50 });
+    const sale = createSale(saleInput([{ batch_id: batch.id, quantity: 3 }]));
+
+    expect(() =>
+      updateSale(sale.id, saleInput([{ batch_id: batch.id, quantity: 10 }]))
+    ).toThrow(/Not enough stock/);
+
+    expect(getSale(sale.id)?.items[0].quantity).toBe(3);
+    expect(listBatchesByMedicine(batch.medicine_id)[0].quantity_in_stock).toBe(2);
   });
 });

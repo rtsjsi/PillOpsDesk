@@ -6,12 +6,12 @@ import { AppIcon } from './AppIcon';
 
 const NAV = [
   { to: '/', label: 'Dashboard', end: true, icon: '🏠' },
-  { to: '/billing', label: 'Billing', icon: '🧾' },
-  { to: '/sales', label: 'Sales History', icon: '📜' },
-  { to: '/inventory', label: 'Inventory', icon: '💊' },
   { to: '/purchases', label: 'Purchases', icon: '📦' },
-  { to: '/customers', label: 'Customers', icon: '👥' },
+  { to: '/billing', label: 'Sales', icon: '🧾' },
+  { to: '/inventory', label: 'Inventory', icon: '💊' },
   { to: '/suppliers', label: 'Suppliers', icon: '🚚' },
+  { to: '/customers', label: 'Customers', icon: '👥' },
+  { to: '/sales', label: 'Sales History', icon: '📜' },
   { to: '/reports', label: 'Reports', icon: '📊' },
   { to: '/settings', label: 'Settings', icon: '⚙️' },
 ];
