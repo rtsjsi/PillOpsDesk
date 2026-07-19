@@ -42,6 +42,20 @@ describe('medicines', () => {
     expect(listMedicines('asp')).toHaveLength(1);
     expect(listMedicines('azi')).toHaveLength(1);
   });
+
+  it('persists pack size, schedule, and storage type', () => {
+    const med = createMedicine(
+      medicineInput({
+        name: 'Insulin Glargine',
+        pack_size: '3ml',
+        schedule: 'H1',
+        storage_type: 'refrigerated',
+      })
+    );
+    expect(med.pack_size).toBe('3ml');
+    expect(med.schedule).toBe('H1');
+    expect(med.storage_type).toBe('refrigerated');
+  });
 });
 
 describe('batch stock', () => {

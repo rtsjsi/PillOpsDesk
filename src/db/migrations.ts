@@ -123,6 +123,12 @@ const MIGRATIONS: string[] = [
   `
   ALTER TABLE sales ADD COLUMN discount_percent REAL NOT NULL DEFAULT 0;
   `,
+  // v3: medicine master — pack size, drug schedule, storage type
+  `
+  ALTER TABLE medicines ADD COLUMN pack_size TEXT;
+  ALTER TABLE medicines ADD COLUMN schedule TEXT;
+  ALTER TABLE medicines ADD COLUMN storage_type TEXT;
+  `,
 ];
 
 export function runMigrations(db: Database.Database): void {

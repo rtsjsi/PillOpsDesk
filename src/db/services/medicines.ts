@@ -28,8 +28,10 @@ export function createMedicine(input: MedicineInput): Medicine {
   const info = db
     .prepare(
       `INSERT INTO medicines
-        (name, generic_name, manufacturer, hsn_code, gst_rate, category, rack, reorder_level, is_active)
-       VALUES (@name, @generic_name, @manufacturer, @hsn_code, @gst_rate, @category, @rack, @reorder_level, @is_active)`
+        (name, generic_name, manufacturer, hsn_code, gst_rate, category,
+         pack_size, schedule, storage_type, rack, reorder_level, is_active)
+       VALUES (@name, @generic_name, @manufacturer, @hsn_code, @gst_rate, @category,
+         @pack_size, @schedule, @storage_type, @rack, @reorder_level, @is_active)`
     )
     .run({
       name: input.name,
@@ -38,6 +40,9 @@ export function createMedicine(input: MedicineInput): Medicine {
       hsn_code: input.hsn_code ?? null,
       gst_rate: input.gst_rate,
       category: input.category ?? null,
+      pack_size: input.pack_size ?? null,
+      schedule: input.schedule ?? null,
+      storage_type: input.storage_type ?? null,
       rack: input.rack ?? null,
       reorder_level: input.reorder_level ?? 10,
       is_active: input.is_active ?? 1,
@@ -51,6 +56,7 @@ export function updateMedicine(id: number, input: MedicineInput): Medicine {
     `UPDATE medicines SET
        name = @name, generic_name = @generic_name, manufacturer = @manufacturer,
        hsn_code = @hsn_code, gst_rate = @gst_rate, category = @category,
+       pack_size = @pack_size, schedule = @schedule, storage_type = @storage_type,
        rack = @rack, reorder_level = @reorder_level
      WHERE id = @id`
   ).run({
@@ -61,6 +67,9 @@ export function updateMedicine(id: number, input: MedicineInput): Medicine {
     hsn_code: input.hsn_code ?? null,
     gst_rate: input.gst_rate,
     category: input.category ?? null,
+    pack_size: input.pack_size ?? null,
+    schedule: input.schedule ?? null,
+    storage_type: input.storage_type ?? null,
     rack: input.rack ?? null,
     reorder_level: input.reorder_level ?? 10,
   });
