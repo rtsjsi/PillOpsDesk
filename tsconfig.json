@@ -18,5 +18,6 @@
       "@shared/*": ["src/shared/*"]
     }
   },
-  "include": ["src", "tests", "forge.config.ts", "vite.*.config.ts", "vitest.config.ts", "playwright.config.ts"]
+  "include": ["src", "forge.config.ts", "vite.*.config.ts"]
 }
+

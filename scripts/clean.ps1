@@ -1,4 +1,4 @@
-# Removes generated build/test artifacts from the project tree.
+# Removes generated build artifacts from the project tree.
 # Safe to re-run. Does not touch source, node_modules, or scripts/keys.
 $ErrorActionPreference = 'Continue'
 $Root = Split-Path $PSScriptRoot -Parent
@@ -6,13 +6,7 @@ $Root = Split-Path $PSScriptRoot -Parent
 $Targets = @(
   'out',
   '.vite',
-  'dist',
-  'test-results',
-  'playwright-report',
-  'tests\e2e\report',
-  'tests\e2e\.user-data',
-  'tests\e2e\.user-data-run',
-  'tests\e2e\.user-data-smoke'
+  'dist'
 )
 
 Write-Host "Cleaning PillOpsDesk artifacts under $Root"

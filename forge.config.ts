@@ -1,5 +1,4 @@
 import type { ForgeConfig } from '@electron-forge/shared-types';
-import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
@@ -30,7 +29,6 @@ const PACKAGED_NODE_MODULES = [
   'better-sqlite3',
   'bindings',
   'file-uri-to-path',
-  'electron-squirrel-startup',
 ];
 
 async function copyPackagedNodeModules(buildPath: string): Promise<void> {
@@ -75,14 +73,19 @@ const config: ForgeConfig = {
     },
   },
   makers: [
-    new MakerSquirrel({
-      name: 'pillopsdesk',
-      setupExe: 'PillOpsDeskSetup.exe',
-      setupIcon: path.resolve(__dirname, 'assets/icons/icon.ico'),
-      authors: publisherName,
-      copyright: `Copyright © ${new Date().getFullYear()} ${publisherName}`,
-      ...(windowsSign ? { windowsSign } : {}),
-    }),
+    // Classic Windows wizard: progress page + Finish dialog with “Run” checkbox.
+    // NSIS options live in package.json → build.nsis
+    {
+      name: '@electron-addons/electron-forge-maker-nsis',
+      config: windowsSign
+        ? {
+            codesign: {
+              certificateFile: windowsSign.certificateFile,
+              certificatePassword: windowsSign.certificatePassword,
+            },
+          }
+        : {},
+    },
   ],
   plugins: [
     new AutoUnpackNativesPlugin({}),

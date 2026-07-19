@@ -60,16 +60,9 @@ On first launch you will be asked to create the **owner** account.
 npm run make
 ```
 
-The installer (`PillOpsDeskSetup.exe`) and packaged app are produced under
-the `out/` directory. Clear build/test junk anytime with `npm run clean`.
-
-## Tests
-
-```bash
-npm test            # unit tests (Vitest)
-npm run package     # package the app (required once before e2e)
-npm run test:e2e    # Playwright end-to-end tests
-```
+The installer (`PillOpsDeskSetup.exe`) is a classic Windows wizard (progress bar
+and Finish page with an option to launch the app). It is produced under the
+`out/` directory. Clear build junk anytime with `npm run clean`.
 
 ## Project structure
 

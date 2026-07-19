@@ -9,20 +9,12 @@
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "package:e2e": "npm run package",
     "make": "electron-forge make",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "postinstall": "electron-rebuild -f -w better-sqlite3",
     "clean": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/clean.ps1",
     "typecheck": "tsc --noEmit",
     "lint": "npm run typecheck",
-    "pretest": "npm rebuild better-sqlite3",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "posttest": "electron-rebuild -f -w better-sqlite3",
-    "test:e2e": "playwright test",
-    "test:e2e:login": "playwright test tests/e2e/login.spec.ts",
-    "test:e2e:ui": "playwright test --ui",
     "license:keypair": "node scripts/generate-keypair.cjs",
     "license:generate": "node scripts/generate-license.cjs",
     "icons": "node scripts/generate-icons.cjs"
@@ -30,21 +22,19 @@
   "dependencies": {
     "better-sqlite3": "^12.11.1",
     "dotenv": "^17.4.2",
-    "electron-squirrel-startup": "^1.0.1",
     "google-auth-library": "^10.9.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2"
   },
   "devDependencies": {
+    "@electron-addons/electron-forge-maker-nsis": "^7.0.2",
     "@electron-forge/cli": "^7.6.0",
-    "@electron-forge/maker-squirrel": "^7.11.2",
     "@electron-forge/plugin-auto-unpack-natives": "^7.6.0",
     "@electron-forge/plugin-fuses": "^7.6.0",
     "@electron-forge/plugin-vite": "^7.6.0",
     "@electron/fuses": "^1.8.0",
     "@electron/rebuild": "^4.0.1",
-    "@playwright/test": "^1.55.0",
     "@types/better-sqlite3": "^7.6.11",
     "@types/node": "^26.1.1",
     "@types/react": "^18.3.11",
@@ -57,7 +47,25 @@
     "sharp": "^0.35.3",
     "tailwindcss": "^3.4.13",
     "typescript": "^5.6.2",
-    "vite": "^5.4.8",
-    "vitest": "^3.2.4"
+    "vite": "^5.4.8"
+  },
+  "build": {
+    "appId": "com.pillopsdesk.app",
+    "productName": "PillOpsDesk",
+    "win": {
+      "icon": "assets/icons/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PillOpsDesk",
+      "artifactName": "PillOpsDeskSetup.${ext}",
+      "installerIcon": "assets/icons/icon.ico",
+      "uninstallerIcon": "assets/icons/icon.ico",
+      "uninstallDisplayName": "PillOpsDesk"
+    }
   }
 }

@@ -4,6 +4,7 @@ import type {
   DashboardStats,
   StockRow,
   SalesReportRow,
+  PurchasesReportRow,
   GstSummaryRow,
 } from '@shared/types';
 
@@ -127,6 +128,21 @@ export function getSalesReport(from: string, to: string): SalesReportRow[] {
        ORDER BY date DESC`
     )
     .all(from, to) as SalesReportRow[];
+}
+
+export function getPurchasesReport(from: string, to: string): PurchasesReportRow[] {
+  const db = getDb();
+  return db
+    .prepare(
+      `SELECT date(purchase_date) AS date,
+              COUNT(*) AS invoice_count,
+              COALESCE(SUM(total_amount), 0) AS total
+       FROM purchases
+       WHERE date(purchase_date) BETWEEN ? AND ?
+       GROUP BY date(purchase_date)
+       ORDER BY date DESC`
+    )
+    .all(from, to) as PurchasesReportRow[];
 }
 
 export function getGstSummary(from: string, to: string): GstSummaryRow[] {

@@ -59,6 +59,7 @@ const api: PharmacyApi = {
     expiring: (withinDays) => invoke(IPC.reportsExpiring, withinDays),
     expiredInStock: () => invoke(IPC.reportsExpiredInStock),
     salesReport: (from, to) => invoke(IPC.reportsSalesReport, from, to),
+    purchasesReport: (from, to) => invoke(IPC.reportsPurchasesReport, from, to),
     gstSummary: (from, to) => invoke(IPC.reportsGstSummary, from, to),
     stockValuation: () => invoke(IPC.reportsStockValuation),
     exportCsv: (filename, csv) => invoke(IPC.reportsExportCsv, filename, csv),

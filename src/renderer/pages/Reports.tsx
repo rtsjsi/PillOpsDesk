@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import type {
   SalesReportRow,
+  PurchasesReportRow,
   GstSummaryRow,
   StockRow,
 } from '../../shared/types';
-import { inr, formatDate, todayIso, daysUntil, toCsv } from '../lib/format';
+import { inr, formatDate, todayIso, monthStartIso, daysUntil, toCsv } from '../lib/format';
 import { Spinner, EmptyState, Badge, useToast } from '../components/ui';
 
-type Tab = 'sales' | 'gst' | 'lowstock' | 'expiring' | 'valuation';
+type Tab = 'sales' | 'purchases' | 'gst' | 'lowstock' | 'expiring' | 'valuation';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'sales', label: 'Sales' },
+  { id: 'purchases', label: 'Purchases' },
   { id: 'gst', label: 'GST Summary' },
   { id: 'lowstock', label: 'Low Stock' },
   { id: 'expiring', label: 'Expiring' },
@@ -38,6 +40,7 @@ export function Reports() {
         ))}
       </div>
       {tab === 'sales' && <SalesReport />}
+      {tab === 'purchases' && <PurchasesReport />}
       {tab === 'gst' && <GstReport />}
       {tab === 'lowstock' && <LowStockReport />}
       {tab === 'expiring' && <ExpiringReport />}
@@ -165,6 +168,69 @@ function SalesReport() {
                 <td className="td font-bold" colSpan={5}>
                   Grand Total
                 </td>
+                <td className="td text-right font-bold text-brand-700">{inr(grand)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PurchasesReport() {
+  const [from, setFrom] = useState(monthStartIso());
+  const [to, setTo] = useState(todayIso());
+  const [rows, setRows] = useState<PurchasesReportRow[] | null>(null);
+
+  const run = () => {
+    setRows(null);
+    window.pharmacy.reports.purchasesReport(from, to).then(setRows);
+  };
+  useEffect(run, []);
+
+  const grand = rows?.reduce((s, r) => s + r.total, 0) ?? 0;
+  const invoiceTotal = rows?.reduce((s, r) => s + r.invoice_count, 0) ?? 0;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-end justify-between">
+        <DateRange from={from} to={to} setFrom={setFrom} setTo={setTo} onRun={run} />
+        {rows && (
+          <ExportButton
+            filename={`purchases-${from}-to-${to}.csv`}
+            headers={['Date', 'Purchases', 'Total']}
+            rows={rows.map((r) => [r.date, r.invoice_count, r.total.toFixed(2)])}
+          />
+        )}
+      </div>
+      <div className="card overflow-hidden">
+        {!rows ? (
+          <Spinner />
+        ) : rows.length === 0 ? (
+          <EmptyState message="No purchases in range." />
+        ) : (
+          <table className="w-full">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="th">Date</th>
+                <th className="th text-center">Purchases</th>
+                <th className="th text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.date} className="border-t border-slate-100">
+                  <td className="td">{formatDate(r.date)}</td>
+                  <td className="td text-center">{r.invoice_count}</td>
+                  <td className="td text-right font-medium">{inr(r.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-slate-200 bg-slate-50">
+                <td className="td font-bold">Grand Total</td>
+                <td className="td text-center font-bold">{invoiceTotal}</td>
                 <td className="td text-right font-bold text-brand-700">{inr(grand)}</td>
               </tr>
             </tfoot>

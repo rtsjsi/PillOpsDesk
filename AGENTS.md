@@ -23,7 +23,7 @@ Primary users: pharmacy owner and staff, operating a single store on a single PC
 | Styling   | Tailwind CSS (config in `tailwind.config.cjs`)    |
 | Database  | SQLite via **better-sqlite3** (synchronous, WAL)  |
 | IPC       | `contextBridge` + `ipcRenderer.invoke` (typed)    |
-| Packaging | electron-forge `make` → Squirrel Windows installer |
+| Packaging | electron-forge `make` → NSIS Windows installer (wizard + progress) |
 
 Node 20+ required. `better-sqlite3` is a **native module** compiled against
 Electron via `@electron/rebuild` (see gotchas).
@@ -112,10 +112,8 @@ tsconfig.json             # @shared/* path alias -> src/shared/*
 ```bash
 npm install       # installs deps; postinstall rebuilds better-sqlite3 for Electron
 npm start         # run the app in development (Vite dev server + Electron)
-npm test          # unit tests (Vitest)
-npm run test:e2e  # Playwright e2e (needs packaged app via npm run package)
-npm run make      # build the Windows installer (out/make/.../PillOpsDeskSetup.exe)
-npm run clean     # delete out/, .vite/, Playwright artifacts, e2e user-data
+npm run make      # build the Windows installer (out/.../PillOpsDeskSetup.exe)
+npm run clean     # delete out/, .vite/
 npm run rebuild   # manually rebuild better-sqlite3 against Electron if needed
 npm run typecheck # TypeScript check (no emit; Vite/Forge does the actual build)
 npm run icons     # regenerate app icons from assets/icons/icon.svg

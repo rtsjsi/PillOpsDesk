@@ -135,6 +135,9 @@ export function registerIpc(): void {
   handleRead(IPC.reportsSalesReport, (from: string, to: string) =>
     reports.getSalesReport(from, to)
   );
+  handleRead(IPC.reportsPurchasesReport, (from: string, to: string) =>
+    reports.getPurchasesReport(from, to)
+  );
   handleRead(IPC.reportsGstSummary, (from: string, to: string) =>
     reports.getGstSummary(from, to)
   );

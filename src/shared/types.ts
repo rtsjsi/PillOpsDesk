@@ -210,6 +210,12 @@ export interface SalesReportRow {
   total: number;
 }
 
+export interface PurchasesReportRow {
+  date: string;
+  invoice_count: number;
+  total: number;
+}
+
 export interface GstSummaryRow {
   gst_rate: number;
   taxable_value: number;

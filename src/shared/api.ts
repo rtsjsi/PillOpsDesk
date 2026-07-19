@@ -21,6 +21,7 @@ import type {
   User,
   DashboardStats,
   SalesReportRow,
+  PurchasesReportRow,
   GstSummaryRow,
   LicenseStatus,
   DriveBackupSettings,
@@ -82,6 +83,7 @@ export interface PharmacyApi {
     expiring: (withinDays?: number) => Promise<StockRow[]>;
     expiredInStock: () => Promise<StockRow[]>;
     salesReport: (from: string, to: string) => Promise<SalesReportRow[]>;
+    purchasesReport: (from: string, to: string) => Promise<PurchasesReportRow[]>;
     gstSummary: (from: string, to: string) => Promise<GstSummaryRow[]>;
     stockValuation: () => Promise<StockRow[]>;
     exportCsv: (filename: string, csv: string) => Promise<boolean>;
@@ -159,6 +161,7 @@ export const IPC = {
   reportsExpiring: 'reports:expiring',
   reportsExpiredInStock: 'reports:expiredInStock',
   reportsSalesReport: 'reports:salesReport',
+  reportsPurchasesReport: 'reports:purchasesReport',
   reportsGstSummary: 'reports:gstSummary',
   reportsStockValuation: 'reports:stockValuation',
   reportsExportCsv: 'reports:exportCsv',

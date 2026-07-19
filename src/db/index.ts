@@ -6,23 +6,14 @@ import { runMigrations } from './migrations';
 let db: Database.Database | null = null;
 
 export function getDbPath(): string {
-  // Lazy-load electron so Vitest can import this module without the Electron runtime.
+  // Lazy-load electron so this module can be required without the Electron runtime
+  // in tooling that only needs the path helpers at typecheck time.
   const { app } = require('electron') as typeof import('electron');
   const dir = app.getPath('userData');
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
   return path.join(dir, 'pharmacy.db');
-}
-
-/** Opens an in-memory DB with migrations — for automated tests only. */
-export function initTestDb(existing?: Database.Database): Database.Database {
-  closeDb();
-  db = existing ?? new Database(':memory:');
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
-  runMigrations(db);
-  return db;
 }
 
 export function getDb(): Database.Database {
