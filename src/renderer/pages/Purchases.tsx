@@ -16,6 +16,21 @@ interface DraftItem extends PurchaseItemInput {
   medicine_name: string;
 }
 
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+/** Markup % from purchase cost to sale price. */
+function marginPercent(purchase: number, sale: number): number {
+  if (purchase <= 0) return 0;
+  return round2(((sale - purchase) / purchase) * 100);
+}
+
+function saleFromMargin(purchase: number, marginPct: number): number {
+  if (purchase <= 0) return 0;
+  return round2(purchase * (1 + marginPct / 100));
+}
+
 export function Purchases() {
   const toast = useToast();
   const canWrite = useWriteAllowed();
@@ -223,6 +238,8 @@ export function Purchases() {
                   <th className="th">Expiry</th>
                   <th className="th text-center">Qty</th>
                   <th className="th text-right">Purch.</th>
+                  <th className="th text-right">Margin</th>
+                  <th className="th text-right">Sale</th>
                   <th className="th text-right">MRP</th>
                   <th className="th text-right">Line</th>
                 </tr>
@@ -235,6 +252,10 @@ export function Purchases() {
                     <td className="td">{formatDate(it.expiry_date)}</td>
                     <td className="td text-center">{it.quantity}</td>
                     <td className="td text-right">{inr(it.purchase_price)}</td>
+                    <td className="td text-right">
+                      {marginPercent(it.purchase_price, it.sale_price).toFixed(1)}%
+                    </td>
+                    <td className="td text-right">{inr(it.sale_price)}</td>
                     <td className="td text-right">{inr(it.mrp)}</td>
                     <td className="td text-right">
                       {inr(it.purchase_price * it.quantity)}
@@ -452,6 +473,7 @@ function PurchaseForm({
                   <th className="th">Qty</th>
                   <th className="th">MRP</th>
                   <th className="th">Purch.</th>
+                  <th className="th">Margin %</th>
                   <th className="th">Sale</th>
                   <th className="th"></th>
                 </tr>
@@ -499,8 +521,30 @@ function PurchaseForm({
                         step="0.01"
                         className="input w-20 px-2 py-1"
                         value={it.purchase_price}
+                        onChange={(e) => {
+                          const purchase_price = Number(e.target.value);
+                          const margin = marginPercent(it.purchase_price, it.sale_price);
+                          patch(idx, {
+                            purchase_price,
+                            sale_price: saleFromMargin(purchase_price, margin),
+                          });
+                        }}
+                      />
+                    </td>
+                    <td className="td">
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="input w-16 px-2 py-1"
+                        title="Markup % on purchase cost"
+                        value={marginPercent(it.purchase_price, it.sale_price)}
                         onChange={(e) =>
-                          patch(idx, { purchase_price: Number(e.target.value) })
+                          patch(idx, {
+                            sale_price: saleFromMargin(
+                              it.purchase_price,
+                              Number(e.target.value)
+                            ),
+                          })
                         }
                       />
                     </td>
