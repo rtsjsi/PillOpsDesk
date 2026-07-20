@@ -90,6 +90,7 @@ src/
     register.ts           # Wires every IPC channel to a service
     invoice.ts            # Builds invoice HTML + prints via hidden BrowserWindow
     backup.ts             # DB backup/restore + CSV export (uses dialog)
+    updates.ts            # GitHub Releases OTA check / download / install
   renderer/
     App.tsx               # Routes + auth context (useAuth) + ToastProvider
     components/
