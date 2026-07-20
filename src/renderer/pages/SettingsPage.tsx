@@ -1,5 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import type { DriveBackupFile, DriveBackupSettings, DriveBackupStatus, Settings, User } from '../../shared/types';
+import type {
+  DriveBackupFile,
+  DriveBackupSettings,
+  DriveBackupStatus,
+  Settings,
+  UpdateCheckResult,
+  UpdateDownloadProgress,
+  User,
+} from '../../shared/types';
 import { Modal } from '../components/Modal';
 import { Spinner, useToast, errMsg, Badge } from '../components/ui';
 import { useAuth, useLicense, useWriteAllowed } from '../App';
@@ -286,6 +294,121 @@ function GoogleDriveSection({ readOnly }: { readOnly: boolean }) {
   );
 }
 
+function AppUpdatesSection() {
+  const toast = useToast();
+  const [currentVersion, setCurrentVersion] = useState<string | null>(null);
+  const [checkResult, setCheckResult] = useState<UpdateCheckResult | null>(null);
+  const [progress, setProgress] = useState<UpdateDownloadProgress | null>(null);
+  const [busy, setBusy] = useState<'check' | 'apply' | null>(null);
+
+  useEffect(() => {
+    void window.pharmacy.updates.getVersion().then(setCurrentVersion);
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = window.pharmacy.updates.onProgress(setProgress);
+    return unsubscribe;
+  }, []);
+
+  const check = async () => {
+    setBusy('check');
+    setCheckResult(null);
+    setProgress(null);
+    try {
+      const result = await window.pharmacy.updates.check();
+      setCheckResult(result);
+      if (!result.updateAvailable) {
+        toast.success('You are on the latest version.');
+      }
+    } catch (e) {
+      toast.error(errMsg(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const downloadAndInstall = async () => {
+    const manifest = checkResult?.manifest;
+    if (!manifest) return;
+
+    setBusy('apply');
+    setProgress(null);
+    try {
+      await window.pharmacy.updates.apply(manifest);
+    } catch (e) {
+      toast.error(errMsg(e));
+      setBusy(null);
+    }
+  };
+
+  const progressLabel =
+    progress?.phase === 'installing'
+      ? 'Installing update in the background…'
+      : 'Downloading update…';
+
+  return (
+    <div className="card p-5">
+      <h2 className="mb-2 text-lg font-semibold text-slate-700">App Updates</h2>
+      <p className="mb-4 text-sm text-slate-500">
+        Check for updates online. When you install an update, it downloads and applies in the
+        background and PillOpsDesk restarts automatically. Your pharmacy database is kept.
+      </p>
+
+      <div className="mb-4 text-sm">
+        <div className="text-xs uppercase text-slate-500">Current Version</div>
+        <div className="font-medium text-slate-800">{currentVersion ?? '…'}</div>
+      </div>
+
+      {checkResult?.updateAvailable && checkResult.manifest && (
+        <div className="mb-4 rounded-lg border border-emerald-100 bg-emerald-50 p-4 text-sm">
+          <div className="font-medium text-emerald-900">
+            Version {checkResult.manifest.version} is available
+          </div>
+          {checkResult.manifest.notes && (
+            <p className="mt-2 whitespace-pre-wrap text-emerald-800">{checkResult.manifest.notes}</p>
+          )}
+        </div>
+      )}
+
+      {progress && busy === 'apply' && (
+        <div className="mb-4">
+          <div className="mb-1 flex justify-between text-xs text-slate-500">
+            <span>{progressLabel}</span>
+            {progress.phase === 'downloading' && <span>{progress.percent}%</span>}
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+            <div
+              className={`h-full rounded-full bg-brand-600 transition-all ${
+                progress.phase === 'installing' ? 'w-full animate-pulse' : ''
+              }`}
+              style={
+                progress.phase === 'downloading'
+                  ? { width: `${progress.percent}%` }
+                  : undefined
+              }
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="flex gap-3">
+        <button className="btn-secondary" onClick={check} disabled={busy !== null}>
+          {busy === 'check' ? 'Checking…' : 'Check for Updates'}
+        </button>
+        {checkResult?.updateAvailable && checkResult.manifest && (
+          <button className="btn-primary" onClick={downloadAndInstall} disabled={busy !== null}>
+            {busy === 'apply'
+              ? progress?.phase === 'installing'
+                ? 'Installing…'
+                : 'Downloading…'
+              : 'Download & Install'}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function SettingsPage() {
   const toast = useToast();
   const { user } = useAuth();
@@ -416,6 +539,8 @@ export function SettingsPage() {
       <SubscriptionSection />
 
       <GoogleDriveSection readOnly={!canWrite} />
+
+      <AppUpdatesSection />
 
       <div className="card p-5">
         <h2 className="mb-2 text-lg font-semibold text-slate-700">Backup &amp; Restore</h2>

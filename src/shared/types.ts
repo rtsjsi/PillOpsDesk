@@ -276,3 +276,24 @@ export interface DriveBackupFile {
   createdAt: string;
   size: number;
 }
+
+export interface UpdateManifest {
+  version: string;
+  releaseDate?: string;
+  notes?: string;
+  url: string;
+  sha256: string;
+}
+
+export interface UpdateCheckResult {
+  currentVersion: string;
+  updateAvailable: boolean;
+  manifest?: UpdateManifest;
+}
+
+export interface UpdateDownloadProgress {
+  phase: 'downloading' | 'installing';
+  percent: number;
+  transferred: number;
+  total: number;
+}

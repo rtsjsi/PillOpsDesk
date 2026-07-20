@@ -17,7 +17,8 @@
     "lint": "npm run typecheck",
     "license:keypair": "node scripts/generate-keypair.cjs",
     "license:generate": "node scripts/generate-license.cjs",
-    "icons": "node scripts/generate-icons.cjs"
+    "icons": "node scripts/generate-icons.cjs",
+    "release:manifest": "node scripts/prepare-release-manifest.cjs"
   },
   "dependencies": {
     "better-sqlite3": "^12.11.1",

@@ -27,6 +27,9 @@ import type {
   DriveBackupSettings,
   DriveBackupStatus,
   DriveBackupFile,
+  UpdateCheckResult,
+  UpdateManifest,
+  UpdateDownloadProgress,
 } from './types';
 
 export interface PharmacyApi {
@@ -113,6 +116,12 @@ export interface PharmacyApi {
     getMachineId: () => Promise<string>;
     activate: (licenseKey: string) => Promise<LicenseStatus>;
   };
+  updates: {
+    getVersion: () => Promise<string>;
+    check: () => Promise<UpdateCheckResult>;
+    apply: (manifest: UpdateManifest) => Promise<void>;
+    onProgress: (callback: (progress: UpdateDownloadProgress) => void) => () => void;
+  };
 }
 
 export const IPC = {
@@ -185,4 +194,9 @@ export const IPC = {
   licenseGetStatus: 'license:getStatus',
   licenseGetMachineId: 'license:getMachineId',
   licenseActivate: 'license:activate',
+
+  updatesGetVersion: 'updates:getVersion',
+  updatesCheck: 'updates:check',
+  updatesApply: 'updates:apply',
+  updatesProgress: 'updates:progress',
 } as const;
