@@ -7,6 +7,7 @@ import type {
   PurchaseWithItems,
 } from '../../shared/types';
 import { inr, formatDate, todayIso, monthStartIso } from '../lib/format';
+import { purchaseLineAmounts, round2 } from '../../shared/gst';
 import { Modal } from '../components/Modal';
 import { Spinner, EmptyState, useToast, errMsg } from '../components/ui';
 import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
@@ -14,6 +15,25 @@ import { useWriteAllowed } from '../App';
 
 interface DraftItem extends PurchaseItemInput {
   medicine_name: string;
+}
+
+function marginPercent(purchase: number, sale: number): number {
+  if (purchase <= 0) return 0;
+  return round2(((sale - purchase) / purchase) * 100);
+}
+
+function saleFromMargin(purchase: number, marginPct: number): number {
+  if (purchase <= 0) return 0;
+  return round2(purchase * (1 + marginPct / 100));
+}
+
+function lineTotals(it: PurchaseItemInput) {
+  return purchaseLineAmounts({
+    purchase_price: it.purchase_price,
+    discount_percent: it.discount_percent,
+    quantity: it.quantity,
+    gst_rate: it.gst_rate,
+  });
 }
 
 export function Purchases() {
@@ -222,9 +242,14 @@ export function Purchases() {
                   <th className="th">Batch</th>
                   <th className="th">Expiry</th>
                   <th className="th text-center">Qty</th>
-                  <th className="th text-right">Purch.</th>
+                  <th className="th text-center">Free</th>
+                  <th className="th text-right">Rate</th>
+                  <th className="th text-right">Disc %</th>
+                  <th className="th text-right">Taxable</th>
+                  <th className="th text-right">Line Total</th>
+                  <th className="th text-right">Margin</th>
+                  <th className="th text-right">Sale</th>
                   <th className="th text-right">MRP</th>
-                  <th className="th text-right">Line</th>
                 </tr>
               </thead>
               <tbody>
@@ -234,11 +259,18 @@ export function Purchases() {
                     <td className="td">{it.batch_no}</td>
                     <td className="td">{formatDate(it.expiry_date)}</td>
                     <td className="td text-center">{it.quantity}</td>
+                    <td className="td text-center">{it.free_quantity || '-'}</td>
                     <td className="td text-right">{inr(it.purchase_price)}</td>
-                    <td className="td text-right">{inr(it.mrp)}</td>
                     <td className="td text-right">
-                      {inr(it.purchase_price * it.quantity)}
+                      {it.discount_percent > 0 ? `${it.discount_percent}%` : '-'}
                     </td>
+                    <td className="td text-right">{inr(it.taxable_value)}</td>
+                    <td className="td text-right">{inr(it.line_total)}</td>
+                    <td className="td text-right">
+                      {marginPercent(it.purchase_price, it.sale_price).toFixed(1)}%
+                    </td>
+                    <td className="td text-right">{inr(it.sale_price)}</td>
+                    <td className="td text-right">{inr(it.mrp)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -287,6 +319,8 @@ function PurchaseForm({
         sale_price: it.sale_price,
         gst_rate: it.gst_rate,
         quantity: it.quantity,
+        discount_percent: it.discount_percent ?? 0,
+        free_quantity: it.free_quantity ?? 0,
       })) ?? []
   );
   const [busy, setBusy] = useState(false);
@@ -318,6 +352,8 @@ function PurchaseForm({
         sale_price: 0,
         gst_rate: m.gst_rate,
         quantity: 1,
+        discount_percent: 0,
+        free_quantity: 0,
       },
     ]);
     setSearch('');
@@ -331,7 +367,7 @@ function PurchaseForm({
     setItems((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const total = items.reduce((s, it) => s + it.purchase_price * it.quantity, 0);
+  const total = items.reduce((s, it) => s + lineTotals(it).line_total, 0);
 
   const save = async () => {
     if (items.length === 0) return onError('Add at least one item.');
@@ -340,6 +376,12 @@ function PurchaseForm({
         return onError(`Batch number and expiry required for ${it.medicine_name}.`);
       }
       if (it.quantity <= 0) return onError(`Quantity must be positive for ${it.medicine_name}.`);
+      if ((it.free_quantity ?? 0) < 0) {
+        return onError(`Free quantity cannot be negative for ${it.medicine_name}.`);
+      }
+      if ((it.discount_percent ?? 0) < 0 || (it.discount_percent ?? 0) > 100) {
+        return onError(`Discount must be 0–100% for ${it.medicine_name}.`);
+      }
     }
     const payload = {
       supplier_id: supplierId,
@@ -450,14 +492,21 @@ function PurchaseForm({
                   <th className="th">Batch</th>
                   <th className="th">Expiry</th>
                   <th className="th">Qty</th>
+                  <th className="th">Free</th>
                   <th className="th">MRP</th>
-                  <th className="th">Purch.</th>
+                  <th className="th">Rate</th>
+                  <th className="th">Disc %</th>
+                  <th className="th">Margin %</th>
                   <th className="th">Sale</th>
+                  <th className="th text-right">Taxable</th>
+                  <th className="th text-right">Total</th>
                   <th className="th"></th>
                 </tr>
               </thead>
               <tbody>
-                {items.map((it, idx) => (
+                {items.map((it, idx) => {
+                  const amounts = lineTotals(it);
+                  return (
                   <tr key={idx} className="border-t border-slate-100">
                     <td className="td">{it.medicine_name}</td>
                     <td className="td">
@@ -487,6 +536,18 @@ function PurchaseForm({
                     <td className="td">
                       <input
                         type="number"
+                        min={0}
+                        className="input w-14 px-2 py-1"
+                        title="Scheme / bonus quantity"
+                        value={it.free_quantity}
+                        onChange={(e) =>
+                          patch(idx, { free_quantity: Math.max(0, Number(e.target.value)) })
+                        }
+                      />
+                    </td>
+                    <td className="td">
+                      <input
+                        type="number"
                         step="0.01"
                         className="input w-20 px-2 py-1"
                         value={it.mrp}
@@ -498,9 +559,50 @@ function PurchaseForm({
                         type="number"
                         step="0.01"
                         className="input w-20 px-2 py-1"
+                        title="Purchase rate before discount (GST-exclusive)"
                         value={it.purchase_price}
+                        onChange={(e) => {
+                          const purchase_price = Number(e.target.value);
+                          const margin = marginPercent(it.purchase_price, it.sale_price);
+                          patch(idx, {
+                            purchase_price,
+                            sale_price: saleFromMargin(purchase_price, margin),
+                          });
+                        }}
+                      />
+                    </td>
+                    <td className="td">
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step="0.1"
+                        className="input w-14 px-2 py-1"
+                        value={it.discount_percent}
                         onChange={(e) =>
-                          patch(idx, { purchase_price: Number(e.target.value) })
+                          patch(idx, {
+                            discount_percent: Math.min(
+                              100,
+                              Math.max(0, Number(e.target.value))
+                            ),
+                          })
+                        }
+                      />
+                    </td>
+                    <td className="td">
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="input w-16 px-2 py-1"
+                        title="Markup % on purchase cost"
+                        value={marginPercent(it.purchase_price, it.sale_price)}
+                        onChange={(e) =>
+                          patch(idx, {
+                            sale_price: saleFromMargin(
+                              it.purchase_price,
+                              Number(e.target.value)
+                            ),
+                          })
                         }
                       />
                     </td>
@@ -513,6 +615,12 @@ function PurchaseForm({
                         onChange={(e) => patch(idx, { sale_price: Number(e.target.value) })}
                       />
                     </td>
+                    <td className="td text-right text-slate-600 whitespace-nowrap">
+                      {inr(amounts.taxable_value)}
+                    </td>
+                    <td className="td text-right font-medium whitespace-nowrap">
+                      {inr(amounts.line_total)}
+                    </td>
                     <td className="td text-right">
                       <button
                         className="text-red-500 hover:text-red-700"
@@ -522,7 +630,8 @@ function PurchaseForm({
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

@@ -114,3 +114,31 @@ export function sumGstLines(lines: GstLineAmounts[]): {
     total: round2(total),
   };
 }
+
+/** Purchase line amounts from distributor rate (GST-exclusive) after line discount. */
+export function purchaseLineAmounts(input: {
+  purchase_price: number;
+  discount_percent: number;
+  quantity: number;
+  gst_rate: number;
+}): { net_rate: number; taxable_value: number; line_total: number } {
+  const disc = Math.min(Math.max(0, input.discount_percent ?? 0), 100);
+  const qty = Math.max(0, input.quantity ?? 0);
+  const rate = input.gst_rate ?? 0;
+  const net_rate = round2(Math.max(0, input.purchase_price) * (1 - disc / 100));
+  const taxable_value = round2(net_rate * qty);
+  const line_total = round2(taxable_value * (1 + rate / 100));
+  return { net_rate, taxable_value, line_total };
+}
+
+/** Landing cost per paid unit (after discount, incl. GST). */
+export function purchaseLandingCost(
+  line: Pick<
+    { purchase_price: number; discount_percent: number; quantity: number; gst_rate: number },
+    'purchase_price' | 'discount_percent' | 'quantity' | 'gst_rate'
+  >
+): number {
+  const { line_total } = purchaseLineAmounts(line);
+  if (line.quantity <= 0) return purchaseLineAmounts({ ...line, quantity: 1 }).net_rate * (1 + (line.gst_rate ?? 0) / 100);
+  return round2(line_total / line.quantity);
+}

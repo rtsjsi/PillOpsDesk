@@ -1,4 +1,5 @@
 import { getDb } from '../index';
+import { purchaseLandingCost, purchaseLineAmounts } from '@shared/gst';
 import type {
   Purchase,
   PurchaseInput,
@@ -6,6 +7,19 @@ import type {
   PurchaseItemInput,
   PurchaseWithItems,
 } from '@shared/types';
+
+function lineAmounts(it: PurchaseItemInput) {
+  return purchaseLineAmounts({
+    purchase_price: it.purchase_price,
+    discount_percent: it.discount_percent,
+    quantity: it.quantity,
+    gst_rate: it.gst_rate,
+  });
+}
+
+function stockQty(it: PurchaseItemInput): number {
+  return it.quantity + Math.max(0, it.free_quantity ?? 0);
+}
 
 function applyPurchaseItems(
   db: ReturnType<typeof getDb>,
@@ -28,11 +42,16 @@ function applyPurchaseItems(
   );
   const insertItem = db.prepare(
     `INSERT INTO purchase_items
-      (purchase_id, batch_id, medicine_id, quantity, purchase_price, gst_rate)
-     VALUES (@purchase_id, @batch_id, @medicine_id, @quantity, @purchase_price, @gst_rate)`
+      (purchase_id, batch_id, medicine_id, quantity, free_quantity, purchase_price,
+       discount_percent, gst_rate, taxable_value, line_total)
+     VALUES (@purchase_id, @batch_id, @medicine_id, @quantity, @free_quantity,
+             @purchase_price, @discount_percent, @gst_rate, @taxable_value, @line_total)`
   );
 
   for (const it of items) {
+    const amounts = lineAmounts(it);
+    const landing = purchaseLandingCost(it);
+    const qtyIn = stockQty(it);
     const existing = findBatch.get(it.medicine_id, it.batch_no, it.expiry_date) as
       | { id: number }
       | undefined;
@@ -40,9 +59,9 @@ function applyPurchaseItems(
     if (existing) {
       updateBatch.run({
         id: existing.id,
-        qty: it.quantity,
+        qty: qtyIn,
         mrp: it.mrp,
-        purchase_price: it.purchase_price,
+        purchase_price: landing,
         sale_price: it.sale_price,
       });
       batchId = existing.id;
@@ -52,9 +71,9 @@ function applyPurchaseItems(
         batch_no: it.batch_no,
         expiry_date: it.expiry_date,
         mrp: it.mrp,
-        purchase_price: it.purchase_price,
+        purchase_price: landing,
         sale_price: it.sale_price,
-        quantity_in_stock: it.quantity,
+        quantity_in_stock: qtyIn,
       });
       batchId = Number(bInfo.lastInsertRowid);
     }
@@ -63,10 +82,18 @@ function applyPurchaseItems(
       batch_id: batchId,
       medicine_id: it.medicine_id,
       quantity: it.quantity,
+      free_quantity: Math.max(0, it.free_quantity ?? 0),
       purchase_price: it.purchase_price,
+      discount_percent: Math.min(Math.max(0, it.discount_percent ?? 0), 100),
       gst_rate: it.gst_rate,
+      taxable_value: amounts.taxable_value,
+      line_total: amounts.line_total,
     });
   }
+}
+
+function purchaseTotal(items: PurchaseItemInput[]): number {
+  return items.reduce((sum, it) => sum + lineAmounts(it).line_total, 0);
 }
 
 export function createPurchase(input: PurchaseInput): Purchase {
@@ -74,10 +101,7 @@ export function createPurchase(input: PurchaseInput): Purchase {
   if (!input.items.length) throw new Error('Add at least one item.');
 
   const tx = db.transaction((data: PurchaseInput) => {
-    const total = data.items.reduce(
-      (sum, it) => sum + it.purchase_price * it.quantity,
-      0
-    );
+    const total = purchaseTotal(data.items);
     const purchaseInfo = db
       .prepare(
         `INSERT INTO purchases (supplier_id, invoice_no, purchase_date, total_amount, notes)
@@ -111,7 +135,8 @@ export function getPurchase(id: number): PurchaseWithItems | null {
       `SELECT pi.id, pi.purchase_id, pi.batch_id, pi.medicine_id,
               m.name AS medicine_name,
               b.batch_no, b.expiry_date, b.mrp, b.sale_price,
-              pi.purchase_price, pi.gst_rate, pi.quantity
+              pi.purchase_price, pi.discount_percent, pi.free_quantity,
+              pi.gst_rate, pi.quantity, pi.taxable_value, pi.line_total
        FROM purchase_items pi
        JOIN medicines m ON m.id = pi.medicine_id
        JOIN batches b ON b.id = pi.batch_id
@@ -145,7 +170,8 @@ export function updatePurchase(id: number, input: PurchaseInput): PurchaseWithIt
 
     const oldItems = db
       .prepare(
-        `SELECT pi.batch_id, pi.quantity, m.name AS medicine_name, b.batch_no
+        `SELECT pi.batch_id, pi.quantity, pi.free_quantity,
+                m.name AS medicine_name, b.batch_no
          FROM purchase_items pi
          JOIN medicines m ON m.id = pi.medicine_id
          JOIN batches b ON b.id = pi.batch_id
@@ -154,6 +180,7 @@ export function updatePurchase(id: number, input: PurchaseInput): PurchaseWithIt
       .all(id) as {
       batch_id: number;
       quantity: number;
+      free_quantity: number;
       medicine_name: string;
       batch_no: string;
     }[];
@@ -164,22 +191,20 @@ export function updatePurchase(id: number, input: PurchaseInput): PurchaseWithIt
     );
 
     for (const old of oldItems) {
+      const stockOut = old.quantity + Math.max(0, old.free_quantity ?? 0);
       const row = getStock.get(old.batch_id) as { quantity_in_stock: number } | undefined;
       if (!row) throw new Error(`Batch for ${old.medicine_name} no longer exists.`);
-      if (row.quantity_in_stock < old.quantity) {
+      if (row.quantity_in_stock < stockOut) {
         throw new Error(
-          `Cannot edit this purchase — ${old.medicine_name} (batch ${old.batch_no}) has already been sold. Available stock: ${row.quantity_in_stock}, purchase qty: ${old.quantity}.`
+          `Cannot edit this purchase — ${old.medicine_name} (batch ${old.batch_no}) has already been sold. Available stock: ${row.quantity_in_stock}, purchase qty: ${stockOut}.`
         );
       }
-      decStock.run(old.quantity, old.batch_id);
+      decStock.run(stockOut, old.batch_id);
     }
 
     db.prepare('DELETE FROM purchase_items WHERE purchase_id = ?').run(id);
 
-    const total = data.items.reduce(
-      (sum, it) => sum + it.purchase_price * it.quantity,
-      0
-    );
+    const total = purchaseTotal(data.items);
     db.prepare(
       `UPDATE purchases SET
         supplier_id = @supplier_id,

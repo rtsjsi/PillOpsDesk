@@ -135,6 +135,13 @@ const MIGRATIONS: string[] = [
   ALTER TABLE medicines RENAME COLUMN category TO dosage_form;
   ALTER TABLE medicines ADD COLUMN category TEXT;
   `,
+  // v5: purchase line discount, free qty, taxable value, line total
+  `
+  ALTER TABLE purchase_items ADD COLUMN discount_percent REAL NOT NULL DEFAULT 0;
+  ALTER TABLE purchase_items ADD COLUMN free_quantity INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE purchase_items ADD COLUMN taxable_value REAL NOT NULL DEFAULT 0;
+  ALTER TABLE purchase_items ADD COLUMN line_total REAL NOT NULL DEFAULT 0;
+  `,
 ];
 
 export function runMigrations(db: Database.Database): void {
