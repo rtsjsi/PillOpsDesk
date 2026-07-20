@@ -1,6 +1,6 @@
 import { getDb } from '../index';
 import { getSettings } from './settings';
-import { applyInvoiceDiscountPercent, round2 } from '@shared/gst';
+import { computeSaleInvoice, saleLineAmounts } from '@shared/gst';
 import type {
   SaleInput,
   SaleWithItems,
@@ -67,14 +67,17 @@ function writeSaleLines(
   );
   const insertItem = db.prepare(
     `INSERT INTO sale_items
-      (sale_id, batch_id, medicine_id, medicine_name, batch_no, hsn_code, quantity, price, gst_rate, discount, line_total)
-     VALUES (@sale_id, @batch_id, @medicine_id, @medicine_name, @batch_no, @hsn_code, @quantity, @price, @gst_rate, 0, @line_total)`
+      (sale_id, batch_id, medicine_id, medicine_name, batch_no, hsn_code, quantity, price, gst_rate,
+       discount_percent, discount, taxable_value, line_total)
+     VALUES (@sale_id, @batch_id, @medicine_id, @medicine_name, @batch_no, @hsn_code, @quantity, @price, @gst_rate,
+             @discount_percent, @discount, @taxable_value, @line_total)`
   );
 
   const resolved: {
     item: (typeof data.items)[number];
     batch: BatchRow;
     lineGross: number;
+    discountPercent: number;
   }[] = [];
 
   for (const item of data.items) {
@@ -87,20 +90,29 @@ function writeSaleLines(
       );
     }
 
+    const discountPercent = Math.min(Math.max(0, item.discount_percent ?? 0), 100);
     resolved.push({
       item,
       batch: b,
       lineGross: b.sale_price * item.quantity,
+      discountPercent,
     });
   }
 
-  const invoice = applyInvoiceDiscountPercent(
-    resolved.map((row) => ({ gross: row.lineGross, gst_rate: row.batch.gst_rate ?? 0 })),
-    data.discount_percent ?? 0
+  const invoice = computeSaleInvoice(
+    resolved.map((row) => ({
+      gross: row.lineGross,
+      gst_rate: row.batch.gst_rate ?? 0,
+      discount_percent: row.discountPercent,
+    }))
   );
 
-  resolved.forEach((row, index) => {
-    const amounts = invoice.lines[index];
+  resolved.forEach((row) => {
+    const lineAmounts = saleLineAmounts({
+      gross: row.lineGross,
+      gst_rate: row.batch.gst_rate ?? 0,
+      discount_percent: row.discountPercent,
+    });
     insertItem.run({
       sale_id: saleId,
       batch_id: row.batch.id,
@@ -111,7 +123,10 @@ function writeSaleLines(
       quantity: row.item.quantity,
       price: row.batch.sale_price,
       gst_rate: row.batch.gst_rate ?? 0,
-      line_total: amounts.gross,
+      discount_percent: row.discountPercent,
+      discount: lineAmounts.discountAmount,
+      taxable_value: lineAmounts.taxable,
+      line_total: lineAmounts.gross,
     });
     decStock.run(row.item.quantity, row.batch.id);
   });
@@ -125,7 +140,7 @@ function writeSaleLines(
     data.customer_id ?? null,
     invoice.subtotal,
     invoice.discountAmount,
-    round2(data.discount_percent ?? 0),
+    0,
     invoice.cgst,
     invoice.sgst,
     invoice.total,
@@ -188,9 +203,13 @@ export function getSale(id: number): SaleWithItems | null {
   const db = getDb();
   const sale = db.prepare('SELECT * FROM sales WHERE id = ?').get(id) as Sale | undefined;
   if (!sale) return null;
-  const items = db
-    .prepare('SELECT * FROM sale_items WHERE sale_id = ? ORDER BY id')
-    .all(id) as SaleItem[];
+  const items = (
+    db.prepare('SELECT * FROM sale_items WHERE sale_id = ? ORDER BY id').all(id) as SaleItem[]
+  ).map((it) => ({
+    ...it,
+    discount_percent: it.discount_percent ?? 0,
+    taxable_value: it.taxable_value ?? 0,
+  }));
   const customer = sale.customer_id
     ? (db.prepare('SELECT name FROM customers WHERE id = ?').get(sale.customer_id) as
         | { name: string }

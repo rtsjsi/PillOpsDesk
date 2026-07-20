@@ -142,6 +142,11 @@ const MIGRATIONS: string[] = [
   ALTER TABLE purchase_items ADD COLUMN taxable_value REAL NOT NULL DEFAULT 0;
   ALTER TABLE purchase_items ADD COLUMN line_total REAL NOT NULL DEFAULT 0;
   `,
+  // v6: sale line discount % and taxable value (discount applied per line, not on header)
+  `
+  ALTER TABLE sale_items ADD COLUMN discount_percent REAL NOT NULL DEFAULT 0;
+  ALTER TABLE sale_items ADD COLUMN taxable_value REAL NOT NULL DEFAULT 0;
+  `,
 ];
 
 export function runMigrations(db: Database.Database): void {

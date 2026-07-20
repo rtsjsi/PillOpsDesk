@@ -132,12 +132,12 @@ export interface Sale {
 export interface SaleItemInput {
   batch_id: number;
   quantity: number;
+  discount_percent: number;
 }
 
 export interface SaleInput {
   customer_id: number | null;
   items: SaleItemInput[];
-  discount_percent: number;
 }
 
 export interface SaleItem {
@@ -151,7 +151,9 @@ export interface SaleItem {
   quantity: number;
   price: number;
   gst_rate: number;
-  discount: number;
+  discount_percent: number;
+  discount: number; // rupee amount saved on this line
+  taxable_value: number;
   line_total: number;
 }
 

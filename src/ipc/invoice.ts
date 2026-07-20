@@ -25,6 +25,7 @@ function buildInvoiceHtml(sale: SaleWithItems, settings: Settings): string {
         <td class="num">${it.quantity}</td>
         <td class="num">${money(it.price)}</td>
         <td class="num">${it.gst_rate}%</td>
+        <td class="num">${it.discount_percent > 0 ? it.discount_percent + '%' : '-'}</td>
         <td class="num">${money(it.line_total)}</td>
       </tr>`
     )
@@ -72,7 +73,7 @@ function buildInvoiceHtml(sale: SaleWithItems, settings: Settings): string {
       <thead>
         <tr>
           <th>#</th><th>Item</th><th>HSN</th><th class="num">Qty</th>
-          <th class="num">Rate</th><th class="num">GST</th><th class="num">Amount</th>
+          <th class="num">Rate</th><th class="num">GST</th><th class="num">Disc</th><th class="num">Amount</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
@@ -80,8 +81,8 @@ function buildInvoiceHtml(sale: SaleWithItems, settings: Settings): string {
 
     <table class="totals">
       ${
-        sale.discount_percent > 0
-          ? `<tr><td>Invoice Discount (${sale.discount_percent}%)</td><td class="num">- ${money(sale.discount)}</td></tr>`
+        sale.discount > 0
+          ? `<tr><td>Discount</td><td class="num">- ${money(sale.discount)}</td></tr>`
           : ''
       }
       <tr><td>Taxable Value</td><td class="num">${money(sale.subtotal)}</td></tr>

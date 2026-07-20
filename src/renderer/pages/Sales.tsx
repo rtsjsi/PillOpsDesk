@@ -6,7 +6,7 @@ import type {
   SellableBatch,
   Batch,
 } from '../../shared/types';
-import { applyInvoiceDiscountPercent } from '../../shared/gst';
+import { computeSaleInvoice, saleLineAmounts } from '../../shared/gst';
 import { inr, formatDateTime, formatDate, todayIso, monthStartIso } from '../lib/format';
 import { Modal } from '../components/Modal';
 import { Spinner, EmptyState, useToast, errMsg } from '../components/ui';
@@ -16,6 +16,7 @@ import { useWriteAllowed } from '../App';
 interface CartLine {
   batch: SellableBatch;
   quantity: number;
+  discount_percent: number;
 }
 
 export function Sales() {
@@ -207,6 +208,7 @@ export function Sales() {
                   <th className="th text-center">Qty</th>
                   <th className="th text-right">Rate</th>
                   <th className="th text-center">GST</th>
+                  <th className="th text-center">Disc %</th>
                   <th className="th text-right">Total</th>
                 </tr>
               </thead>
@@ -220,17 +222,17 @@ export function Sales() {
                     <td className="td text-center">{it.quantity}</td>
                     <td className="td text-right">{inr(it.price)}</td>
                     <td className="td text-center">{it.gst_rate}%</td>
+                    <td className="td text-center">
+                      {it.discount_percent > 0 ? `${it.discount_percent}%` : '-'}
+                    </td>
                     <td className="td text-right">{inr(it.line_total)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             <div className="ml-auto w-64 space-y-1 text-sm">
-              {selected.discount_percent > 0 && (
-                <Row
-                  label={`Invoice Discount (${selected.discount_percent}%)`}
-                  value={`- ${inr(selected.discount)}`}
-                />
+              {selected.discount > 0 && (
+                <Row label="Discount" value={`- ${inr(selected.discount)}`} />
               )}
               <Row label="Taxable Value" value={inr(selected.subtotal)} />
               <Row label="CGST" value={inr(selected.cgst)} />
@@ -288,7 +290,6 @@ function NewSaleForm({
   const [cart, setCart] = useState<CartLine[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [customerId, setCustomerId] = useState<number | null>(null);
-  const [discountPercent, setDiscountPercent] = useState(0);
   const [busy, setBusy] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -324,7 +325,7 @@ function NewSaleForm({
         copy[idx] = { ...copy[idx], quantity: nextQty };
         return copy;
       }
-      return [...prev, { batch, quantity: 1 }];
+      return [...prev, { batch, quantity: 1, discount_percent: 0 }];
     });
     setSearch('');
     setResults([]);
@@ -344,6 +345,16 @@ function NewSaleForm({
     );
   };
 
+  const updateLineDiscount = (batchId: number, discount_percent: number) => {
+    setCart((prev) =>
+      prev.map((l) =>
+        l.batch.batch_id === batchId
+          ? { ...l, discount_percent: Math.min(100, Math.max(0, discount_percent)) }
+          : l
+      )
+    );
+  };
+
   const removeLine = (batchId: number) => {
     setCart((prev) => prev.filter((l) => l.batch.batch_id !== batchId));
   };
@@ -352,23 +363,30 @@ function NewSaleForm({
     const lines = cart.map((l) => ({
       gross: l.batch.sale_price * l.quantity,
       gst_rate: l.batch.gst_rate ?? 0,
+      discount_percent: l.discount_percent ?? 0,
     }));
-    return applyInvoiceDiscountPercent(lines, discountPercent);
-  }, [cart, discountPercent]);
+    return computeSaleInvoice(lines);
+  }, [cart]);
 
   const checkout = async (print: boolean) => {
     if (cart.length === 0) {
       onError('Add at least one item.');
       return;
     }
+    for (const l of cart) {
+      if ((l.discount_percent ?? 0) < 0 || (l.discount_percent ?? 0) > 100) {
+        onError(`Discount must be 0–100% for ${l.batch.name}.`);
+        return;
+      }
+    }
     setBusy(true);
     try {
       const sale = await window.pharmacy.sales.create({
         customer_id: customerId,
-        discount_percent: discountPercent,
         items: cart.map((l) => ({
           batch_id: l.batch.batch_id,
           quantity: l.quantity,
+          discount_percent: l.discount_percent ?? 0,
         })),
       });
       if (print) {
@@ -411,40 +429,22 @@ function NewSaleForm({
       }
     >
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="label">Customer</label>
-            <select
-              className="input"
-              value={customerId ?? ''}
-              onChange={(e) =>
-                setCustomerId(e.target.value ? Number(e.target.value) : null)
-              }
-            >
-              <option value="">Walk-in Customer</option>
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} {c.phone ? `(${c.phone})` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="label">Invoice Discount (%)</label>
-            <input
-              type="number"
-              min={0}
-              max={100}
-              step="0.01"
-              className="input"
-              value={discountPercent}
-              onChange={(e) =>
-                setDiscountPercent(
-                  Math.min(100, Math.max(0, Number(e.target.value) || 0))
-                )
-              }
-            />
-          </div>
+        <div>
+          <label className="label">Customer</label>
+          <select
+            className="input"
+            value={customerId ?? ''}
+            onChange={(e) =>
+              setCustomerId(e.target.value ? Number(e.target.value) : null)
+            }
+          >
+            <option value="">Walk-in Customer</option>
+            {customers.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} {c.phone ? `(${c.phone})` : ''}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="relative">
@@ -491,12 +491,19 @@ function NewSaleForm({
                 <th className="th">Item</th>
                 <th className="th text-center">Qty</th>
                 <th className="th text-right">Rate</th>
+                <th className="th text-center">Disc %</th>
                 <th className="th text-right">Total</th>
                 <th className="th"></th>
               </tr>
             </thead>
             <tbody>
-              {cart.map((l) => (
+              {cart.map((l) => {
+                const amounts = saleLineAmounts({
+                  gross: l.batch.sale_price * l.quantity,
+                  gst_rate: l.batch.gst_rate ?? 0,
+                  discount_percent: l.discount_percent ?? 0,
+                });
+                return (
                 <tr key={l.batch.batch_id} className="border-t border-slate-100">
                   <td className="td">
                     <div className="font-medium">{l.batch.name}</div>
@@ -517,8 +524,24 @@ function NewSaleForm({
                     />
                   </td>
                   <td className="td text-right">{inr(l.batch.sale_price)}</td>
+                  <td className="td text-center">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step="0.1"
+                      className="input w-14 px-2 py-1 text-center"
+                      value={l.discount_percent}
+                      onChange={(e) =>
+                        updateLineDiscount(
+                          l.batch.batch_id,
+                          Number(e.target.value)
+                        )
+                      }
+                    />
+                  </td>
                   <td className="td text-right font-medium">
-                    {inr(l.batch.sale_price * l.quantity)}
+                    {inr(amounts.gross)}
                   </td>
                   <td className="td text-right">
                     <button
@@ -529,17 +552,15 @@ function NewSaleForm({
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         )}
 
         <div className="ml-auto w-64 space-y-1 text-sm">
-          {totals.discountPercent > 0 && (
-            <Row
-              label={`Invoice Discount (${totals.discountPercent}%)`}
-              value={`- ${inr(totals.discountAmount)}`}
-            />
+          {totals.discountAmount > 0 && (
+            <Row label="Discount" value={`- ${inr(totals.discountAmount)}`} />
           )}
           <Row label="Taxable Value" value={inr(totals.subtotal)} />
           <Row label="CGST" value={inr(totals.cgst)} />
@@ -567,7 +588,6 @@ function SaleEditForm({
 }) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [customerId, setCustomerId] = useState<number | null>(sale.customer_id);
-  const [discountPercent, setDiscountPercent] = useState(sale.discount_percent ?? 0);
   const [cart, setCart] = useState<CartLine[] | null>(null);
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<SellableBatch[]>([]);
@@ -596,6 +616,9 @@ function SaleEditForm({
     async function initCart() {
       const lines: CartLine[] = [];
       const byMedicine = new Map<number, Batch[]>();
+      const legacyInvoiceDisc =
+        (sale.discount_percent ?? 0) > 0 &&
+        sale.items.every((row) => !(row.discount_percent ?? 0));
 
       for (const it of sale.items) {
         if (it.batch_id == null) continue;
@@ -624,9 +647,12 @@ function SaleEditForm({
           hsn_code: it.hsn_code,
           quantity_in_stock: batch.quantity_in_stock,
         };
+        const lineDisc = legacyInvoiceDisc
+          ? sale.discount_percent
+          : (it.discount_percent ?? 0);
         const existing = lines.find((l) => l.batch.batch_id === it.batch_id);
         if (existing) existing.quantity += it.quantity;
-        else lines.push({ batch: sellable, quantity: it.quantity });
+        else lines.push({ batch: sellable, quantity: it.quantity, discount_percent: lineDisc });
       }
       if (!cancelled) setCart(lines);
     }
@@ -667,7 +693,7 @@ function SaleEditForm({
         };
         return copy;
       }
-      return [...list, { batch, quantity: 1 }];
+      return [...list, { batch, quantity: 1, discount_percent: 0 }];
     });
     setSearch('');
     setResults([]);
@@ -685,31 +711,47 @@ function SaleEditForm({
     );
   };
 
+  const updateLineDiscount = (batchId: number, discount_percent: number) => {
+    setCart((prev) =>
+      (prev ?? []).map((l) =>
+        l.batch.batch_id === batchId
+          ? { ...l, discount_percent: Math.min(100, Math.max(0, discount_percent)) }
+          : l
+      )
+    );
+  };
+
   const removeLine = (batchId: number) => {
     setCart((prev) => (prev ?? []).filter((l) => l.batch.batch_id !== batchId));
   };
 
   const totals = useMemo(() => {
     if (!cart) {
-      return applyInvoiceDiscountPercent([], discountPercent);
+      return computeSaleInvoice([]);
     }
     const lines = cart.map((l) => ({
       gross: l.batch.sale_price * l.quantity,
       gst_rate: l.batch.gst_rate ?? 0,
+      discount_percent: l.discount_percent ?? 0,
     }));
-    return applyInvoiceDiscountPercent(lines, discountPercent);
-  }, [cart, discountPercent]);
+    return computeSaleInvoice(lines);
+  }, [cart]);
 
   const save = async () => {
     if (!cart || cart.length === 0) return onError('Add at least one item.');
+    for (const l of cart) {
+      if ((l.discount_percent ?? 0) < 0 || (l.discount_percent ?? 0) > 100) {
+        return onError(`Discount must be 0–100% for ${l.batch.name}.`);
+      }
+    }
     setBusy(true);
     try {
       await window.pharmacy.sales.update(sale.id, {
         customer_id: customerId,
-        discount_percent: discountPercent,
         items: cart.map((l) => ({
           batch_id: l.batch.batch_id,
           quantity: l.quantity,
+          discount_percent: l.discount_percent ?? 0,
         })),
       });
       onSaved();
@@ -741,40 +783,22 @@ function SaleEditForm({
         <Spinner />
       ) : (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Customer</label>
-              <select
-                className="input"
-                value={customerId ?? ''}
-                onChange={(e) =>
-                  setCustomerId(e.target.value ? Number(e.target.value) : null)
-                }
-              >
-                <option value="">Walk-in Customer</option>
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} {c.phone ? `(${c.phone})` : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="label">Invoice Discount (%)</label>
-              <input
-                type="number"
-                min={0}
-                max={100}
-                step="0.01"
-                className="input"
-                value={discountPercent}
-                onChange={(e) =>
-                  setDiscountPercent(
-                    Math.min(100, Math.max(0, Number(e.target.value) || 0))
-                  )
-                }
-              />
-            </div>
+          <div>
+            <label className="label">Customer</label>
+            <select
+              className="input"
+              value={customerId ?? ''}
+              onChange={(e) =>
+                setCustomerId(e.target.value ? Number(e.target.value) : null)
+              }
+            >
+              <option value="">Walk-in Customer</option>
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} {c.phone ? `(${c.phone})` : ''}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="relative">
@@ -822,6 +846,7 @@ function SaleEditForm({
                   <th className="th">Item</th>
                   <th className="th text-center">Qty</th>
                   <th className="th text-right">Rate</th>
+                  <th className="th text-center">Disc %</th>
                   <th className="th text-right">Total</th>
                   <th className="th"></th>
                 </tr>
@@ -829,6 +854,11 @@ function SaleEditForm({
               <tbody>
                 {cart.map((l) => {
                   const max = availableStock(l.batch);
+                  const amounts = saleLineAmounts({
+                    gross: l.batch.sale_price * l.quantity,
+                    gst_rate: l.batch.gst_rate ?? 0,
+                    discount_percent: l.discount_percent ?? 0,
+                  });
                   return (
                     <tr key={l.batch.batch_id} className="border-t border-slate-100">
                       <td className="td">
@@ -850,8 +880,24 @@ function SaleEditForm({
                         />
                       </td>
                       <td className="td text-right">{inr(l.batch.sale_price)}</td>
+                      <td className="td text-center">
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step="0.1"
+                          className="input w-14 px-2 py-1 text-center"
+                          value={l.discount_percent}
+                          onChange={(e) =>
+                            updateLineDiscount(
+                              l.batch.batch_id,
+                              Number(e.target.value)
+                            )
+                          }
+                        />
+                      </td>
                       <td className="td text-right font-medium">
-                        {inr(l.batch.sale_price * l.quantity)}
+                        {inr(amounts.gross)}
                       </td>
                       <td className="td text-right">
                         <button
@@ -869,11 +915,8 @@ function SaleEditForm({
           )}
 
           <div className="ml-auto w-64 space-y-1 text-sm">
-            {totals.discountPercent > 0 && (
-              <Row
-                label={`Invoice Discount (${totals.discountPercent}%)`}
-                value={`- ${inr(totals.discountAmount)}`}
-              />
+            {totals.discountAmount > 0 && (
+              <Row label="Discount" value={`- ${inr(totals.discountAmount)}`} />
             )}
             <Row label="Taxable Value" value={inr(totals.subtotal)} />
             <Row label="CGST" value={inr(totals.cgst)} />
