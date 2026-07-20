@@ -119,9 +119,40 @@ npm run typecheck # TypeScript check (no emit; Vite/Forge does the actual build)
 npm run icons     # regenerate app icons from assets/icons/icon.svg
 npm run license:keypair   # one-time: create RSA key pair (vendor machine only)
 npm run license:generate  # issue a customer license key (see §5a)
+npm run release:manifest  # build latest.json for GitHub Releases OTA (see §5b)
 ```
 
 `npm run lint` is an alias for `typecheck` (no ESLint config in this repo).
+
+## 5b. OTA updates — GitHub Releases (vendor)
+
+Packaged installs can check **Settings → App Updates** for a newer version.
+The app fetches `latest.json` from the latest GitHub Release, verifies the
+installer SHA-256, downloads `PillOpsDeskSetup.exe`, and runs it silently (`/S`).
+
+Manifest URL (embedded in `src/shared/update-config.ts`):
+
+`https://github.com/rtsjsi/PillOpsDesk/releases/latest/download/latest.json`
+
+### Publish a release
+
+1. Bump `version` in `package.json`.
+2. Build and sign the installer: `npm run make` (set `WINDOWS_CERT_FILE` when signing).
+3. Generate the manifest next to the installer:
+
+```bash
+npm run release:manifest -- out/make/nsis/.../PillOpsDeskSetup.exe "Release notes here"
+```
+
+4. Create a GitHub Release tagged `vX.Y.Z` and upload **both** `PillOpsDeskSetup.exe`
+   and `latest.json`. Or use the helper script (requires [gh](https://cli.github.com/)):
+
+```powershell
+.\scripts\publish-github-release.ps1 -Notes "Bug fixes and improvements"
+```
+
+Each release must include `latest.json` so `/releases/latest/download/latest.json`
+points at the newest manifest. Customer databases in `userData` are preserved.
 
 ## 5a. Licensing — generate a key for an app user (vendor)
 

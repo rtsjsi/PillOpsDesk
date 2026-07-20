@@ -9,6 +9,7 @@ import type {
   SaleInput,
   Settings,
   DriveBackupSettings,
+  UpdateManifest,
 } from '@shared/types';
 import * as medicines from '../db/services/medicines';
 import * as batches from '../db/services/batches';
@@ -30,6 +31,12 @@ import {
   saveDriveSettings,
 } from './google-drive';
 import { printInvoice } from './invoice';
+import {
+  checkForUpdates,
+  downloadUpdate,
+  getAppVersion,
+  installUpdate,
+} from './updates';
 
 function handle<T extends unknown[], R>(
   channel: string,
@@ -165,4 +172,12 @@ export function registerIpc(): void {
 
   // Reprinting past invoices is allowed in read-only
   handleRead(IPC.printInvoice, (saleId: number) => printInvoice(saleId));
+
+  // App updates via GitHub Releases (available even in read-only mode)
+  handle(IPC.updatesGetVersion, () => getAppVersion());
+  handle(IPC.updatesCheck, () => checkForUpdates());
+  handle(IPC.updatesDownload, (manifest: UpdateManifest) => downloadUpdate(manifest));
+  handle(IPC.updatesInstall, (installerPath: string) => {
+    installUpdate(installerPath);
+  });
 }

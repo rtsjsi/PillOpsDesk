@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC } from './shared/api';
 import type { PharmacyApi } from './shared/api';
+import type { UpdateDownloadProgress } from './shared/types';
 
 const invoke = (channel: string, ...args: unknown[]) =>
   ipcRenderer.invoke(channel, ...args);
@@ -88,6 +89,18 @@ const api: PharmacyApi = {
     getStatus: () => invoke(IPC.licenseGetStatus),
     getMachineId: () => invoke(IPC.licenseGetMachineId),
     activate: (licenseKey) => invoke(IPC.licenseActivate, licenseKey),
+  },
+  updates: {
+    getVersion: () => invoke(IPC.updatesGetVersion),
+    check: () => invoke(IPC.updatesCheck),
+    download: (manifest) => invoke(IPC.updatesDownload, manifest),
+    install: (installerPath) => invoke(IPC.updatesInstall, installerPath),
+    onDownloadProgress: (callback) => {
+      const handler = (_event: Electron.IpcRendererEvent, progress: UpdateDownloadProgress) =>
+        callback(progress);
+      ipcRenderer.on(IPC.updatesProgress, handler);
+      return () => ipcRenderer.removeListener(IPC.updatesProgress, handler);
+    },
   },
 };
 
