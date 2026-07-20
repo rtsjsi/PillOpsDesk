@@ -79,6 +79,8 @@ export interface PurchaseItemInput {
   sale_price: number;
   gst_rate: number;
   quantity: number;
+  discount_percent: number;
+  free_quantity: number;
 }
 
 export interface PurchaseInput {
@@ -102,6 +104,10 @@ export interface PurchaseItem {
   sale_price: number;
   gst_rate: number;
   quantity: number;
+  discount_percent: number;
+  free_quantity: number;
+  taxable_value: number;
+  line_total: number;
 }
 
 export interface PurchaseWithItems extends Purchase {
