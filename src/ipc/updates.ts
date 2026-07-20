@@ -30,6 +30,80 @@ function compareVersions(current: string, latest: string): number {
   return 0;
 }
 
+function psQuote(value: string): string {
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
+function getInstallDir(): string {
+  return path.dirname(process.execPath);
+}
+
+function buildBackgroundUpdaterScript(
+  installDir: string,
+  zipPath: string,
+  updaterScriptPath: string
+): string {
+  const exePath = path.join(installDir, 'pillopsdesk.exe');
+  return `$ErrorActionPreference = 'Stop'
+$InstallDir = ${psQuote(installDir)}
+$ZipPath = ${psQuote(zipPath)}
+$ExePath = ${psQuote(exePath)}
+$ExtractDir = Join-Path $env:TEMP ('pillopsdesk-update-' + [guid]::NewGuid().ToString())
+$UpdaterScript = ${psQuote(updaterScriptPath)}
+
+for ($i = 0; $i -lt 120; $i++) {
+  if (-not (Get-Process -Name 'pillopsdesk' -ErrorAction SilentlyContinue)) { break }
+  Start-Sleep -Milliseconds 500
+}
+Get-Process -Name 'pillopsdesk' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 2
+
+New-Item -ItemType Directory -Path $ExtractDir -Force | Out-Null
+Expand-Archive -Path $ZipPath -DestinationPath $ExtractDir -Force
+
+Get-ChildItem -Path $ExtractDir -Force | ForEach-Object {
+  Copy-Item -Path $_.FullName -Destination $InstallDir -Recurse -Force
+}
+
+Start-Process -FilePath $ExePath -WorkingDirectory $InstallDir
+
+Remove-Item -Path $ZipPath -Force -ErrorAction SilentlyContinue
+Remove-Item -Path $ExtractDir -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path $UpdaterScript -Force -ErrorAction SilentlyContinue
+`;
+}
+
+function launchBackgroundUpdater(installDir: string, zipPath: string): void {
+  const updaterScriptPath = path.join(
+    os.tmpdir(),
+    `pillopsdesk-updater-${Date.now()}.ps1`
+  );
+  fs.writeFileSync(
+    updaterScriptPath,
+    buildBackgroundUpdaterScript(installDir, zipPath, updaterScriptPath),
+    'utf8'
+  );
+
+  const child = spawn(
+    'powershell.exe',
+    [
+      '-NoProfile',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-WindowStyle',
+      'Hidden',
+      '-File',
+      updaterScriptPath,
+    ],
+    {
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true,
+    }
+  );
+  child.unref();
+}
+
 export function getAppVersion(): string {
   return app.getVersion();
 }
@@ -77,11 +151,7 @@ async function sha256File(filePath: string): Promise<string> {
   });
 }
 
-export async function downloadUpdate(manifest: UpdateManifest): Promise<string> {
-  if (!app.isPackaged) {
-    throw new Error('Updates are only available in the installed app.');
-  }
-
+async function downloadUpdatePackage(manifest: UpdateManifest): Promise<string> {
   const res = await fetch(manifest.url, {
     headers: { 'User-Agent': 'PillOpsDesk-Updater' },
   });
@@ -96,7 +166,7 @@ export async function downloadUpdate(manifest: UpdateManifest): Promise<string> 
 
   const total = Number(res.headers.get('content-length') ?? 0);
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pillopsdesk-update-'));
-  const installerPath = path.join(tempDir, 'PillOpsDeskSetup.exe');
+  const zipPath = path.join(tempDir, `PillOpsDesk-${manifest.version}-win64.zip`);
 
   const reader = res.body.getReader();
   const chunks: Buffer[] = [];
@@ -109,29 +179,50 @@ export async function downloadUpdate(manifest: UpdateManifest): Promise<string> 
     chunks.push(chunk);
     transferred += chunk.length;
     sendProgress({
+      phase: 'downloading',
       percent: total > 0 ? Math.min(100, Math.round((transferred / total) * 100)) : 0,
       transferred,
       total: total || transferred,
     });
   }
 
-  fs.writeFileSync(installerPath, Buffer.concat(chunks));
+  fs.writeFileSync(zipPath, Buffer.concat(chunks));
 
-  const hash = await sha256File(installerPath);
+  const hash = await sha256File(zipPath);
   if (hash.toLowerCase() !== manifest.sha256.toLowerCase()) {
     fs.rmSync(tempDir, { recursive: true, force: true });
     throw new Error('Downloaded update failed verification. Please try again later.');
   }
 
-  sendProgress({ percent: 100, transferred, total: total || transferred });
-  return installerPath;
+  sendProgress({
+    phase: 'downloading',
+    percent: 100,
+    transferred,
+    total: total || transferred,
+  });
+
+  return zipPath;
 }
 
-export function installUpdate(installerPath: string): void {
-  const child = spawn(installerPath, ['/S'], {
-    detached: true,
-    stdio: 'ignore',
+/** Download, verify, apply in background, and quit — no installer UI. */
+export async function applyUpdate(manifest: UpdateManifest): Promise<void> {
+  if (!app.isPackaged) {
+    throw new Error('Updates are only available in the installed app.');
+  }
+
+  if (process.platform !== 'win32') {
+    throw new Error('Automatic updates are only supported on Windows.');
+  }
+
+  const zipPath = await downloadUpdatePackage(manifest);
+
+  sendProgress({
+    phase: 'installing',
+    percent: 100,
+    transferred: 0,
+    total: 0,
   });
-  child.unref();
+
+  launchBackgroundUpdater(getInstallDir(), zipPath);
   app.quit();
 }

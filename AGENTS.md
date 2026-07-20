@@ -127,26 +127,31 @@ npm run release:manifest  # build latest.json for GitHub Releases OTA (see §5b)
 
 ## 5b. OTA updates — GitHub Releases (vendor)
 
-Packaged installs can check **Settings → App Updates** for a newer version.
-The app fetches `latest.json` from the latest GitHub Release, verifies the
-installer SHA-256, downloads `PillOpsDeskSetup.exe`, and runs it silently (`/S`).
+Packaged installs use **Settings → App Updates**: check, then **Download & Install**.
+The app fetches `latest.json`, downloads a signed zip package, verifies SHA-256,
+applies files in the background via a hidden PowerShell helper, and restarts —
+no NSIS wizard is shown to the user.
 
 Manifest URL (embedded in `src/shared/update-config.ts`):
 
 `https://github.com/rtsjsi/PillOpsDesk/releases/latest/download/latest.json`
 
+OTA download URL in the manifest points at `PillOpsDesk-X.Y.Z-win64.zip`.
+`PillOpsDeskSetup.exe` can still be attached to the same release for first-time installs.
+
 ### Publish a release
 
 1. Bump `version` in `package.json`.
-2. Build and sign the installer: `npm run make` (set `WINDOWS_CERT_FILE` when signing).
-3. Generate the manifest next to the installer:
+2. Build and sign: `npm run make` (set `WINDOWS_CERT_FILE` when signing).
+3. Zip the packaged app folder (`out/*-win32-x64`) as `PillOpsDesk-X.Y.Z-win64.zip`
+   and generate the manifest:
 
 ```bash
-npm run release:manifest -- out/make/nsis/.../PillOpsDeskSetup.exe "Release notes here"
+npm run release:manifest -- out/release-ota/PillOpsDesk-1.0.4-win64.zip "Release notes here"
 ```
 
-4. Create a GitHub Release tagged `vX.Y.Z` and upload **both** `PillOpsDeskSetup.exe`
-   and `latest.json`. Or use the helper script (requires [gh](https://cli.github.com/)):
+4. Create a GitHub Release tagged `vX.Y.Z` and upload **`PillOpsDesk-X.Y.Z-win64.zip`**
+   and **`latest.json`**. Or use the helper (requires [gh](https://cli.github.com/)):
 
 ```powershell
 .\scripts\publish-github-release.ps1 -Notes "Bug fixes and improvements"

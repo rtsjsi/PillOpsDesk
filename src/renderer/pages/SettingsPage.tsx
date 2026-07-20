@@ -299,14 +299,14 @@ function AppUpdatesSection() {
   const [currentVersion, setCurrentVersion] = useState<string | null>(null);
   const [checkResult, setCheckResult] = useState<UpdateCheckResult | null>(null);
   const [progress, setProgress] = useState<UpdateDownloadProgress | null>(null);
-  const [busy, setBusy] = useState<'check' | 'download' | null>(null);
+  const [busy, setBusy] = useState<'check' | 'apply' | null>(null);
 
   useEffect(() => {
     void window.pharmacy.updates.getVersion().then(setCurrentVersion);
   }, []);
 
   useEffect(() => {
-    const unsubscribe = window.pharmacy.updates.onDownloadProgress(setProgress);
+    const unsubscribe = window.pharmacy.updates.onProgress(setProgress);
     return unsubscribe;
   }, []);
 
@@ -317,9 +317,7 @@ function AppUpdatesSection() {
     try {
       const result = await window.pharmacy.updates.check();
       setCheckResult(result);
-      if (result.updateAvailable && result.manifest) {
-        toast.success(`Update available: v${result.manifest.version}`);
-      } else {
+      if (!result.updateAvailable) {
         toast.success('You are on the latest version.');
       }
     } catch (e) {
@@ -333,28 +331,27 @@ function AppUpdatesSection() {
     const manifest = checkResult?.manifest;
     if (!manifest) return;
 
-    const ok = confirm(
-      `Install PillOpsDesk v${manifest.version}? The app will close while the installer runs, then reopen PillOpsDesk from the desktop or Start menu.`
-    );
-    if (!ok) return;
-
-    setBusy('download');
+    setBusy('apply');
     setProgress(null);
     try {
-      const installerPath = await window.pharmacy.updates.download(manifest);
-      await window.pharmacy.updates.install(installerPath);
+      await window.pharmacy.updates.apply(manifest);
     } catch (e) {
       toast.error(errMsg(e));
       setBusy(null);
     }
   };
 
+  const progressLabel =
+    progress?.phase === 'installing'
+      ? 'Installing update in the background…'
+      : 'Downloading update…';
+
   return (
     <div className="card p-5">
       <h2 className="mb-2 text-lg font-semibold text-slate-700">App Updates</h2>
       <p className="mb-4 text-sm text-slate-500">
-        Check for a new version from GitHub Releases. Your pharmacy database is kept during
-        updates.
+        Check for updates online. When you install an update, it downloads and applies in the
+        background and PillOpsDesk restarts automatically. Your pharmacy database is kept.
       </p>
 
       <div className="mb-4 text-sm">
@@ -373,16 +370,22 @@ function AppUpdatesSection() {
         </div>
       )}
 
-      {progress && busy === 'download' && (
+      {progress && busy === 'apply' && (
         <div className="mb-4">
           <div className="mb-1 flex justify-between text-xs text-slate-500">
-            <span>Downloading update…</span>
-            <span>{progress.percent}%</span>
+            <span>{progressLabel}</span>
+            {progress.phase === 'downloading' && <span>{progress.percent}%</span>}
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-slate-100">
             <div
-              className="h-full rounded-full bg-brand-600 transition-all"
-              style={{ width: `${progress.percent}%` }}
+              className={`h-full rounded-full bg-brand-600 transition-all ${
+                progress.phase === 'installing' ? 'w-full animate-pulse' : ''
+              }`}
+              style={
+                progress.phase === 'downloading'
+                  ? { width: `${progress.percent}%` }
+                  : undefined
+              }
             />
           </div>
         </div>
@@ -394,7 +397,11 @@ function AppUpdatesSection() {
         </button>
         {checkResult?.updateAvailable && checkResult.manifest && (
           <button className="btn-primary" onClick={downloadAndInstall} disabled={busy !== null}>
-            {busy === 'download' ? 'Downloading…' : `Install v${checkResult.manifest.version}`}
+            {busy === 'apply'
+              ? progress?.phase === 'installing'
+                ? 'Installing…'
+                : 'Downloading…'
+              : 'Download & Install'}
           </button>
         )}
       </div>

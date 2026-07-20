@@ -292,6 +292,7 @@ export interface UpdateCheckResult {
 }
 
 export interface UpdateDownloadProgress {
+  phase: 'downloading' | 'installing';
   percent: number;
   transferred: number;
   total: number;

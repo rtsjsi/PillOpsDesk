@@ -93,9 +93,8 @@ const api: PharmacyApi = {
   updates: {
     getVersion: () => invoke(IPC.updatesGetVersion),
     check: () => invoke(IPC.updatesCheck),
-    download: (manifest) => invoke(IPC.updatesDownload, manifest),
-    install: (installerPath) => invoke(IPC.updatesInstall, installerPath),
-    onDownloadProgress: (callback) => {
+    apply: (manifest) => invoke(IPC.updatesApply, manifest),
+    onProgress: (callback) => {
       const handler = (_event: Electron.IpcRendererEvent, progress: UpdateDownloadProgress) =>
         callback(progress);
       ipcRenderer.on(IPC.updatesProgress, handler);

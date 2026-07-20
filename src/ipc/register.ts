@@ -32,10 +32,9 @@ import {
 } from './google-drive';
 import { printInvoice } from './invoice';
 import {
+  applyUpdate,
   checkForUpdates,
-  downloadUpdate,
   getAppVersion,
-  installUpdate,
 } from './updates';
 
 function handle<T extends unknown[], R>(
@@ -176,8 +175,5 @@ export function registerIpc(): void {
   // App updates via GitHub Releases (available even in read-only mode)
   handle(IPC.updatesGetVersion, () => getAppVersion());
   handle(IPC.updatesCheck, () => checkForUpdates());
-  handle(IPC.updatesDownload, (manifest: UpdateManifest) => downloadUpdate(manifest));
-  handle(IPC.updatesInstall, (installerPath: string) => {
-    installUpdate(installerPath);
-  });
+  handle(IPC.updatesApply, (manifest: UpdateManifest) => applyUpdate(manifest));
 }

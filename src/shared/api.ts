@@ -119,9 +119,8 @@ export interface PharmacyApi {
   updates: {
     getVersion: () => Promise<string>;
     check: () => Promise<UpdateCheckResult>;
-    download: (manifest: UpdateManifest) => Promise<string>;
-    install: (installerPath: string) => Promise<void>;
-    onDownloadProgress: (callback: (progress: UpdateDownloadProgress) => void) => () => void;
+    apply: (manifest: UpdateManifest) => Promise<void>;
+    onProgress: (callback: (progress: UpdateDownloadProgress) => void) => () => void;
   };
 }
 
@@ -198,7 +197,6 @@ export const IPC = {
 
   updatesGetVersion: 'updates:getVersion',
   updatesCheck: 'updates:check',
-  updatesDownload: 'updates:download',
-  updatesInstall: 'updates:install',
+  updatesApply: 'updates:apply',
   updatesProgress: 'updates:progress',
 } as const;
