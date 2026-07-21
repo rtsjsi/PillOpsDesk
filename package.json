@@ -1,7 +1,7 @@
 {
   "name": "pillopsdesk",
   "productName": "PillOpsDesk",
-  "version": "1.0.8",
+  "version": "1.0.10",
   "description": "Offline desktop pharmacy management app for small-town medical stores (GST sales, inventory, batch/expiry, reports).",
   "main": ".vite/build/main.js",
   "author": "PillOpsDesk",

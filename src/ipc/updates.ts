@@ -204,16 +204,6 @@ export async function checkForUpdates(): Promise<UpdateCheckResult> {
   };
 }
 
-async function sha256File(filePath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const hash = crypto.createHash('sha256');
-    const stream = fs.createReadStream(filePath);
-    stream.on('data', (chunk) => hash.update(chunk));
-    stream.on('error', reject);
-    stream.on('end', () => resolve(hash.digest('hex')));
-  });
-}
-
 async function downloadUpdatePackage(manifest: UpdateManifest): Promise<string> {
   const res = await fetch(manifest.url, {
     headers: { 'User-Agent': 'PillOpsDesk-Updater' },
@@ -231,28 +221,58 @@ async function downloadUpdatePackage(manifest: UpdateManifest): Promise<string> 
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pillopsdesk-update-'));
   const zipPath = path.join(tempDir, `PillOpsDesk-${manifest.version}-win64.zip`);
 
+  // Stream straight to disk and hash on the fly, instead of buffering the
+  // whole (~100MB+) package in memory and re-reading it afterwards to hash
+  // it. That buffering approach caused heavy GC/memory pressure on lower-spec
+  // PCs, which visibly slowed the download down.
+  const hash = crypto.createHash('sha256');
+  const fileStream = fs.createWriteStream(zipPath);
   const reader = res.body.getReader();
-  const chunks: Buffer[] = [];
   let transferred = 0;
+  let lastReportedAt = 0;
+  let lastReportedPercent = -1;
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const chunk = Buffer.from(value);
-    chunks.push(chunk);
-    transferred += chunk.length;
-    sendProgress({
-      phase: 'downloading',
-      percent: total > 0 ? Math.min(100, Math.round((transferred / total) * 100)) : 0,
-      transferred,
-      total: total || transferred,
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = Buffer.from(value);
+      hash.update(chunk);
+      transferred += chunk.length;
+
+      const canWrite = fileStream.write(chunk);
+      if (!canWrite) {
+        await new Promise<void>((resolve) => fileStream.once('drain', resolve));
+      }
+
+      // Throttle IPC updates: at chunk-level frequency (thousands of times
+      // for a large file) this can itself add enough overhead to slow the
+      // download loop down and flood the renderer with re-renders.
+      const percent = total > 0 ? Math.min(100, Math.round((transferred / total) * 100)) : 0;
+      const now = Date.now();
+      if (percent !== lastReportedPercent || now - lastReportedAt >= 150) {
+        lastReportedPercent = percent;
+        lastReportedAt = now;
+        sendProgress({
+          phase: 'downloading',
+          percent,
+          transferred,
+          total: total || transferred,
+        });
+      }
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      fileStream.end((err?: Error | null) => (err ? reject(err) : resolve()));
     });
+  } catch (err) {
+    fileStream.destroy();
+    fs.rmSync(tempDir, { recursive: true, force: true });
+    throw err;
   }
 
-  fs.writeFileSync(zipPath, Buffer.concat(chunks));
-
-  const hash = await sha256File(zipPath);
-  if (hash.toLowerCase() !== manifest.sha256.toLowerCase()) {
+  const digest = hash.digest('hex');
+  if (digest.toLowerCase() !== manifest.sha256.toLowerCase()) {
     fs.rmSync(tempDir, { recursive: true, force: true });
     throw new Error('Downloaded update failed verification. Please try again later.');
   }
