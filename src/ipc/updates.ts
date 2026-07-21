@@ -115,17 +115,25 @@ export async function checkForUpdates(): Promise<UpdateCheckResult> {
     return { currentVersion, updateAvailable: false };
   }
 
-  const res = await fetch(UPDATE_MANIFEST_URL, {
-    headers: {
-      Accept: 'application/json',
-      'User-Agent': 'PillOpsDesk-Updater',
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetch(UPDATE_MANIFEST_URL, {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'PillOpsDesk-Updater',
+      },
+    });
+  } catch {
+    throw new Error('Could not check for updates. Check your internet connection.');
+  }
 
   if (!res.ok) {
-    throw new Error(
-      `Could not check for updates (${res.status}). Check your internet connection.`
-    );
+    if (res.status === 404) {
+      throw new Error(
+        'No update information found. An update package has not been published yet.'
+      );
+    }
+    throw new Error(`Could not check for updates (HTTP ${res.status}). Try again later.`);
   }
 
   const manifest = (await res.json()) as UpdateManifest;

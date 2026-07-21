@@ -114,7 +114,7 @@ tsconfig.json             # @shared/* path alias -> src/shared/*
 npm install       # installs deps; postinstall rebuilds better-sqlite3 for Electron
 npm start         # run the app in development (Vite dev server + Electron)
 npm run make      # build the Windows installer only (out/.../PillOpsDeskSetup.exe)
-npm run release   # make + OTA zip + latest.json + GitHub Release (see §5b)
+npm run release   # bump patch version + make + OTA zip + latest.json + GitHub Release (see §5b)
 npm run clean     # delete out/, .vite/
 npm run rebuild   # manually rebuild better-sqlite3 against Electron if needed
 npm run typecheck # TypeScript check (no emit; Vite/Forge does the actual build)
@@ -137,23 +137,22 @@ Manifest URL (in `src/shared/update-config.ts`):
 
 ### Publish a release
 
-1. Bump `version` in `package.json`.
-2. Ensure [gh](https://cli.github.com/) is installed and logged in (`gh auth login`).
-3. Run:
+1. Ensure [gh](https://cli.github.com/) is installed and logged in (`gh auth login`).
+2. Run:
 
 ```powershell
 npm run release
 ```
+
+This bumps the patch version in `package.json` (e.g. `1.0.4` → `1.0.5`), builds the
+installer, zips `PillOpsDesk-X.Y.Z-win64.zip`, writes `latest.json`, and uploads
+all three to GitHub Release `vX.Y.Z`. Customer databases in `userData` are preserved.
 
 Optional notes:
 
 ```powershell
 npm run release -- -Notes "Bug fixes and improvements"
 ```
-
-That one command builds the installer, zips `PillOpsDesk-X.Y.Z-win64.zip`, writes
-`latest.json`, and uploads all three (setup + zip + manifest) to GitHub Release
-`vX.Y.Z`. Customer databases in `userData` are preserved.
 
 ## 5a. Licensing — generate a key for an app user (vendor)
 
