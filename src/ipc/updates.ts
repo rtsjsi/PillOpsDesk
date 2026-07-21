@@ -44,31 +44,86 @@ function buildBackgroundUpdaterScript(
   updaterScriptPath: string
 ): string {
   const exePath = path.join(installDir, 'pillopsdesk.exe');
+  const logPath = path.join(os.tmpdir(), 'pillopsdesk-updater.log');
   return `$ErrorActionPreference = 'Stop'
 $InstallDir = ${psQuote(installDir)}
 $ZipPath = ${psQuote(zipPath)}
 $ExePath = ${psQuote(exePath)}
 $ExtractDir = Join-Path $env:TEMP ('pillopsdesk-update-' + [guid]::NewGuid().ToString())
 $UpdaterScript = ${psQuote(updaterScriptPath)}
+$LogPath = ${psQuote(logPath)}
 
-for ($i = 0; $i -lt 120; $i++) {
-  if (-not (Get-Process -Name 'pillopsdesk' -ErrorAction SilentlyContinue)) { break }
-  Start-Sleep -Milliseconds 500
-}
-Get-Process -Name 'pillopsdesk' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-Start-Sleep -Seconds 2
-
-New-Item -ItemType Directory -Path $ExtractDir -Force | Out-Null
-Expand-Archive -Path $ZipPath -DestinationPath $ExtractDir -Force
-
-Get-ChildItem -Path $ExtractDir -Force | ForEach-Object {
-  Copy-Item -Path $_.FullName -Destination $InstallDir -Recurse -Force
+function Write-Log($Message) {
+  $Line = '[' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + '] ' + $Message
+  Add-Content -Path $LogPath -Value $Line -ErrorAction SilentlyContinue
 }
 
-Start-Process -FilePath $ExePath -WorkingDirectory $InstallDir
+function Unblock-Recursively($Path) {
+  Get-ChildItem -Path $Path -Recurse -Force -ErrorAction SilentlyContinue |
+    Unblock-File -ErrorAction SilentlyContinue
+}
 
-Remove-Item -Path $ZipPath -Force -ErrorAction SilentlyContinue
-Remove-Item -Path $ExtractDir -Recurse -Force -ErrorAction SilentlyContinue
+function Invoke-WithRetry([scriptblock]$Action, [string]$StepName, [int]$MaxAttempts = 6) {
+  for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+    try {
+      & $Action
+      return
+    } catch {
+      if ($attempt -eq $MaxAttempts) { throw }
+      Write-Log ("$StepName failed on attempt $attempt/$MaxAttempts (" + $_.Exception.Message + '). Retrying...')
+      # Files freshly written/extracted are often briefly locked by antivirus
+      # real-time scanning; back off and retry instead of giving up immediately.
+      Start-Sleep -Seconds ([Math]::Min(2 * $attempt, 10))
+    }
+  }
+}
+
+Remove-Item -Path $LogPath -Force -ErrorAction SilentlyContinue
+Write-Log 'Updater started.'
+
+try {
+  for ($i = 0; $i -lt 120; $i++) {
+    if (-not (Get-Process -Name 'pillopsdesk' -ErrorAction SilentlyContinue)) { break }
+    Start-Sleep -Milliseconds 500
+  }
+  Get-Process -Name 'pillopsdesk' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+  Start-Sleep -Seconds 3
+  Write-Log 'App process closed.'
+
+  # The downloaded zip carries the Windows "Mark of the Web" (it came from the
+  # internet). Unblock it and everything extracted from it, otherwise Windows
+  # Defender / Smart App Control can silently refuse to run the new files.
+  Unblock-File -Path $ZipPath -ErrorAction SilentlyContinue
+
+  New-Item -ItemType Directory -Path $ExtractDir -Force | Out-Null
+  Invoke-WithRetry -StepName 'Expand-Archive' -Action {
+    Expand-Archive -Path $ZipPath -DestinationPath $ExtractDir -Force
+  }
+  Unblock-Recursively $ExtractDir
+  Write-Log 'Update package extracted.'
+
+  Invoke-WithRetry -StepName 'Copy-Item' -Action {
+    Get-ChildItem -Path $ExtractDir -Force | ForEach-Object {
+      Copy-Item -Path $_.FullName -Destination $InstallDir -Recurse -Force
+    }
+  }
+  Unblock-Recursively $InstallDir
+  Write-Log 'Update files copied into install directory.'
+
+  Remove-Item -Path $ZipPath -Force -ErrorAction SilentlyContinue
+  Remove-Item -Path $ExtractDir -Recurse -Force -ErrorAction SilentlyContinue
+  Write-Log 'Update applied successfully. Relaunching app.'
+} catch {
+  Write-Log ('Update FAILED: ' + $_.Exception.Message)
+}
+
+if (Test-Path $ExePath) {
+  Start-Process -FilePath $ExePath -WorkingDirectory $InstallDir
+  Write-Log 'App relaunched.'
+} else {
+  Write-Log ('Could not relaunch: exe not found at ' + $ExePath)
+}
+
 Remove-Item -Path $UpdaterScript -Force -ErrorAction SilentlyContinue
 `;
 }
@@ -130,7 +185,7 @@ export async function checkForUpdates(): Promise<UpdateCheckResult> {
   if (!res.ok) {
     if (res.status === 404) {
       throw new Error(
-        'No update information found. An update package has not been published yet.'
+        'No update information found. Ensure a GitHub release with latest.json is published and publicly downloadable.'
       );
     }
     throw new Error(`Could not check for updates (HTTP ${res.status}). Try again later.`);

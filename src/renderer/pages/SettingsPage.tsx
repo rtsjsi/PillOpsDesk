@@ -318,7 +318,7 @@ function AppUpdatesSection() {
       const result = await window.pharmacy.updates.check();
       setCheckResult(result);
       if (!result.updateAvailable) {
-        toast.success('You are on the latest version.');
+        toast.success('Already on latest version.');
       }
     } catch (e) {
       toast.error(errMsg(e));
@@ -367,6 +367,12 @@ function AppUpdatesSection() {
           {checkResult.manifest.notes && (
             <p className="mt-2 whitespace-pre-wrap text-emerald-800">{checkResult.manifest.notes}</p>
           )}
+        </div>
+      )}
+
+      {checkResult && !checkResult.updateAvailable && (
+        <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+          Already on latest version ({checkResult.currentVersion}).
         </div>
       )}
 
