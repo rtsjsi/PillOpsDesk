@@ -113,14 +113,14 @@ tsconfig.json             # @shared/* path alias -> src/shared/*
 ```bash
 npm install       # installs deps; postinstall rebuilds better-sqlite3 for Electron
 npm start         # run the app in development (Vite dev server + Electron)
-npm run make      # build the Windows installer (out/.../PillOpsDeskSetup.exe)
+npm run make      # build the Windows installer only (out/.../PillOpsDeskSetup.exe)
+npm run release   # make + OTA zip + latest.json + GitHub Release (see §5b)
 npm run clean     # delete out/, .vite/
 npm run rebuild   # manually rebuild better-sqlite3 against Electron if needed
 npm run typecheck # TypeScript check (no emit; Vite/Forge does the actual build)
 npm run icons     # regenerate app icons from assets/icons/icon.svg
 npm run license:keypair   # one-time: create RSA key pair (vendor machine only)
 npm run license:generate  # issue a customer license key (see §5a)
-npm run release:manifest  # build latest.json for GitHub Releases OTA (see §5b)
 ```
 
 `npm run lint` is an alias for `typecheck` (no ESLint config in this repo).
@@ -128,37 +128,32 @@ npm run release:manifest  # build latest.json for GitHub Releases OTA (see §5b)
 ## 5b. OTA updates — GitHub Releases (vendor)
 
 Packaged installs use **Settings → App Updates**: check, then **Download & Install**.
-The app fetches `latest.json`, downloads a signed zip package, verifies SHA-256,
-applies files in the background via a hidden PowerShell helper, and restarts —
-no NSIS wizard is shown to the user.
+The app fetches `latest.json`, downloads the zip, verifies SHA-256, applies files
+via a hidden PowerShell helper, and restarts.
 
-Manifest URL (embedded in `src/shared/update-config.ts`):
+Manifest URL (in `src/shared/update-config.ts`):
 
 `https://github.com/rtsjsi/PillOpsDesk/releases/latest/download/latest.json`
-
-OTA download URL in the manifest points at `PillOpsDesk-X.Y.Z-win64.zip`.
-`PillOpsDeskSetup.exe` can still be attached to the same release for first-time installs.
 
 ### Publish a release
 
 1. Bump `version` in `package.json`.
-2. Build and sign: `npm run make` (set `WINDOWS_CERT_FILE` when signing).
-3. Zip the packaged app folder (`out/*-win32-x64`) as `PillOpsDesk-X.Y.Z-win64.zip`
-   and generate the manifest:
-
-```bash
-npm run release:manifest -- out/release-ota/PillOpsDesk-1.0.4-win64.zip "Release notes here"
-```
-
-4. Create a GitHub Release tagged `vX.Y.Z` and upload **`PillOpsDesk-X.Y.Z-win64.zip`**
-   and **`latest.json`**. Or use the helper (requires [gh](https://cli.github.com/)):
+2. Ensure [gh](https://cli.github.com/) is installed and logged in (`gh auth login`).
+3. Run:
 
 ```powershell
-.\scripts\publish-github-release.ps1 -Notes "Bug fixes and improvements"
+npm run release
 ```
 
-Each release must include `latest.json` so `/releases/latest/download/latest.json`
-points at the newest manifest. Customer databases in `userData` are preserved.
+Optional notes:
+
+```powershell
+npm run release -- -Notes "Bug fixes and improvements"
+```
+
+That one command builds the installer, zips `PillOpsDesk-X.Y.Z-win64.zip`, writes
+`latest.json`, and uploads all three (setup + zip + manifest) to GitHub Release
+`vX.Y.Z`. Customer databases in `userData` are preserved.
 
 ## 5a. Licensing — generate a key for an app user (vendor)
 

@@ -1,5 +1,8 @@
-# Build, package OTA zip, generate latest.json, and publish a GitHub Release.
-# Requires: gh CLI (https://cli.github.com/) authenticated for the repo.
+# Build installer, package OTA zip + latest.json, and publish a GitHub Release.
+# Usage: npm run release
+#        npm run release -- -Notes "What changed"
+#        npm run release -- -SkipMake   (reuse an existing out\*-win32-x64 build)
+# Requires: gh CLI logged in (gh auth login).
 param(
   [string]$Notes = '',
   [switch]$SkipMake
@@ -45,7 +48,7 @@ if (-not (Test-Path $ManifestPath)) {
   Write-Error 'latest.json was not created next to the OTA zip.'
 }
 
-$SetupExe = Get-ChildItem -Path (Join-Path $ProjectRoot 'out\make\nsis\*\PillOpsDeskSetup.exe') -ErrorAction SilentlyContinue |
+$SetupExe = Get-ChildItem -Path (Join-Path $ProjectRoot 'out\make\nsis') -Recurse -Filter 'PillOpsDeskSetup.exe' -ErrorAction SilentlyContinue |
   Sort-Object LastWriteTime -Descending |
   Select-Object -First 1
 

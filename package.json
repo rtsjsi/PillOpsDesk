@@ -18,6 +18,7 @@
     "license:keypair": "node scripts/generate-keypair.cjs",
     "license:generate": "node scripts/generate-license.cjs",
     "icons": "node scripts/generate-icons.cjs",
+    "release": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish-github-release.ps1",
     "release:manifest": "node scripts/prepare-release-manifest.cjs"
   },
   "dependencies": {
