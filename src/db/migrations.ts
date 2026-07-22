@@ -147,6 +147,116 @@ const MIGRATIONS: string[] = [
   ALTER TABLE sale_items ADD COLUMN discount_percent REAL NOT NULL DEFAULT 0;
   ALTER TABLE sale_items ADD COLUMN taxable_value REAL NOT NULL DEFAULT 0;
   `,
+  // v7: set all item-master GST rates to 5%
+  `
+  UPDATE medicines SET gst_rate = 5;
+  `,
+  // v8: fill blank HSN codes for item master (India GST Chapter 30 / related)
+  // Order: specific non-pharma and therapeutic classes first, then catch-all medicaments.
+  `
+  UPDATE medicines SET hsn_code = '40141010'
+  WHERE (hsn_code IS NULL OR trim(hsn_code) = '')
+    AND (
+      lower(ifnull(dosage_form,'')) = 'condom'
+      OR lower(name) LIKE '%condom%'
+    );
+
+  UPDATE medicines SET hsn_code = '38221990'
+  WHERE (hsn_code IS NULL OR trim(hsn_code) = '')
+    AND (
+      lower(ifnull(dosage_form,'')) = 'kit'
+      OR lower(name) LIKE '%pregnancy%'
+      OR lower(name) LIKE '%hcg%'
+    );
+
+  UPDATE medicines SET hsn_code = '34011190'
+  WHERE (hsn_code IS NULL OR trim(hsn_code) = '')
+    AND (
+      lower(ifnull(dosage_form,'')) = 'soap'
+      OR lower(name) LIKE '%soap%'
+      OR lower(name) LIKE '%body wash%'
+      OR lower(name) LIKE '%shampoo%'
+      OR lower(name) LIKE '%netawash%'
+      OR lower(name) LIKE '%intimate wash%'
+    );
+
+  UPDATE medicines SET hsn_code = '38089199'
+  WHERE (hsn_code IS NULL OR trim(hsn_code) = '')
+    AND lower(name) LIKE '%mosquito%';
+
+  UPDATE medicines SET hsn_code = '33049990'
+  WHERE (hsn_code IS NULL OR trim(hsn_code) = '')
+    AND (
+      lower(name) LIKE '%moisturiser%'
+      OR lower(name) LIKE '%moisturizer%'
+      OR lower(name) LIKE '%lip cream%'
+      OR lower(name) LIKE '%baby body wash%'
+      OR lower(name) LIKE '%baby shampoo%'
+    );
+
+  UPDATE medicines SET hsn_code = '30045090'
+  WHERE (hsn_code IS NULL OR trim(hsn_code) = '')
+    AND (
+      lower(ifnull(category,'')) LIKE '%hematinic%'
+      OR lower(ifnull(category,'')) = 'nutrinex'
+      OR lower(ifnull(generic_name,'')) LIKE '%vitamin%'
+      OR lower(ifnull(generic_name,'')) LIKE '%multivitamin%'
+      OR lower(ifnull(generic_name,'')) LIKE '%cholecalciferol%'
+      OR lower(ifnull(generic_name,'')) LIKE '%methylcobalamin%'
+      OR lower(ifnull(generic_name,'')) LIKE '%calcium carbonate%'
+      OR lower(ifnull(generic_name,'')) LIKE '%ferrous%'
+      OR lower(ifnull(generic_name,'')) LIKE '%omega-3%'
+      OR lower(ifnull(generic_name,'')) LIKE '%ginseng%'
+    );
+
+  UPDATE medicines SET hsn_code = '30041090'
+  WHERE (hsn_code IS NULL OR trim(hsn_code) = '')
+    AND (
+      lower(ifnull(generic_name,'')) LIKE '%amoxicillin%'
+      OR lower(ifnull(generic_name,'')) LIKE '%amoxycillin%'
+      OR lower(ifnull(generic_name,'')) LIKE '%cloxacillin%'
+      OR lower(ifnull(generic_name,'')) LIKE '%penicillin%'
+    );
+
+  UPDATE medicines SET hsn_code = '30042099'
+  WHERE (hsn_code IS NULL OR trim(hsn_code) = '')
+    AND (
+      lower(ifnull(category,'')) IN ('antibiotic', 'anti-infective', 'anti-fungal')
+      OR lower(ifnull(generic_name,'')) LIKE '%azithromycin%'
+      OR lower(ifnull(generic_name,'')) LIKE '%cef%'
+      OR lower(ifnull(generic_name,'')) LIKE '%cephalexin%'
+      OR lower(ifnull(generic_name,'')) LIKE '%ciprofloxacin%'
+      OR lower(ifnull(generic_name,'')) LIKE '%ofloxacin%'
+      OR lower(ifnull(generic_name,'')) LIKE '%levofloxacin%'
+      OR lower(ifnull(generic_name,'')) LIKE '%linezolid%'
+      OR lower(ifnull(generic_name,'')) LIKE '%gentamicin%'
+      OR lower(ifnull(generic_name,'')) LIKE '%itraconazole%'
+      OR lower(ifnull(generic_name,'')) LIKE '%ketoconazole%'
+      OR lower(ifnull(generic_name,'')) LIKE '%clotrimazole%'
+      OR lower(ifnull(generic_name,'')) LIKE '%terbinafine%'
+      OR lower(ifnull(generic_name,'')) LIKE '%fusidic%'
+      OR lower(ifnull(generic_name,'')) LIKE '%metronidazole%'
+      OR lower(ifnull(generic_name,'')) LIKE '%ornidazole%'
+      OR lower(ifnull(generic_name,'')) LIKE '%fluconazole%'
+    );
+
+  UPDATE medicines SET hsn_code = '30043200'
+  WHERE (hsn_code IS NULL OR trim(hsn_code) = '')
+    AND (
+      lower(ifnull(generic_name,'')) LIKE '%dexamethasone%'
+      OR lower(ifnull(generic_name,'')) LIKE '%prednisolone%'
+      OR lower(ifnull(generic_name,'')) LIKE '%methylprednisolone%'
+      OR lower(ifnull(generic_name,'')) LIKE '%deflazacort%'
+      OR lower(ifnull(generic_name,'')) LIKE '%triamcinolone%'
+      OR lower(ifnull(generic_name,'')) LIKE '%beclomethasone%'
+      OR lower(ifnull(generic_name,'')) LIKE '%clobetasol%'
+      OR lower(ifnull(generic_name,'')) LIKE '%hydrocortisone%'
+      OR lower(ifnull(generic_name,'')) LIKE '%norethisterone%'
+    );
+
+  UPDATE medicines SET hsn_code = '30049099'
+  WHERE hsn_code IS NULL OR trim(hsn_code) = '';
+  `,
 ];
 
 export function runMigrations(db: Database.Database): void {

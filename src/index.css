@@ -11,6 +11,16 @@
   body {
     @apply bg-slate-100 text-slate-800 antialiased;
   }
+  /* Hide up/down spinners on number inputs (Chromium + Firefox) */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
 }
 
 @layer components {

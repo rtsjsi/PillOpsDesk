@@ -57,30 +57,32 @@ export function Customers() {
   };
 
   return (
-    <div className="space-y-4">
-      <ReadOnlyNotice />
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Customers</h1>
-        <button className="btn-primary" onClick={openNew} disabled={!canWrite}>
-          + Add Customer
-        </button>
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="shrink-0 space-y-4">
+        <ReadOnlyNotice />
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-slate-800">Customers</h1>
+          <button className="btn-primary" onClick={openNew} disabled={!canWrite}>
+            + Add Customer
+          </button>
+        </div>
+
+        <input
+          className="input max-w-md"
+          placeholder="Search customers..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
-      <input
-        className="input max-w-md"
-        placeholder="Search customers..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-
-      <div className="card overflow-hidden">
+      <div className="card min-h-0 flex-1 overflow-auto">
         {!list ? (
           <Spinner />
         ) : list.length === 0 ? (
           <EmptyState message="No customers yet." />
         ) : (
           <table className="w-full">
-            <thead className="bg-slate-50">
+            <thead className="sticky top-0 z-10 bg-slate-50">
               <tr>
                 <th className="th">Name</th>
                 <th className="th">Phone</th>

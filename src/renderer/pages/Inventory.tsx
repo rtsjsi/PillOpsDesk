@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import type { Medicine, MedicineInput, MedicineSchedule, MedicineStorageType, Batch, BatchInput } from '../../shared/types';
 import { inr, formatDate, daysUntil, todayIso } from '../lib/format';
 import { Modal } from '../components/Modal';
-import { Spinner, EmptyState, Badge, useToast, errMsg } from '../components/ui';
+import { Spinner, EmptyState, Badge, useToast, errMsg, NumberInput } from '../components/ui';
 import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
 import { useWriteAllowed } from '../App';
 
@@ -35,7 +35,7 @@ const emptyMedicine: MedicineInput = {
   generic_name: '',
   manufacturer: '',
   hsn_code: '',
-  gst_rate: 12,
+  gst_rate: 5,
   dosage_form: '',
   category: '',
   pack_size: '',
@@ -134,30 +134,32 @@ export function Inventory() {
   };
 
   return (
-    <div className="space-y-4">
-      <ReadOnlyNotice />
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Inventory</h1>
-        <button className="btn-primary" onClick={openNew} disabled={!canWrite}>
-          + Add Medicine
-        </button>
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="shrink-0 space-y-4">
+        <ReadOnlyNotice />
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-slate-800">Inventory</h1>
+          <button className="btn-primary" onClick={openNew} disabled={!canWrite}>
+            + Add Medicine
+          </button>
+        </div>
+
+        <input
+          className="input max-w-md"
+          placeholder="Search by name, salt, or manufacturer..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
-      <input
-        className="input max-w-md"
-        placeholder="Search by name, salt, or manufacturer..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-
-      <div className="card overflow-hidden">
+      <div className="card min-h-0 flex-1 overflow-auto">
         {!meds ? (
           <Spinner />
         ) : meds.length === 0 ? (
           <EmptyState message="No medicines found. Add one to get started." />
         ) : (
           <table className="w-full">
-            <thead className="bg-slate-50">
+            <thead className="sticky top-0 z-10 bg-slate-50">
               <tr>
                 <th className="th">Medicine</th>
                 <th className="th">Manufacturer</th>
@@ -376,14 +378,11 @@ export function Inventory() {
           </div>
           <div>
             <label className="label">Reorder Level</label>
-            <input
+            <NumberInput
               className="input"
-              type="number"
               min={0}
               value={form.reorder_level}
-              onChange={(e) =>
-                setForm({ ...form, reorder_level: Number(e.target.value) })
-              }
+              onValueChange={(reorder_level) => setForm({ ...form, reorder_level })}
             />
           </div>
         </div>
@@ -587,46 +586,40 @@ function BatchManager({
           </div>
           <div>
             <label className="label">Quantity</label>
-            <input
+            <NumberInput
               className="input"
-              type="number"
               min={0}
               value={form.quantity_in_stock}
-              onChange={(e) =>
-                setForm({ ...form, quantity_in_stock: Number(e.target.value) })
+              onValueChange={(quantity_in_stock) =>
+                setForm({ ...form, quantity_in_stock })
               }
             />
           </div>
           <div>
             <label className="label">MRP</label>
-            <input
+            <NumberInput
               className="input"
-              type="number"
               step="0.01"
               value={form.mrp}
-              onChange={(e) => setForm({ ...form, mrp: Number(e.target.value) })}
+              onValueChange={(mrp) => setForm({ ...form, mrp })}
             />
           </div>
           <div>
             <label className="label">Purchase Price</label>
-            <input
+            <NumberInput
               className="input"
-              type="number"
               step="0.01"
               value={form.purchase_price}
-              onChange={(e) =>
-                setForm({ ...form, purchase_price: Number(e.target.value) })
-              }
+              onValueChange={(purchase_price) => setForm({ ...form, purchase_price })}
             />
           </div>
           <div>
             <label className="label">Sale Price</label>
-            <input
+            <NumberInput
               className="input"
-              type="number"
               step="0.01"
               value={form.sale_price}
-              onChange={(e) => setForm({ ...form, sale_price: Number(e.target.value) })}
+              onValueChange={(sale_price) => setForm({ ...form, sale_price })}
             />
           </div>
           <div className="col-span-3 flex justify-end gap-2">

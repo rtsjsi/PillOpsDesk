@@ -9,7 +9,7 @@ import type {
   User,
 } from '../../shared/types';
 import { Modal } from '../components/Modal';
-import { Spinner, useToast, errMsg, Badge } from '../components/ui';
+import { Spinner, useToast, errMsg, Badge, NumberInput } from '../components/ui';
 import { useAuth, useLicense, useWriteAllowed } from '../App';
 import { formatDate } from '../lib/format';
 import { applyAppTitle } from '../lib/appTitle';
@@ -297,12 +297,14 @@ function GoogleDriveSection({ readOnly }: { readOnly: boolean }) {
 function AppUpdatesSection() {
   const toast = useToast();
   const [currentVersion, setCurrentVersion] = useState<string | null>(null);
+  const [logPath, setLogPath] = useState<string | null>(null);
   const [checkResult, setCheckResult] = useState<UpdateCheckResult | null>(null);
   const [progress, setProgress] = useState<UpdateDownloadProgress | null>(null);
   const [busy, setBusy] = useState<'check' | 'apply' | null>(null);
 
   useEffect(() => {
     void window.pharmacy.updates.getVersion().then(setCurrentVersion);
+    void window.pharmacy.updates.getLogPath().then(setLogPath);
   }, []);
 
   useEffect(() => {
@@ -338,6 +340,24 @@ function AppUpdatesSection() {
     } catch (e) {
       toast.error(errMsg(e));
       setBusy(null);
+    }
+  };
+
+  const openLog = async () => {
+    try {
+      await window.pharmacy.updates.openLog();
+    } catch (e) {
+      toast.error(errMsg(e));
+    }
+  };
+
+  const copyLogPath = async () => {
+    if (!logPath) return;
+    try {
+      await navigator.clipboard.writeText(logPath);
+      toast.success('Log path copied.');
+    } catch {
+      toast.error('Could not copy log path.');
     }
   };
 
@@ -397,7 +417,7 @@ function AppUpdatesSection() {
         </div>
       )}
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <button className="btn-secondary" onClick={check} disabled={busy !== null}>
           {busy === 'check' ? 'Checking…' : 'Check for Updates'}
         </button>
@@ -410,6 +430,24 @@ function AppUpdatesSection() {
               : 'Download & Install'}
           </button>
         )}
+      </div>
+
+      <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+        <div className="font-medium text-slate-700">Updater log (for support)</div>
+        <p className="mt-1 break-all font-mono text-[11px] text-slate-500">
+          {logPath ?? '…'}
+        </p>
+        <p className="mt-1 text-slate-500">
+          After a failed or incomplete install, open this log and share it for review.
+        </p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <button type="button" className="btn-secondary text-xs" onClick={openLog}>
+            Open Log
+          </button>
+          <button type="button" className="btn-secondary text-xs" onClick={copyLogPath}>
+            Copy Path
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -520,11 +558,10 @@ export function SettingsPage() {
           </div>
           <div>
             <label className="label">Expiry Alert (days)</label>
-            <input
+            <NumberInput
               className="input"
-              type="number"
               value={settings.expiry_alert_days}
-              onChange={(e) => set({ expiry_alert_days: Number(e.target.value) })}
+              onValueChange={(expiry_alert_days) => set({ expiry_alert_days })}
             />
           </div>
         </div>

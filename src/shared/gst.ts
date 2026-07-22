@@ -119,14 +119,51 @@ export function purchaseLineAmounts(input: {
   discount_percent: number;
   quantity: number;
   gst_rate: number;
-}): { net_rate: number; taxable_value: number; line_total: number } {
+}): {
+  net_rate: number;
+  taxable_value: number;
+  line_total: number;
+  discount_amount: number;
+  gst_amount: number;
+} {
   const disc = Math.min(Math.max(0, input.discount_percent ?? 0), 100);
   const qty = Math.max(0, input.quantity ?? 0);
   const rate = input.gst_rate ?? 0;
+  const gross = round2(Math.max(0, input.purchase_price) * qty);
   const net_rate = round2(Math.max(0, input.purchase_price) * (1 - disc / 100));
   const taxable_value = round2(net_rate * qty);
+  const discount_amount = round2(gross - taxable_value);
   const line_total = round2(taxable_value * (1 + rate / 100));
-  return { net_rate, taxable_value, line_total };
+  const gst_amount = round2(line_total - taxable_value);
+  return { net_rate, taxable_value, line_total, discount_amount, gst_amount };
+}
+
+/** Sums purchase line amounts for an invoice. */
+export function purchaseInvoiceTotals(
+  items: Array<{
+    purchase_price: number;
+    discount_percent: number;
+    quantity: number;
+    gst_rate: number;
+  }>
+): {
+  discount: number;
+  taxable: number;
+  gst: number;
+  total: number;
+} {
+  return items.reduce(
+    (acc, it) => {
+      const line = purchaseLineAmounts(it);
+      return {
+        discount: round2(acc.discount + line.discount_amount),
+        taxable: round2(acc.taxable + line.taxable_value),
+        gst: round2(acc.gst + line.gst_amount),
+        total: round2(acc.total + line.line_total),
+      };
+    },
+    { discount: 0, taxable: 0, gst: 0, total: 0 }
+  );
 }
 
 /** Landing cost per paid unit (after discount, incl. GST). */

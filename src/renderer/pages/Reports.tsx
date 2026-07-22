@@ -6,7 +6,7 @@ import type {
   StockRow,
 } from '../../shared/types';
 import { inr, formatDate, todayIso, monthStartIso, daysUntil, toCsv } from '../lib/format';
-import { Spinner, EmptyState, Badge, useToast } from '../components/ui';
+import { Spinner, EmptyState, Badge, useToast, NumberInput } from '../components/ui';
 
 type Tab = 'sales' | 'purchases' | 'gst' | 'lowstock' | 'expiring' | 'valuation';
 
@@ -22,29 +22,33 @@ const TABS: { id: Tab; label: string }[] = [
 export function Reports() {
   const [tab, setTab] = useState<Tab>('sales');
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-slate-800">Reports</h1>
-      <div className="flex flex-wrap gap-2 border-b border-slate-200">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium ${
-              tab === t.id
-                ? 'border-brand-600 text-brand-700'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="shrink-0 space-y-4">
+        <h1 className="text-2xl font-bold text-slate-800">Reports</h1>
+        <div className="flex flex-wrap gap-2 border-b border-slate-200">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium ${
+                tab === t.id
+                  ? 'border-brand-600 text-brand-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
-      {tab === 'sales' && <SalesReport />}
-      {tab === 'purchases' && <PurchasesReport />}
-      {tab === 'gst' && <GstReport />}
-      {tab === 'lowstock' && <LowStockReport />}
-      {tab === 'expiring' && <ExpiringReport />}
-      {tab === 'valuation' && <ValuationReport />}
+      <div className="min-h-0 flex-1 overflow-hidden">
+        {tab === 'sales' && <SalesReport />}
+        {tab === 'purchases' && <PurchasesReport />}
+        {tab === 'gst' && <GstReport />}
+        {tab === 'lowstock' && <LowStockReport />}
+        {tab === 'expiring' && <ExpiringReport />}
+        {tab === 'valuation' && <ValuationReport />}
+      </div>
     </div>
   );
 }
@@ -115,8 +119,8 @@ function SalesReport() {
   const grand = rows?.reduce((s, r) => s + r.total, 0) ?? 0;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-end justify-between">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="flex shrink-0 items-end justify-between">
         <DateRange from={from} to={to} setFrom={setFrom} setTo={setTo} onRun={run} />
         {rows && (
           <ExportButton
@@ -134,14 +138,14 @@ function SalesReport() {
           />
         )}
       </div>
-      <div className="card overflow-hidden">
+      <div className="card min-h-0 flex-1 overflow-auto">
         {!rows ? (
           <Spinner />
         ) : rows.length === 0 ? (
           <EmptyState message="No sales in range." />
         ) : (
           <table className="w-full">
-            <thead className="bg-slate-50">
+            <thead className="sticky top-0 z-10 bg-slate-50">
               <tr>
                 <th className="th">Date</th>
                 <th className="th text-center">Invoices</th>
@@ -193,8 +197,8 @@ function PurchasesReport() {
   const invoiceTotal = rows?.reduce((s, r) => s + r.invoice_count, 0) ?? 0;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-end justify-between">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="flex shrink-0 items-end justify-between">
         <DateRange from={from} to={to} setFrom={setFrom} setTo={setTo} onRun={run} />
         {rows && (
           <ExportButton
@@ -204,14 +208,14 @@ function PurchasesReport() {
           />
         )}
       </div>
-      <div className="card overflow-hidden">
+      <div className="card min-h-0 flex-1 overflow-auto">
         {!rows ? (
           <Spinner />
         ) : rows.length === 0 ? (
           <EmptyState message="No purchases in range." />
         ) : (
           <table className="w-full">
-            <thead className="bg-slate-50">
+            <thead className="sticky top-0 z-10 bg-slate-50">
               <tr>
                 <th className="th">Date</th>
                 <th className="th text-center">Purchases</th>
@@ -253,8 +257,8 @@ function GstReport() {
   useEffect(run, []);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-end justify-between">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="flex shrink-0 items-end justify-between">
         <DateRange from={from} to={to} setFrom={setFrom} setTo={setTo} onRun={run} />
         {rows && (
           <ExportButton
@@ -270,14 +274,14 @@ function GstReport() {
           />
         )}
       </div>
-      <div className="card overflow-hidden">
+      <div className="card min-h-0 flex-1 overflow-auto">
         {!rows ? (
           <Spinner />
         ) : rows.length === 0 ? (
           <EmptyState message="No taxable sales in range." />
         ) : (
           <table className="w-full">
-            <thead className="bg-slate-50">
+            <thead className="sticky top-0 z-10 bg-slate-50">
               <tr>
                 <th className="th">GST Rate</th>
                 <th className="th text-right">Taxable Value</th>
@@ -328,27 +332,29 @@ function ExpiringReport() {
   };
   useEffect(run, []);
   return (
-    <div className="space-y-4">
-      <div className="flex items-end gap-3">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="flex shrink-0 items-end gap-3">
         <div>
           <label className="label">Within (days)</label>
-          <input
-            type="number"
+          <NumberInput
             className="input w-32"
             value={days}
-            onChange={(e) => setDays(Number(e.target.value))}
+            emptyValue={1}
+            onValueChange={setDays}
           />
         </div>
         <button className="btn-primary" onClick={run}>
           Run
         </button>
       </div>
-      <StockTable
-        rows={rows}
-        emptyMsg="No expiring items in range."
-        filename="expiring.csv"
-        showExpiry
-      />
+      <div className="min-h-0 flex-1 overflow-hidden">
+        <StockTable
+          rows={rows}
+          emptyMsg="No expiring items in range."
+          filename="expiring.csv"
+          showExpiry
+        />
+      </div>
     </div>
   );
 }
@@ -361,8 +367,8 @@ function ValuationReport() {
   const totalCost = rows?.reduce((s, r) => s + r.purchase_price * r.quantity_in_stock, 0) ?? 0;
   const totalMrp = rows?.reduce((s, r) => s + r.mrp * r.quantity_in_stock, 0) ?? 0;
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="grid shrink-0 grid-cols-2 gap-4">
         <div className="card p-4">
           <div className="text-sm text-slate-500">Stock Value (at cost)</div>
           <div className="text-2xl font-bold text-slate-800">{inr(totalCost)}</div>
@@ -372,12 +378,14 @@ function ValuationReport() {
           <div className="text-2xl font-bold text-brand-700">{inr(totalMrp)}</div>
         </div>
       </div>
-      <StockTable
-        rows={rows}
-        emptyMsg="No stock on hand."
-        filename="stock-valuation.csv"
-        showValues
-      />
+      <div className="min-h-0 flex-1 overflow-hidden">
+        <StockTable
+          rows={rows}
+          emptyMsg="No stock on hand."
+          filename="stock-valuation.csv"
+          showValues
+        />
+      </div>
     </div>
   );
 }
@@ -396,9 +404,9 @@ function StockTable({
   showValues?: boolean;
 }) {
   return (
-    <div className="space-y-3">
+    <div className="flex h-full min-h-0 flex-col gap-3">
       {rows && rows.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex shrink-0 justify-end">
           <ExportButton
             filename={filename}
             headers={['Medicine', 'Batch', 'Expiry', 'Qty', 'Purchase', 'MRP']}
@@ -413,14 +421,14 @@ function StockTable({
           />
         </div>
       )}
-      <div className="card overflow-hidden">
+      <div className="card min-h-0 flex-1 overflow-auto">
         {!rows ? (
           <Spinner />
         ) : rows.length === 0 ? (
           <EmptyState message={emptyMsg} />
         ) : (
           <table className="w-full">
-            <thead className="bg-slate-50">
+            <thead className="sticky top-0 z-10 bg-slate-50">
               <tr>
                 <th className="th">Medicine</th>
                 <th className="th">Batch</th>

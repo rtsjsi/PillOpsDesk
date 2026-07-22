@@ -82,22 +82,24 @@ export function Layout() {
           </button>
         </div>
       </aside>
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {licenseStatus?.state === 'grace' && (
-          <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-900">
+          <div className="shrink-0 border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-900">
             <strong>Subscription expired.</strong> {licenseStatus.message}
           </div>
         )}
         {licenseStatus?.state === 'readonly' && (
-          <div className="border-b border-red-200 bg-red-50 px-6 py-3 text-sm text-red-900">
+          <div className="shrink-0 border-b border-red-200 bg-red-50 px-6 py-3 text-sm text-red-900">
             <strong>Read-only mode.</strong> {licenseStatus.message}
             {user?.role === 'owner' && (
               <span> Renew under Settings → Subscription.</span>
             )}
           </div>
         )}
-        <div className="mx-auto max-w-7xl p-6">
-          <Outlet />
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">
+          <div className="mx-auto flex h-full max-w-7xl flex-col">
+            <Outlet />
+          </div>
         </div>
       </main>
     </div>

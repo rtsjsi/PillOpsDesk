@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 export function Spinner() {
   return (
@@ -11,6 +11,61 @@ export function Spinner() {
 export function EmptyState({ message }: { message: string }) {
   return (
     <div className="py-12 text-center text-sm text-slate-400">{message}</div>
+  );
+}
+
+type NumberInputProps = Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  'type' | 'value' | 'onChange'
+> & {
+  value: number;
+  onValueChange: (value: number) => void;
+  /** Committed when the field is left blank (default 0). */
+  emptyValue?: number;
+};
+
+/** Number field that can be cleared (empty) while typing; commits on blur. */
+export function NumberInput({
+  value,
+  onValueChange,
+  emptyValue = 0,
+  onFocus,
+  onBlur,
+  ...rest
+}: NumberInputProps) {
+  const [focused, setFocused] = useState(false);
+  const [text, setText] = useState(String(value));
+
+  useEffect(() => {
+    if (!focused) setText(String(value));
+  }, [value, focused]);
+
+  return (
+    <input
+      {...rest}
+      type="number"
+      value={focused ? text : value}
+      onFocus={(e) => {
+        setFocused(true);
+        setText(String(value));
+        onFocus?.(e);
+      }}
+      onChange={(e) => {
+        const raw = e.target.value;
+        setText(raw);
+        if (raw === '' || raw === '-' || raw === '.' || raw === '-.') return;
+        const n = Number(raw);
+        if (!Number.isNaN(n)) onValueChange(n);
+      }}
+      onBlur={(e) => {
+        setFocused(false);
+        const n = Number(text);
+        const next = text === '' || text === '-' || Number.isNaN(n) ? emptyValue : n;
+        onValueChange(next);
+        setText(String(next));
+        onBlur?.(e);
+      }}
+    />
   );
 }
 

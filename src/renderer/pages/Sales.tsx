@@ -9,7 +9,7 @@ import type {
 import { computeSaleInvoice, saleLineAmounts } from '../../shared/gst';
 import { inr, formatDateTime, formatDate, todayIso, monthStartIso } from '../lib/format';
 import { Modal } from '../components/Modal';
-import { Spinner, EmptyState, useToast, errMsg } from '../components/ui';
+import { Spinner, EmptyState, useToast, errMsg, NumberInput } from '../components/ui';
 import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
 import { useWriteAllowed } from '../App';
 
@@ -67,55 +67,57 @@ export function Sales() {
   const dayTotal = sales?.reduce((s, x) => s + x.total, 0) ?? 0;
 
   return (
-    <div className="space-y-4">
-      <ReadOnlyNotice />
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Sales</h1>
-        <button
-          className="btn-primary"
-          onClick={() => setNewSaleOpen(true)}
-          disabled={!canWrite}
-        >
-          + New Sale
-        </button>
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="shrink-0 space-y-4">
+        <ReadOnlyNotice />
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-slate-800">Sales</h1>
+          <button
+            className="btn-primary"
+            onClick={() => setNewSaleOpen(true)}
+            disabled={!canWrite}
+          >
+            + New Sale
+          </button>
+        </div>
+
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="label">From</label>
+            <input
+              type="date"
+              className="input"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label">To</label>
+            <input
+              type="date"
+              className="input"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+            />
+          </div>
+          <button className="btn-primary" onClick={load}>
+            Filter
+          </button>
+          <div className="ml-auto text-right">
+            <div className="text-sm text-slate-500">Total for range</div>
+            <div className="text-xl font-bold text-brand-700">{inr(dayTotal)}</div>
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
-        <div>
-          <label className="label">From</label>
-          <input
-            type="date"
-            className="input"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className="label">To</label>
-          <input
-            type="date"
-            className="input"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-          />
-        </div>
-        <button className="btn-primary" onClick={load}>
-          Filter
-        </button>
-        <div className="ml-auto text-right">
-          <div className="text-sm text-slate-500">Total for range</div>
-          <div className="text-xl font-bold text-brand-700">{inr(dayTotal)}</div>
-        </div>
-      </div>
-
-      <div className="card overflow-hidden">
+      <div className="card min-h-0 flex-1 overflow-auto">
         {!sales ? (
           <Spinner />
         ) : sales.length === 0 ? (
           <EmptyState message="No sales in the selected range." />
         ) : (
           <table className="w-full">
-            <thead className="bg-slate-50">
+            <thead className="sticky top-0 z-10 bg-slate-50">
               <tr>
                 <th className="th">Invoice</th>
                 <th className="th">Date</th>
@@ -405,7 +407,8 @@ function NewSaleForm({
       open
       title="New Sale"
       onClose={onClose}
-      wide
+      xl
+      bodyScroll={false}
       footer={
         <>
           <button className="btn-secondary" onClick={onClose} disabled={busy}>
@@ -428,147 +431,158 @@ function NewSaleForm({
         </>
       }
     >
-      <div className="space-y-4">
-        <div>
-          <label className="label">Customer</label>
-          <select
-            className="input"
-            value={customerId ?? ''}
-            onChange={(e) =>
-              setCustomerId(e.target.value ? Number(e.target.value) : null)
-            }
-          >
-            <option value="">Walk-in Customer</option>
-            {customers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} {c.phone ? `(${c.phone})` : ''}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="relative">
-          <label className="label">Add Item</label>
-          <input
-            ref={searchRef}
-            className="input"
-            placeholder="Scan barcode or search medicine / batch..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onFocus={() => results.length && setShowResults(true)}
-          />
-          {showResults && results.length > 0 && (
-            <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg">
-              {results.map((r) => (
-                <button
-                  key={r.batch_id}
-                  className="flex w-full items-center justify-between border-b border-slate-100 px-3 py-2 text-left text-sm hover:bg-brand-50"
-                  onClick={() => addToCart(r)}
-                >
-                  <div>
-                    <div className="font-medium text-slate-800">{r.name}</div>
-                    <div className="text-xs text-slate-400">
-                      Batch {r.batch_no} · Exp {formatDate(r.expiry_date)} · Stock{' '}
-                      {r.quantity_in_stock}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold">{inr(r.sale_price)}</div>
-                    <div className="text-xs text-slate-400">{r.gst_rate}% GST</div>
-                  </div>
-                </button>
+      <div className="flex min-h-0 flex-1 flex-col gap-2">
+        <div className="grid shrink-0 grid-cols-2 gap-2">
+          <div>
+            <label className="label">Customer</label>
+            <select
+              className="input"
+              value={customerId ?? ''}
+              onChange={(e) =>
+                setCustomerId(e.target.value ? Number(e.target.value) : null)
+              }
+            >
+              <option value="">Walk-in Customer</option>
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} {c.phone ? `(${c.phone})` : ''}
+                </option>
               ))}
-            </div>
+            </select>
+          </div>
+          <div className="relative">
+            <label className="label">Add Item</label>
+            <input
+              ref={searchRef}
+              className="input"
+              placeholder="Scan barcode or search medicine / batch..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onFocus={() => results.length && setShowResults(true)}
+            />
+            {showResults && results.length > 0 && (
+              <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg">
+                {results.map((r) => (
+                  <button
+                    key={r.batch_id}
+                    className="flex w-full items-center justify-between border-b border-slate-100 px-3 py-2 text-left text-sm hover:bg-brand-50"
+                    onClick={() => addToCart(r)}
+                  >
+                    <div>
+                      <div className="font-medium text-slate-800">{r.name}</div>
+                      <div className="text-xs text-slate-400">
+                        Batch {r.batch_no} · Exp {formatDate(r.expiry_date)} · Stock{' '}
+                        {r.quantity_in_stock}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">{inr(r.sale_price)}</div>
+                      <div className="text-xs text-slate-400">{r.gst_rate}% GST</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-auto rounded-md border border-slate-200">
+          {cart.length === 0 ? (
+            <EmptyState message="Cart is empty. Search and add medicines above." />
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 z-10 bg-slate-50">
+                <tr>
+                  <th className="th">Item</th>
+                  <th className="th text-center">Qty</th>
+                  <th className="th text-right">Rate</th>
+                  <th className="th text-center">Disc %</th>
+                  <th className="th text-right">Total</th>
+                  <th className="th"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {cart.map((l) => {
+                  const amounts = saleLineAmounts({
+                    gross: l.batch.sale_price * l.quantity,
+                    gst_rate: l.batch.gst_rate ?? 0,
+                    discount_percent: l.discount_percent ?? 0,
+                  });
+                  return (
+                  <tr key={l.batch.batch_id} className="border-t border-slate-100">
+                    <td className="td">
+                      <div className="font-medium">{l.batch.name}</div>
+                      <div className="text-xs text-slate-400">
+                        Batch {l.batch.batch_no} · {l.batch.gst_rate}% GST
+                      </div>
+                    </td>
+                    <td className="td text-center">
+                      <NumberInput
+                        min={1}
+                        max={l.batch.quantity_in_stock}
+                        value={l.quantity}
+                        emptyValue={1}
+                        onValueChange={(quantity) => updateLine(l.batch.batch_id, quantity)}
+                        className="input w-16 px-2 py-1 text-center"
+                      />
+                    </td>
+                    <td className="td text-right">{inr(l.batch.sale_price)}</td>
+                    <td className="td text-center">
+                      <NumberInput
+                        min={0}
+                        max={100}
+                        step="0.1"
+                        className="input w-14 px-2 py-1 text-center"
+                        value={l.discount_percent}
+                        onValueChange={(discount_percent) =>
+                          updateLineDiscount(l.batch.batch_id, discount_percent)
+                        }
+                      />
+                    </td>
+                    <td className="td text-right font-medium">
+                      {inr(amounts.gross)}
+                    </td>
+                    <td className="td text-right">
+                      <button
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => removeLine(l.batch.batch_id)}
+                      >
+                        ✕
+                      </button>
+                    </td>
+                  </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           )}
         </div>
 
-        {cart.length === 0 ? (
-          <EmptyState message="Cart is empty. Search and add medicines above." />
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="th">Item</th>
-                <th className="th text-center">Qty</th>
-                <th className="th text-right">Rate</th>
-                <th className="th text-center">Disc %</th>
-                <th className="th text-right">Total</th>
-                <th className="th"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {cart.map((l) => {
-                const amounts = saleLineAmounts({
-                  gross: l.batch.sale_price * l.quantity,
-                  gst_rate: l.batch.gst_rate ?? 0,
-                  discount_percent: l.discount_percent ?? 0,
-                });
-                return (
-                <tr key={l.batch.batch_id} className="border-t border-slate-100">
-                  <td className="td">
-                    <div className="font-medium">{l.batch.name}</div>
-                    <div className="text-xs text-slate-400">
-                      Batch {l.batch.batch_no} · {l.batch.gst_rate}% GST
-                    </div>
-                  </td>
-                  <td className="td text-center">
-                    <input
-                      type="number"
-                      min={1}
-                      max={l.batch.quantity_in_stock}
-                      value={l.quantity}
-                      onChange={(e) =>
-                        updateLine(l.batch.batch_id, Number(e.target.value))
-                      }
-                      className="input w-16 px-2 py-1 text-center"
-                    />
-                  </td>
-                  <td className="td text-right">{inr(l.batch.sale_price)}</td>
-                  <td className="td text-center">
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
-                      step="0.1"
-                      className="input w-14 px-2 py-1 text-center"
-                      value={l.discount_percent}
-                      onChange={(e) =>
-                        updateLineDiscount(
-                          l.batch.batch_id,
-                          Number(e.target.value)
-                        )
-                      }
-                    />
-                  </td>
-                  <td className="td text-right font-medium">
-                    {inr(amounts.gross)}
-                  </td>
-                  <td className="td text-right">
-                    <button
-                      className="text-red-500 hover:text-red-700"
-                      onClick={() => removeLine(l.batch.batch_id)}
-                    >
-                      ✕
-                    </button>
-                  </td>
-                </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-
-        <div className="ml-auto w-64 space-y-1 text-sm">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-x-5 gap-y-1 border-t border-slate-200 pt-2 text-sm">
           {totals.discountAmount > 0 && (
-            <Row label="Discount" value={`- ${inr(totals.discountAmount)}`} />
+            <span className="text-slate-600">
+              Discount:{' '}
+              <span className="font-medium text-slate-800">
+                - {inr(totals.discountAmount)}
+              </span>
+            </span>
           )}
-          <Row label="Taxable Value" value={inr(totals.subtotal)} />
-          <Row label="CGST" value={inr(totals.cgst)} />
-          <Row label="SGST" value={inr(totals.sgst)} />
-          <div className="flex justify-between border-t border-slate-200 pt-1 text-base font-bold">
-            <span>Total</span>
+          <span className="text-slate-600">
+            Taxable:{' '}
+            <span className="font-medium text-slate-800">{inr(totals.subtotal)}</span>
+          </span>
+          <span className="text-slate-600">
+            CGST:{' '}
+            <span className="font-medium text-slate-800">{inr(totals.cgst)}</span>
+          </span>
+          <span className="text-slate-600">
+            SGST:{' '}
+            <span className="font-medium text-slate-800">{inr(totals.sgst)}</span>
+          </span>
+          <span className="font-semibold text-slate-800">
+            Total:{' '}
             <span className="text-brand-700">{inr(totals.total)}</span>
-          </div>
+          </span>
         </div>
       </div>
     </Modal>
@@ -767,7 +781,8 @@ function SaleEditForm({
       open
       title={`Edit Invoice ${sale.invoice_no}`}
       onClose={onClose}
-      wide
+      xl
+      bodyScroll={false}
       footer={
         <>
           <button className="btn-secondary" onClick={onClose}>
@@ -780,151 +795,166 @@ function SaleEditForm({
       }
     >
       {!cart ? (
-        <Spinner />
+        <div className="flex flex-1 items-center justify-center">
+          <Spinner />
+        </div>
       ) : (
-        <div className="space-y-4">
-          <div>
-            <label className="label">Customer</label>
-            <select
-              className="input"
-              value={customerId ?? ''}
-              onChange={(e) =>
-                setCustomerId(e.target.value ? Number(e.target.value) : null)
-              }
-            >
-              <option value="">Walk-in Customer</option>
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} {c.phone ? `(${c.phone})` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="relative">
-            <label className="label">Add Item</label>
-            <input
-              ref={searchRef}
-              className="input"
-              placeholder="Search medicine / batch..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onFocus={() => results.length && setShowResults(true)}
-            />
-            {showResults && results.length > 0 && (
-              <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg">
-                {results.map((r) => {
-                  const avail = availableStock(r);
-                  return (
-                    <button
-                      key={r.batch_id}
-                      className="flex w-full items-center justify-between border-b border-slate-100 px-3 py-2 text-left text-sm hover:bg-brand-50 disabled:opacity-50"
-                      disabled={avail <= 0}
-                      onClick={() => addToCart(r)}
-                    >
-                      <div>
-                        <div className="font-medium text-slate-800">{r.name}</div>
-                        <div className="text-xs text-slate-400">
-                          Batch {r.batch_no} · Exp {formatDate(r.expiry_date)} · Avail{' '}
-                          {avail}
-                        </div>
-                      </div>
-                      <div className="font-semibold">{inr(r.sale_price)}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {cart.length === 0 ? (
-            <EmptyState message="No items on invoice." />
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="th">Item</th>
-                  <th className="th text-center">Qty</th>
-                  <th className="th text-right">Rate</th>
-                  <th className="th text-center">Disc %</th>
-                  <th className="th text-right">Total</th>
-                  <th className="th"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {cart.map((l) => {
-                  const max = availableStock(l.batch);
-                  const amounts = saleLineAmounts({
-                    gross: l.batch.sale_price * l.quantity,
-                    gst_rate: l.batch.gst_rate ?? 0,
-                    discount_percent: l.discount_percent ?? 0,
-                  });
-                  return (
-                    <tr key={l.batch.batch_id} className="border-t border-slate-100">
-                      <td className="td">
-                        <div className="font-medium">{l.batch.name}</div>
-                        <div className="text-xs text-slate-400">
-                          Batch {l.batch.batch_no} · avail {max}
-                        </div>
-                      </td>
-                      <td className="td text-center">
-                        <input
-                          type="number"
-                          min={1}
-                          max={max}
-                          className="input w-16 px-2 py-1 text-center"
-                          value={l.quantity}
-                          onChange={(e) =>
-                            updateLine(l.batch.batch_id, Number(e.target.value))
-                          }
-                        />
-                      </td>
-                      <td className="td text-right">{inr(l.batch.sale_price)}</td>
-                      <td className="td text-center">
-                        <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          step="0.1"
-                          className="input w-14 px-2 py-1 text-center"
-                          value={l.discount_percent}
-                          onChange={(e) =>
-                            updateLineDiscount(
-                              l.batch.batch_id,
-                              Number(e.target.value)
-                            )
-                          }
-                        />
-                      </td>
-                      <td className="td text-right font-medium">
-                        {inr(amounts.gross)}
-                      </td>
-                      <td className="td text-right">
-                        <button
-                          className="text-red-500 hover:text-red-700"
-                          onClick={() => removeLine(l.batch.batch_id)}
-                        >
-                          ✕
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-
-          <div className="ml-auto w-64 space-y-1 text-sm">
-            {totals.discountAmount > 0 && (
-              <Row label="Discount" value={`- ${inr(totals.discountAmount)}`} />
-            )}
-            <Row label="Taxable Value" value={inr(totals.subtotal)} />
-            <Row label="CGST" value={inr(totals.cgst)} />
-            <Row label="SGST" value={inr(totals.sgst)} />
-            <div className="flex justify-between border-t border-slate-200 pt-1 text-base font-bold">
-              <span>Total</span>
-              <span className="text-brand-700">{inr(totals.total)}</span>
+        <div className="flex min-h-0 flex-1 flex-col gap-2">
+          <div className="grid shrink-0 grid-cols-2 gap-2">
+            <div>
+              <label className="label">Customer</label>
+              <select
+                className="input"
+                value={customerId ?? ''}
+                onChange={(e) =>
+                  setCustomerId(e.target.value ? Number(e.target.value) : null)
+                }
+              >
+                <option value="">Walk-in Customer</option>
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} {c.phone ? `(${c.phone})` : ''}
+                  </option>
+                ))}
+              </select>
             </div>
+            <div className="relative">
+              <label className="label">Add Item</label>
+              <input
+                ref={searchRef}
+                className="input"
+                placeholder="Search medicine / batch..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onFocus={() => results.length && setShowResults(true)}
+              />
+              {showResults && results.length > 0 && (
+                <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg">
+                  {results.map((r) => {
+                    const avail = availableStock(r);
+                    return (
+                      <button
+                        key={r.batch_id}
+                        className="flex w-full items-center justify-between border-b border-slate-100 px-3 py-2 text-left text-sm hover:bg-brand-50 disabled:opacity-50"
+                        disabled={avail <= 0}
+                        onClick={() => addToCart(r)}
+                      >
+                        <div>
+                          <div className="font-medium text-slate-800">{r.name}</div>
+                          <div className="text-xs text-slate-400">
+                            Batch {r.batch_no} · Exp {formatDate(r.expiry_date)} · Avail{' '}
+                            {avail}
+                          </div>
+                        </div>
+                        <div className="font-semibold">{inr(r.sale_price)}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-auto rounded-md border border-slate-200">
+            {cart.length === 0 ? (
+              <EmptyState message="No items on invoice." />
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 z-10 bg-slate-50">
+                  <tr>
+                    <th className="th">Item</th>
+                    <th className="th text-center">Qty</th>
+                    <th className="th text-right">Rate</th>
+                    <th className="th text-center">Disc %</th>
+                    <th className="th text-right">Total</th>
+                    <th className="th"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cart.map((l) => {
+                    const max = availableStock(l.batch);
+                    const amounts = saleLineAmounts({
+                      gross: l.batch.sale_price * l.quantity,
+                      gst_rate: l.batch.gst_rate ?? 0,
+                      discount_percent: l.discount_percent ?? 0,
+                    });
+                    return (
+                      <tr key={l.batch.batch_id} className="border-t border-slate-100">
+                        <td className="td">
+                          <div className="font-medium">{l.batch.name}</div>
+                          <div className="text-xs text-slate-400">
+                            Batch {l.batch.batch_no} · avail {max}
+                          </div>
+                        </td>
+                        <td className="td text-center">
+                          <NumberInput
+                            min={1}
+                            max={max}
+                            className="input w-16 px-2 py-1 text-center"
+                            value={l.quantity}
+                            emptyValue={1}
+                            onValueChange={(quantity) =>
+                              updateLine(l.batch.batch_id, quantity)
+                            }
+                          />
+                        </td>
+                        <td className="td text-right">{inr(l.batch.sale_price)}</td>
+                        <td className="td text-center">
+                          <NumberInput
+                            min={0}
+                            max={100}
+                            step="0.1"
+                            className="input w-14 px-2 py-1 text-center"
+                            value={l.discount_percent}
+                            onValueChange={(discount_percent) =>
+                              updateLineDiscount(l.batch.batch_id, discount_percent)
+                            }
+                          />
+                        </td>
+                        <td className="td text-right font-medium">
+                          {inr(amounts.gross)}
+                        </td>
+                        <td className="td text-right">
+                          <button
+                            className="text-red-500 hover:text-red-700"
+                            onClick={() => removeLine(l.batch.batch_id)}
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-x-5 gap-y-1 border-t border-slate-200 pt-2 text-sm">
+            {totals.discountAmount > 0 && (
+              <span className="text-slate-600">
+                Discount:{' '}
+                <span className="font-medium text-slate-800">
+                  - {inr(totals.discountAmount)}
+                </span>
+              </span>
+            )}
+            <span className="text-slate-600">
+              Taxable:{' '}
+              <span className="font-medium text-slate-800">{inr(totals.subtotal)}</span>
+            </span>
+            <span className="text-slate-600">
+              CGST:{' '}
+              <span className="font-medium text-slate-800">{inr(totals.cgst)}</span>
+            </span>
+            <span className="text-slate-600">
+              SGST:{' '}
+              <span className="font-medium text-slate-800">{inr(totals.sgst)}</span>
+            </span>
+            <span className="font-semibold text-slate-800">
+              Total:{' '}
+              <span className="text-brand-700">{inr(totals.total)}</span>
+            </span>
           </div>
         </div>
       )}

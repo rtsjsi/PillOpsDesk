@@ -35,6 +35,8 @@ import {
   applyUpdate,
   checkForUpdates,
   getAppVersion,
+  getUpdaterLogPath,
+  openUpdaterLog,
 } from './updates';
 
 function handle<T extends unknown[], R>(
@@ -176,4 +178,6 @@ export function registerIpc(): void {
   handle(IPC.updatesGetVersion, () => getAppVersion());
   handle(IPC.updatesCheck, () => checkForUpdates());
   handle(IPC.updatesApply, (manifest: UpdateManifest) => applyUpdate(manifest));
+  handle(IPC.updatesGetLogPath, () => getUpdaterLogPath());
+  handle(IPC.updatesOpenLog, () => openUpdaterLog());
 }

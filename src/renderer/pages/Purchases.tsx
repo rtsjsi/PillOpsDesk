@@ -7,24 +7,34 @@ import type {
   PurchaseWithItems,
 } from '../../shared/types';
 import { inr, formatDate, todayIso, monthStartIso } from '../lib/format';
-import { purchaseLineAmounts, round2 } from '../../shared/gst';
+import { purchaseLineAmounts, purchaseInvoiceTotals, round2 } from '../../shared/gst';
 import { Modal } from '../components/Modal';
-import { Spinner, EmptyState, useToast, errMsg } from '../components/ui';
+import { Spinner, EmptyState, useToast, errMsg, NumberInput } from '../components/ui';
 import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
 import { useWriteAllowed } from '../App';
 
 interface DraftItem extends PurchaseItemInput {
   medicine_name: string;
+  /** Markup % applied on net rate (rate after discount). */
+  margin_percent: number;
 }
 
-function marginPercent(purchase: number, sale: number): number {
-  if (purchase <= 0) return 0;
-  return round2(((sale - purchase) / purchase) * 100);
+function netPurchaseRate(purchase: number, discountPercent: number): number {
+  const disc = Math.min(Math.max(0, discountPercent ?? 0), 100);
+  return round2(Math.max(0, purchase) * (1 - disc / 100));
 }
 
-function saleFromMargin(purchase: number, marginPct: number): number {
-  if (purchase <= 0) return 0;
-  return round2(purchase * (1 + marginPct / 100));
+/** Sale = (rate after disc) + margin % of that net rate. */
+function saleFromMargin(purchase: number, marginPct: number, discountPercent = 0): number {
+  const net = netPurchaseRate(purchase, discountPercent);
+  if (net <= 0) return 0;
+  return round2(net * (1 + marginPct / 100));
+}
+
+function marginFromSale(purchase: number, sale: number, discountPercent = 0): number {
+  const net = netPurchaseRate(purchase, discountPercent);
+  if (net <= 0) return 0;
+  return round2(((sale - net) / net) * 100);
 }
 
 function lineTotals(it: PurchaseItemInput) {
@@ -89,51 +99,53 @@ export function Purchases() {
   const rangeTotal = purchases?.reduce((s, p) => s + p.total_amount, 0) ?? 0;
 
   return (
-    <div className="space-y-4">
-      <ReadOnlyNotice />
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Purchases</h1>
-        <button className="btn-primary" onClick={openNew} disabled={!canWrite}>
-          + New Purchase
-        </button>
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="shrink-0 space-y-4">
+        <ReadOnlyNotice />
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-slate-800">Purchases</h1>
+          <button className="btn-primary" onClick={openNew} disabled={!canWrite}>
+            + New Purchase
+          </button>
+        </div>
+
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="label">From</label>
+            <input
+              type="date"
+              className="input"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label">To</label>
+            <input
+              type="date"
+              className="input"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+            />
+          </div>
+          <button className="btn-primary" onClick={load}>
+            Filter
+          </button>
+          <div className="ml-auto text-right">
+            <div className="text-sm text-slate-500">Total for range</div>
+            <div className="text-xl font-bold text-brand-700">{inr(rangeTotal)}</div>
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
-        <div>
-          <label className="label">From</label>
-          <input
-            type="date"
-            className="input"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className="label">To</label>
-          <input
-            type="date"
-            className="input"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-          />
-        </div>
-        <button className="btn-primary" onClick={load}>
-          Filter
-        </button>
-        <div className="ml-auto text-right">
-          <div className="text-sm text-slate-500">Total for range</div>
-          <div className="text-xl font-bold text-brand-700">{inr(rangeTotal)}</div>
-        </div>
-      </div>
-
-      <div className="card overflow-hidden">
+      <div className="card min-h-0 flex-1 overflow-auto">
         {!purchases ? (
           <Spinner />
         ) : purchases.length === 0 ? (
           <EmptyState message="No purchases in the selected range." />
         ) : (
           <table className="w-full">
-            <thead className="bg-slate-50">
+            <thead className="sticky top-0 z-10 bg-slate-50">
               <tr>
                 <th className="th">Date</th>
                 <th className="th">Invoice No</th>
@@ -245,6 +257,7 @@ export function Purchases() {
                   <th className="th text-center">Free</th>
                   <th className="th text-right">Rate</th>
                   <th className="th text-right">Disc %</th>
+                  <th className="th text-right">GST %</th>
                   <th className="th text-right">Taxable</th>
                   <th className="th text-right">Line Total</th>
                   <th className="th text-right">Margin</th>
@@ -264,10 +277,15 @@ export function Purchases() {
                     <td className="td text-right">
                       {it.discount_percent > 0 ? `${it.discount_percent}%` : '-'}
                     </td>
+                    <td className="td text-right">{it.gst_rate}%</td>
                     <td className="td text-right">{inr(it.taxable_value)}</td>
                     <td className="td text-right">{inr(it.line_total)}</td>
                     <td className="td text-right">
-                      {marginPercent(it.purchase_price, it.sale_price).toFixed(1)}%
+                      {marginFromSale(
+                        it.purchase_price,
+                        it.sale_price,
+                        it.discount_percent
+                      ).toFixed(1)}%
                     </td>
                     <td className="td text-right">{inr(it.sale_price)}</td>
                     <td className="td text-right">{inr(it.mrp)}</td>
@@ -275,11 +293,21 @@ export function Purchases() {
                 ))}
               </tbody>
             </table>
-            <div className="text-right">
-              <div className="text-sm text-slate-500">Total Purchase Value</div>
-              <div className="text-xl font-bold text-brand-700">
-                {inr(viewing.total_amount)}
-              </div>
+            <div className="ml-auto w-72 space-y-1 text-sm">
+              {(() => {
+                const t = purchaseInvoiceTotals(viewing.items);
+                return (
+                  <>
+                    <TotalsRow label="Total Discount" value={inr(t.discount)} />
+                    <TotalsRow label="Total Taxable Value" value={inr(t.taxable)} />
+                    <TotalsRow label="Total GST" value={inr(t.gst)} />
+                    <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-semibold">
+                      <span>Total Invoice Amount</span>
+                      <span className="text-brand-700">{inr(t.total)}</span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}
@@ -306,7 +334,6 @@ function PurchaseForm({
   );
   const [invoiceNo, setInvoiceNo] = useState(initial?.invoice_no ?? '');
   const [date, setDate] = useState(initial?.purchase_date ?? todayIso());
-  const [notes, setNotes] = useState(initial?.notes ?? '');
   const [items, setItems] = useState<DraftItem[]>(
     () =>
       initial?.items.map((it) => ({
@@ -321,6 +348,11 @@ function PurchaseForm({
         quantity: it.quantity,
         discount_percent: it.discount_percent ?? 0,
         free_quantity: it.free_quantity ?? 0,
+        margin_percent: marginFromSale(
+          it.purchase_price,
+          it.sale_price,
+          it.discount_percent ?? 0
+        ),
       })) ?? []
   );
   const [busy, setBusy] = useState(false);
@@ -354,6 +386,7 @@ function PurchaseForm({
         quantity: 1,
         discount_percent: 0,
         free_quantity: 0,
+        margin_percent: 0,
       },
     ]);
     setSearch('');
@@ -367,7 +400,7 @@ function PurchaseForm({
     setItems((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const total = items.reduce((s, it) => s + lineTotals(it).line_total, 0);
+  const totals = purchaseInvoiceTotals(items);
 
   const save = async () => {
     if (items.length === 0) return onError('Add at least one item.');
@@ -387,8 +420,10 @@ function PurchaseForm({
       supplier_id: supplierId,
       invoice_no: invoiceNo.trim() || null,
       purchase_date: date,
-      notes: notes.trim() || null,
-      items: items.map(({ medicine_name, ...rest }) => rest),
+      notes: initial?.notes ?? null,
+      items: items.map(
+        ({ medicine_name: _n, margin_percent: _m, ...rest }) => rest
+      ),
     };
     setBusy(true);
     try {
@@ -407,7 +442,8 @@ function PurchaseForm({
       open
       title={initial ? 'Edit Purchase' : 'New Purchase (Stock Inward)'}
       onClose={onClose}
-      wide
+      xl
+      bodyScroll={false}
       footer={
         <>
           <button className="btn-secondary" onClick={onClose}>
@@ -419,74 +455,75 @@ function PurchaseForm({
         </>
       }
     >
-      <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <label className="label">Supplier</label>
-            <select
-              className="input"
-              value={supplierId ?? ''}
-              onChange={(e) => setSupplierId(e.target.value ? Number(e.target.value) : null)}
-            >
-              <option value="">-- Select --</option>
-              {suppliers.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="label">Invoice No</label>
-            <input
-              className="input"
-              value={invoiceNo}
-              onChange={(e) => setInvoiceNo(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="label">Date</label>
-            <input
-              className="input"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="relative">
-          <label className="label">Add Medicine</label>
-          <input
-            className="input"
-            placeholder="Search medicine to add..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {medResults.length > 0 && (
-            <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg">
-              {medResults.map((m) => (
-                <button
-                  key={m.id}
-                  className="block w-full border-b border-slate-100 px-3 py-2 text-left text-sm hover:bg-brand-50"
-                  onClick={() => addMedicine(m)}
-                >
-                  <span className="font-medium">{m.name}</span>{' '}
-                  <span className="text-xs text-slate-400">
-                    {m.manufacturer} · {m.gst_rate}% GST
-                  </span>
-                </button>
-              ))}
+      <div className="flex min-h-0 flex-1 flex-col gap-2">
+        <div className="shrink-0 space-y-2">
+          <div className="grid grid-cols-4 gap-2">
+            <div>
+              <label className="label">Supplier</label>
+              <select
+                className="input"
+                value={supplierId ?? ''}
+                onChange={(e) => setSupplierId(e.target.value ? Number(e.target.value) : null)}
+              >
+                <option value="">-- Select --</option>
+                {suppliers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          )}
+            <div>
+              <label className="label">Invoice No</label>
+              <input
+                className="input"
+                value={invoiceNo}
+                onChange={(e) => setInvoiceNo(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="label">Date</label>
+              <input
+                className="input"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+            </div>
+            <div className="relative">
+              <label className="label">Add Medicine</label>
+              <input
+                className="input"
+                placeholder="Search medicine..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              {medResults.length > 0 && (
+                <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg">
+                  {medResults.map((m) => (
+                    <button
+                      key={m.id}
+                      className="block w-full border-b border-slate-100 px-3 py-2 text-left text-sm hover:bg-brand-50"
+                      onClick={() => addMedicine(m)}
+                    >
+                      <span className="font-medium">{m.name}</span>{' '}
+                      <span className="text-xs text-slate-400">
+                        {m.manufacturer} · {m.gst_rate}% GST
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {items.length === 0 ? (
-          <EmptyState message="No items added." />
-        ) : (
-          <div className="overflow-x-auto">
+        <div className="min-h-0 flex-1 overflow-auto rounded-md border border-slate-200">
+          {items.length === 0 ? (
+            <EmptyState message="No items added." />
+          ) : (
             <table className="w-full text-sm">
-              <thead className="bg-slate-50">
+              <thead className="sticky top-0 z-10 bg-slate-50">
                 <tr>
                   <th className="th">Medicine</th>
                   <th className="th">Batch</th>
@@ -496,6 +533,7 @@ function PurchaseForm({
                   <th className="th">MRP</th>
                   <th className="th">Rate</th>
                   <th className="th">Disc %</th>
+                  <th className="th">GST %</th>
                   <th className="th">Margin %</th>
                   <th className="th">Sale</th>
                   <th className="th text-right">Taxable</th>
@@ -525,94 +563,119 @@ function PurchaseForm({
                       />
                     </td>
                     <td className="td">
-                      <input
-                        type="number"
+                      <NumberInput
                         min={1}
                         className="input w-16 px-2 py-1"
                         value={it.quantity}
-                        onChange={(e) => patch(idx, { quantity: Number(e.target.value) })}
+                        emptyValue={1}
+                        onValueChange={(quantity) => patch(idx, { quantity })}
                       />
                     </td>
                     <td className="td">
-                      <input
-                        type="number"
+                      <NumberInput
                         min={0}
                         className="input w-14 px-2 py-1"
                         title="Scheme / bonus quantity"
                         value={it.free_quantity}
-                        onChange={(e) =>
-                          patch(idx, { free_quantity: Math.max(0, Number(e.target.value)) })
+                        onValueChange={(free_quantity) =>
+                          patch(idx, { free_quantity: Math.max(0, free_quantity) })
                         }
                       />
                     </td>
                     <td className="td">
-                      <input
-                        type="number"
+                      <NumberInput
                         step="0.01"
                         className="input w-20 px-2 py-1"
                         value={it.mrp}
-                        onChange={(e) => patch(idx, { mrp: Number(e.target.value) })}
+                        onValueChange={(mrp) => patch(idx, { mrp })}
                       />
                     </td>
                     <td className="td">
-                      <input
-                        type="number"
+                      <NumberInput
                         step="0.01"
                         className="input w-20 px-2 py-1"
                         title="Purchase rate before discount (GST-exclusive)"
                         value={it.purchase_price}
-                        onChange={(e) => {
-                          const purchase_price = Number(e.target.value);
-                          const margin = marginPercent(it.purchase_price, it.sale_price);
+                        onValueChange={(purchase_price) =>
                           patch(idx, {
                             purchase_price,
-                            sale_price: saleFromMargin(purchase_price, margin),
-                          });
-                        }}
+                            sale_price: saleFromMargin(
+                              purchase_price,
+                              it.margin_percent,
+                              it.discount_percent
+                            ),
+                          })
+                        }
                       />
                     </td>
                     <td className="td">
-                      <input
-                        type="number"
+                      <NumberInput
                         min={0}
                         max={100}
                         step="0.1"
                         className="input w-14 px-2 py-1"
                         value={it.discount_percent}
-                        onChange={(e) =>
+                        onValueChange={(raw) => {
+                          const discount_percent = Math.min(100, Math.max(0, raw));
                           patch(idx, {
-                            discount_percent: Math.min(
-                              100,
-                              Math.max(0, Number(e.target.value))
-                            ),
-                          })
-                        }
-                      />
-                    </td>
-                    <td className="td">
-                      <input
-                        type="number"
-                        step="0.1"
-                        className="input w-16 px-2 py-1"
-                        title="Markup % on purchase cost"
-                        value={marginPercent(it.purchase_price, it.sale_price)}
-                        onChange={(e) =>
-                          patch(idx, {
+                            discount_percent,
                             sale_price: saleFromMargin(
                               it.purchase_price,
-                              Number(e.target.value)
+                              it.margin_percent,
+                              discount_percent
+                            ),
+                          });
+                        }}
+                      />
+                    </td>
+                    <td className="td">
+                      <NumberInput
+                        min={0}
+                        max={100}
+                        step="0.1"
+                        className="input w-14 px-2 py-1"
+                        title="GST % (used for taxable / line total)"
+                        value={it.gst_rate}
+                        onValueChange={(raw) =>
+                          patch(idx, {
+                            gst_rate: Math.min(100, Math.max(0, raw)),
+                          })
+                        }
+                      />
+                    </td>
+                    <td className="td">
+                      <NumberInput
+                        step="0.1"
+                        className="input w-16 px-2 py-1"
+                        title="Sale = (rate after disc) + this margin %"
+                        value={it.margin_percent}
+                        onValueChange={(margin_percent) =>
+                          patch(idx, {
+                            margin_percent,
+                            sale_price: saleFromMargin(
+                              it.purchase_price,
+                              margin_percent,
+                              it.discount_percent
                             ),
                           })
                         }
                       />
                     </td>
                     <td className="td">
-                      <input
-                        type="number"
+                      <NumberInput
                         step="0.01"
                         className="input w-20 px-2 py-1"
                         value={it.sale_price}
-                        onChange={(e) => patch(idx, { sale_price: Number(e.target.value) })}
+                        onValueChange={(sale_price) =>
+                          patch(idx, {
+                            sale_price,
+                            margin_percent: marginFromSale(
+                              it.purchase_price,
+                              sale_price,
+                              it.discount_percent
+                            ),
+                          })
+                        }
                       />
                     </td>
                     <td className="td text-right text-slate-600 whitespace-nowrap">
@@ -634,24 +697,37 @@ function PurchaseForm({
                 })}
               </tbody>
             </table>
-          </div>
-        )}
+          )}
+        </div>
 
-        <div className="flex items-center justify-between">
-          <div className="w-1/2">
-            <label className="label">Notes</label>
-            <input
-              className="input"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </div>
-          <div className="text-right">
-            <div className="text-sm text-slate-500">Total Purchase Value</div>
-            <div className="text-xl font-bold text-brand-700">{inr(total)}</div>
-          </div>
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-x-5 gap-y-1 border-t border-slate-200 pt-2 text-sm">
+          <span className="text-slate-600">
+            Discount:{' '}
+            <span className="font-medium text-slate-800">{inr(totals.discount)}</span>
+          </span>
+          <span className="text-slate-600">
+            Taxable:{' '}
+            <span className="font-medium text-slate-800">{inr(totals.taxable)}</span>
+          </span>
+          <span className="text-slate-600">
+            GST:{' '}
+            <span className="font-medium text-slate-800">{inr(totals.gst)}</span>
+          </span>
+          <span className="font-semibold text-slate-800">
+            Invoice:{' '}
+            <span className="text-brand-700">{inr(totals.total)}</span>
+          </span>
         </div>
       </div>
     </Modal>
+  );
+}
+
+function TotalsRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-slate-600">{label}</span>
+      <span className="font-medium">{value}</span>
+    </div>
   );
 }
