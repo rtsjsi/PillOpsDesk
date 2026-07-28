@@ -187,7 +187,33 @@ export interface SaleWithItems extends Sale {
   customer_gstin: string | null;
   customer_pan: string | null;
   customer_dl_no: string | null;
+  amount_paid: number;
+  balance_due: number;
+  payment_status: PaymentStatus;
+  payments: SalePayment[];
 }
+
+export type PaymentMethod = 'cash' | 'upi' | 'card' | 'neft' | 'cheque' | 'other';
+export type PaymentStatus = 'unpaid' | 'partial' | 'paid';
+
+export interface SalePayment {
+  id: number;
+  sale_id: number;
+  amount: number;
+  method: PaymentMethod;
+  paid_at: string; // yyyy-mm-dd
+  reference: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export type SalePaymentInput = {
+  amount: number;
+  method: PaymentMethod;
+  paid_at: string; // yyyy-mm-dd
+  reference?: string | null;
+  notes?: string | null;
+};
 
 // A sellable line as shown in the sales screen (a batch joined with its medicine).
 export interface SellableBatch {

@@ -302,6 +302,20 @@ const MIGRATIONS: Migration[] = [
   ALTER TABLE suppliers ADD COLUMN dl_no TEXT;
   ALTER TABLE customers ADD COLUMN dl_no TEXT;
   `,
+  // v15: payments against sales invoices
+  `
+  CREATE TABLE IF NOT EXISTS sale_payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sale_id INTEGER NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
+    amount REAL NOT NULL,
+    method TEXT NOT NULL,
+    paid_at TEXT NOT NULL,
+    reference TEXT,
+    notes TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_sale_payments_sale ON sale_payments(sale_id);
+  `,
 ];
 
 export function runMigrations(db: Database.Database): void {

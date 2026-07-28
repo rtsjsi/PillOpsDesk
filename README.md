@@ -88,7 +88,7 @@ src/
 
 ## Notes
 
-- GST is modelled as intra-state **CGST + SGST** (split evenly). Sale prices are
-  treated as **MRP-inclusive** of GST, which is the common pharmacy convention.
+- GST is modelled as intra-state **CGST + SGST** (split evenly). Sale rates are
+  **GST-exclusive**: taxable = rate × qty after discount, then GST is added.
 - This is a single-machine, single-store app with no cloud sync. Use the backup
   feature regularly to protect your data.

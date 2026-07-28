@@ -150,10 +150,10 @@ export function getGstSummary(from: string, to: string): GstSummaryRow[] {
   return db
     .prepare(
       `SELECT si.gst_rate AS gst_rate,
-              COALESCE(SUM(si.line_total / (1 + si.gst_rate / 100.0)), 0) AS taxable_value,
-              COALESCE(SUM((si.line_total - si.line_total / (1 + si.gst_rate / 100.0)) / 2), 0) AS cgst,
-              COALESCE(SUM((si.line_total - si.line_total / (1 + si.gst_rate / 100.0)) / 2), 0) AS sgst,
-              COALESCE(SUM(si.line_total - si.line_total / (1 + si.gst_rate / 100.0)), 0) AS total_tax
+              COALESCE(SUM(si.taxable_value), 0) AS taxable_value,
+              COALESCE(SUM((si.line_total - si.taxable_value) / 2), 0) AS cgst,
+              COALESCE(SUM((si.line_total - si.taxable_value) / 2), 0) AS sgst,
+              COALESCE(SUM(si.line_total - si.taxable_value), 0) AS total_tax
        FROM sale_items si
        JOIN sales s ON s.id = si.sale_id
        WHERE date(s.sale_date) BETWEEN ? AND ?

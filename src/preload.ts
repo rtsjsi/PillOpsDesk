@@ -52,6 +52,8 @@ const api: PharmacyApi = {
     list: (from, to) => invoke(IPC.salesList, from, to),
     get: (id) => invoke(IPC.salesGet, id),
     update: (id, input) => invoke(IPC.salesUpdate, id, input),
+    recordPayment: (saleId, input) => invoke(IPC.salesRecordPayment, saleId, input),
+    removePayment: (paymentId) => invoke(IPC.salesRemovePayment, paymentId),
   },
   reports: {
     dashboard: () => invoke(IPC.reportsDashboard),

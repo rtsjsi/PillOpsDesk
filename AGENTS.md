@@ -223,6 +223,7 @@ npm run license:generate -- --pharmacy-id PH-0001 --pharmacy-name "Sharma Medica
 - `suppliers`, `customers` — contact info (gstin, pan, dl_no).
 - `purchases` + `purchase_items` — stock inward; increments batch stock.
 - `sales` + `sale_items` — invoices; decrements batch stock. `invoice_no` unique.
+- `sale_payments` — payments against sales (partial/full); status derived from sums.
 - `users` — username, pin_hash, salt, role (`owner` | `staff`).
 - `settings` — key/value store profile + preferences.
 - `counters` — holds the incrementing `invoice` sequence.
@@ -233,10 +234,11 @@ existing migration in place) so existing installs upgrade cleanly.
 
 ## 7. Business rules / conventions
 
-- **GST**: sale prices are treated as **MRP-inclusive** of GST. Taxable value =
-  `gross / (1 + rate/100)`; tax is split evenly into CGST and SGST. This logic
-  exists in both `db/services/sales.ts` (authoritative) and `pages/Sales.tsx`
-  (for live display in New Sale / Edit Invoice) — keep them consistent.
+- **GST**: sale rates are **GST-exclusive**. Taxable value =
+  `gross × (1 − disc%/100)`; GST = `taxable × rate/100`, split evenly into
+  CGST and SGST; line total = taxable + tax. Invoice **net amount** is rounded
+  to the nearest rupee. Logic lives in `@shared/gst` (`saleLineAmounts` /
+  `computeSaleInvoice`) and must stay consistent with `pages/Sales.tsx`.
 - **Money**: store as REAL; round to 2 decimals with the `round2` helper in
   sales service. Format for display with `inr()` from `renderer/lib/format.ts`.
 - **Dates**: batch expiry is month+year only (`MM-YYYY` in UI; stored as last

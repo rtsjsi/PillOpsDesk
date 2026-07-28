@@ -5,13 +5,35 @@ import type {
   Customer,
   SellableBatch,
   Batch,
+  PaymentMethod,
+  PaymentStatus,
+  SalePaymentInput,
 } from '../../shared/types';
-import { computeSaleInvoice, saleLineAmounts } from '../../shared/gst';
-import { inr, formatDateTime, formatExpiry, todayIso, monthStartIso } from '../lib/format';
+import { computeSaleInvoice, saleLineAmounts, saleRoundOff } from '../../shared/gst';
+import { inr, formatDateTime, formatDate, formatExpiry, todayIso, monthStartIso } from '../lib/format';
 import { Modal } from '../components/Modal';
-import { Spinner, EmptyState, useToast, errMsg, NumberInput } from '../components/ui';
+import { Spinner, EmptyState, useToast, errMsg, NumberInput, Badge } from '../components/ui';
 import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
 import { useWriteAllowed } from '../App';
+
+const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
+  { value: 'cash', label: 'Cash' },
+  { value: 'upi', label: 'UPI' },
+  { value: 'card', label: 'Card' },
+  { value: 'neft', label: 'NEFT / Bank' },
+  { value: 'cheque', label: 'Cheque' },
+  { value: 'other', label: 'Other' },
+];
+
+function paymentMethodLabel(method: PaymentMethod): string {
+  return PAYMENT_METHODS.find((m) => m.value === method)?.label ?? method;
+}
+
+function paymentStatusBadge(status: PaymentStatus) {
+  if (status === 'paid') return <Badge tone="green">Paid</Badge>;
+  if (status === 'partial') return <Badge tone="amber">Partial</Badge>;
+  return <Badge tone="red">Unpaid</Badge>;
+}
 
 interface CartLine {
   batch: SellableBatch;
@@ -57,6 +79,7 @@ export function Sales() {
   const [selected, setSelected] = useState<SaleWithItems | null>(null);
   const [editing, setEditing] = useState<SaleWithItems | null>(null);
   const [newSaleOpen, setNewSaleOpen] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
 
   const load = useCallback(() => {
     setSales(null);
@@ -91,7 +114,22 @@ export function Sales() {
     setEditing(sale);
   };
 
+  const removePayment = async (paymentId: number) => {
+    if (!confirm('Delete this payment record?')) return;
+    try {
+      const next = await window.pharmacy.sales.removePayment(paymentId);
+      setSelected(next);
+      setSales((prev) =>
+        prev ? prev.map((s) => (s.id === next.id ? next : s)) : prev
+      );
+      toast.success('Payment removed.');
+    } catch (e) {
+      toast.error(errMsg(e));
+    }
+  };
+
   const dayTotal = sales?.reduce((s, x) => s + x.total, 0) ?? 0;
+  const dayDue = sales?.reduce((s, x) => s + x.balance_due, 0) ?? 0;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
@@ -133,6 +171,9 @@ export function Sales() {
           <div className="ml-auto text-right">
             <div className="text-sm text-slate-500">Total for range</div>
             <div className="text-xl font-bold text-brand-700">{inr(dayTotal)}</div>
+            {dayDue > 0.009 && (
+              <div className="text-xs text-amber-700">Due {inr(dayDue)}</div>
+            )}
           </div>
         </div>
       </div>
@@ -151,6 +192,8 @@ export function Sales() {
                 <th className="th">Customer</th>
                 <th className="th text-center">Items</th>
                 <th className="th text-right">Total</th>
+                <th className="th text-center">Status</th>
+                <th className="th text-right">Due</th>
                 <th className="th text-right">Actions</th>
               </tr>
             </thead>
@@ -162,6 +205,14 @@ export function Sales() {
                   <td className="td">{s.customer_name || 'Walk-in'}</td>
                   <td className="td text-center">{s.items.length}</td>
                   <td className="td text-right font-medium">{inr(s.total)}</td>
+                  <td className="td text-center">{paymentStatusBadge(s.payment_status)}</td>
+                  <td className="td text-right">
+                    {s.balance_due > 0.009 ? (
+                      <span className="font-medium text-amber-700">{inr(s.balance_due)}</span>
+                    ) : (
+                      <span className="text-slate-400">—</span>
+                    )}
+                  </td>
                   <td className="td text-right">
                     <div className="flex justify-end gap-2">
                       <button
@@ -203,6 +254,11 @@ export function Sales() {
               <button className="btn-secondary" onClick={() => setSelected(null)}>
                 Close
               </button>
+              {canWrite && selected.payment_status !== 'paid' && (
+                <button className="btn-secondary" onClick={() => setPayOpen(true)}>
+                  Record Payment
+                </button>
+              )}
               {canWrite && (
                 <button
                   className="btn-secondary"
@@ -224,7 +280,7 @@ export function Sales() {
       >
         {selected && (
           <div className="space-y-4">
-            <div className="flex justify-between text-sm text-slate-600">
+            <div className="flex justify-between gap-4 text-sm text-slate-600">
               <div className="space-y-0.5">
                 <div>{formatDateTime(selected.sale_date)}</div>
                 {selected.customer_name ? (
@@ -239,6 +295,22 @@ export function Sales() {
                 ) : (
                   <div>Walk-in Customer</div>
                 )}
+              </div>
+              <div className="space-y-1 text-right">
+                <div>{paymentStatusBadge(selected.payment_status)}</div>
+                <div>Paid: <span className="font-medium text-slate-800">{inr(selected.amount_paid)}</span></div>
+                <div>
+                  Due:{' '}
+                  <span
+                    className={
+                      selected.balance_due > 0.009
+                        ? 'font-medium text-amber-700'
+                        : 'font-medium text-slate-800'
+                    }
+                  >
+                    {inr(selected.balance_due)}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="overflow-x-auto">
@@ -258,6 +330,7 @@ export function Sales() {
                     <th className="th text-center">Disc %</th>
                     <th className="th text-right">Taxable</th>
                     <th className="th text-center">GST %</th>
+                    <th className="th text-right">GST Amt</th>
                     <th className="th text-right">Amount</th>
                   </tr>
                 </thead>
@@ -281,6 +354,13 @@ export function Sales() {
                       </td>
                       <td className="td text-right">{inr(it.taxable_value)}</td>
                       <td className="td text-center">{it.gst_rate}%</td>
+                      <td className="td text-right">
+                        {inr(
+                          Math.round(
+                            ((it.line_total - it.taxable_value) + Number.EPSILON) * 100
+                          ) / 100
+                        )}
+                      </td>
                       <td className="td text-right font-medium">{inr(it.line_total)}</td>
                     </tr>
                   ))}
@@ -292,14 +372,82 @@ export function Sales() {
               <Row label="Taxable Value" value={inr(selected.subtotal)} />
               <Row label="CGST" value={inr(selected.cgst)} />
               <Row label="SGST" value={inr(selected.sgst)} />
+              <Row
+                label="Round Off"
+                value={`${saleRoundOff(selected) >= 0 ? '+' : ''}${inr(saleRoundOff(selected))}`}
+              />
               <div className="flex justify-between border-t border-slate-200 pt-1 text-base font-bold">
-                <span>Total</span>
+                <span>Net Amount</span>
                 <span className="text-brand-700">{inr(selected.total)}</span>
               </div>
+              <Row label="Paid" value={inr(selected.amount_paid)} />
+              <Row label="Balance Due" value={inr(selected.balance_due)} />
+            </div>
+
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-700">Payments</h3>
+                {canWrite && selected.payment_status !== 'paid' && (
+                  <button className="btn-secondary px-2 py-1" onClick={() => setPayOpen(true)}>
+                    + Record Payment
+                  </button>
+                )}
+              </div>
+              {selected.payments.length === 0 ? (
+                <EmptyState message="No payments recorded yet." />
+              ) : (
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="th">Date</th>
+                      <th className="th">Method</th>
+                      <th className="th">Reference</th>
+                      <th className="th text-right">Amount</th>
+                      <th className="th text-right"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selected.payments.map((p) => (
+                      <tr key={p.id} className="border-t border-slate-100">
+                        <td className="td">{formatDate(p.paid_at)}</td>
+                        <td className="td">{paymentMethodLabel(p.method)}</td>
+                        <td className="td">{p.reference || '—'}</td>
+                        <td className="td text-right font-medium">{inr(p.amount)}</td>
+                        <td className="td text-right">
+                          {canWrite && (
+                            <button
+                              className="btn-danger px-2 py-1"
+                              onClick={() => removePayment(p.id)}
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         )}
       </Modal>
+
+      {selected && payOpen && (
+        <RecordPaymentModal
+          sale={selected}
+          onClose={() => setPayOpen(false)}
+          onSaved={async (next) => {
+            setPayOpen(false);
+            setSelected(next);
+            setSales((prev) =>
+              prev ? prev.map((s) => (s.id === next.id ? next : s)) : prev
+            );
+            toast.success('Payment recorded.');
+          }}
+          onError={(m) => toast.error(m)}
+        />
+      )}
 
       {newSaleOpen && (
         <NewSaleForm
@@ -592,8 +740,15 @@ function NewSaleForm({
             SGST:{' '}
             <span className="font-medium text-slate-800">{inr(totals.sgst)}</span>
           </span>
+          <span className="text-slate-600">
+            Round Off:{' '}
+            <span className="font-medium text-slate-800">
+              {totals.roundOff >= 0 ? '+' : ''}
+              {inr(totals.roundOff)}
+            </span>
+          </span>
           <span className="font-semibold text-slate-800">
-            Total:{' '}
+            Net:{' '}
             <span className="text-brand-700">{inr(totals.total)}</span>
           </span>
         </div>
@@ -943,8 +1098,15 @@ function SaleEditForm({
               SGST:{' '}
               <span className="font-medium text-slate-800">{inr(totals.sgst)}</span>
             </span>
+            <span className="text-slate-600">
+              Round Off:{' '}
+              <span className="font-medium text-slate-800">
+                {totals.roundOff >= 0 ? '+' : ''}
+                {inr(totals.roundOff)}
+              </span>
+            </span>
             <span className="font-semibold text-slate-800">
-              Total:{' '}
+              Net:{' '}
               <span className="text-brand-700">{inr(totals.total)}</span>
             </span>
           </div>
@@ -966,7 +1128,7 @@ function SaleCartTable({
   onRemove: (batchId: number) => void;
 }) {
   return (
-    <table className="w-full min-w-[980px] text-xs">
+    <table className="w-full min-w-[1080px] text-xs">
       <thead className="sticky top-0 z-10 bg-slate-50">
         <tr>
           <th className="th">Item</th>
@@ -982,6 +1144,7 @@ function SaleCartTable({
           <th className="th text-center">Disc %</th>
           <th className="th text-right">Taxable</th>
           <th className="th text-center">GST %</th>
+          <th className="th text-right">GST Amt</th>
           <th className="th text-right">Amount</th>
           <th className="th"></th>
         </tr>
@@ -1077,6 +1240,7 @@ function SaleCartTable({
                   className="input w-12 px-1 py-0.5 text-center"
                 />
               </td>
+              <td className="td text-right whitespace-nowrap">{inr(amounts.gstAmount)}</td>
               <td className="td text-right font-medium whitespace-nowrap">{inr(amounts.gross)}</td>
               <td className="td text-right">
                 <button
@@ -1091,6 +1255,125 @@ function SaleCartTable({
         })}
       </tbody>
     </table>
+  );
+}
+
+function RecordPaymentModal({
+  sale,
+  onClose,
+  onSaved,
+  onError,
+}: {
+  sale: SaleWithItems;
+  onClose: () => void;
+  onSaved: (sale: SaleWithItems) => void | Promise<void>;
+  onError: (m: string) => void;
+}) {
+  const [amount, setAmount] = useState(sale.balance_due);
+  const [method, setMethod] = useState<PaymentMethod>('cash');
+  const [paidAt, setPaidAt] = useState(todayIso());
+  const [reference, setReference] = useState('');
+  const [notes, setNotes] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const save = async () => {
+    if (amount <= 0) return onError('Enter a payment amount greater than zero.');
+    if (amount > sale.balance_due + 0.01) {
+      return onError(`Amount cannot exceed balance due (${inr(sale.balance_due)}).`);
+    }
+    setBusy(true);
+    try {
+      const input: SalePaymentInput = {
+        amount,
+        method,
+        paid_at: paidAt,
+        reference: reference.trim() || null,
+        notes: notes.trim() || null,
+      };
+      const next = await window.pharmacy.sales.recordPayment(sale.id, input);
+      await onSaved(next);
+    } catch (e) {
+      onError(errMsg(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal
+      open
+      title={`Record Payment — ${sale.invoice_no}`}
+      onClose={onClose}
+      footer={
+        <>
+          <button className="btn-secondary" onClick={onClose} disabled={busy}>
+            Cancel
+          </button>
+          <button className="btn-primary" onClick={save} disabled={busy}>
+            {busy ? 'Saving…' : 'Save Payment'}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div className="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-600">
+          Invoice total {inr(sale.total)} · Paid {inr(sale.amount_paid)} · Due{' '}
+          <span className="font-medium text-amber-700">{inr(sale.balance_due)}</span>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="label">Amount *</label>
+            <NumberInput
+              className="input"
+              min={0}
+              step="0.01"
+              value={amount}
+              onValueChange={setAmount}
+            />
+          </div>
+          <div>
+            <label className="label">Method *</label>
+            <select
+              className="input"
+              value={method}
+              onChange={(e) => setMethod(e.target.value as PaymentMethod)}
+            >
+              {PAYMENT_METHODS.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label">Payment Date *</label>
+            <input
+              type="date"
+              className="input"
+              value={paidAt}
+              onChange={(e) => setPaidAt(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label">Reference</label>
+            <input
+              className="input"
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              placeholder="UPI / cheque / txn ref"
+            />
+          </div>
+          <div className="col-span-2">
+            <label className="label">Notes</label>
+            <input
+              className="input"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+    </Modal>
   );
 }
 

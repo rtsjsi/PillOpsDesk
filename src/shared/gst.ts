@@ -1,5 +1,5 @@
 // GST helpers shared by the sales UI and the sales service.
-// Sale prices are MRP-inclusive; tax is split evenly into CGST + SGST.
+// Sale rates are GST-exclusive; tax is split evenly into CGST + SGST.
 
 export interface GstLineInput {
   gross: number;
@@ -11,6 +11,8 @@ export interface GstLineAmounts {
   taxable: number;
   cgst: number;
   sgst: number;
+  /** CGST + SGST for the line. */
+  gstAmount: number;
 }
 
 export interface InvoiceGstResult {
@@ -18,8 +20,13 @@ export interface InvoiceGstResult {
   subtotal: number;
   cgst: number;
   sgst: number;
+  /** Pre-round total (taxable + tax). */
+  rawTotal: number;
+  /** Adjustment to nearest rupee (can be negative). */
+  roundOff: number;
+  /** Net payable after round-off. */
   total: number;
-  /** Rupee amount saved by the invoice discount. */
+  /** Rupee amount saved by line discounts. */
   discountAmount: number;
   discountPercent: number;
 }
@@ -28,16 +35,19 @@ export function round2(n: number): number {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }
 
+/** Line amounts from a GST-exclusive base amount (no discount). */
 export function lineGstFromGross(gross: number, gstRate: number): GstLineAmounts {
   const rate = gstRate ?? 0;
-  const safeGross = Math.max(0, gross);
-  const taxable = rate > 0 ? safeGross / (1 + rate / 100) : safeGross;
-  const tax = safeGross - taxable;
+  const taxable = round2(Math.max(0, gross));
+  const tax = rate > 0 ? round2(taxable * (rate / 100)) : 0;
+  const cgst = round2(tax / 2);
+  const sgst = round2(tax / 2);
   return {
-    gross: round2(safeGross),
-    taxable: round2(taxable),
-    cgst: round2(tax / 2),
-    sgst: round2(tax / 2),
+    gross: round2(taxable + tax),
+    taxable,
+    cgst,
+    sgst,
+    gstAmount: round2(cgst + sgst),
   };
 }
 
@@ -51,26 +61,26 @@ export interface SaleLineAmounts extends GstLineAmounts {
 }
 
 /**
- * Sale line amounts from MRP-inclusive gross after a line discount on taxable value.
- * Taxable value = gross / (1 + rate/100), discounted, then GST is applied; line total
- * = discounted taxable + CGST + SGST.
+ * Sale line amounts from a GST-exclusive rate × qty.
+ * Taxable = gross × (1 − disc%), GST on taxable, line total = taxable + CGST + SGST.
  */
 export function saleLineAmounts(input: SaleLineInput): SaleLineAmounts {
   const disc = Math.min(Math.max(0, input.discount_percent ?? 0), 100);
   const rate = input.gst_rate ?? 0;
   const grossBefore = Math.max(0, input.gross);
-  const preTaxable = rate > 0 ? grossBefore / (1 + rate / 100) : grossBefore;
-  const discountedTaxable = round2(preTaxable * (1 - disc / 100));
-  const lineTotal =
-    rate > 0 ? round2(discountedTaxable * (1 + rate / 100)) : discountedTaxable;
-  const tax = lineTotal - discountedTaxable;
+  const taxable = round2(grossBefore * (1 - disc / 100));
+  const tax = rate > 0 ? round2(taxable * (rate / 100)) : 0;
+  const cgst = round2(tax / 2);
+  const sgst = round2(tax / 2);
+  const lineTotal = round2(taxable + tax);
 
   return {
     gross: lineTotal,
-    taxable: discountedTaxable,
-    cgst: round2(tax / 2),
-    sgst: round2(tax / 2),
-    discountAmount: round2(grossBefore - lineTotal),
+    taxable,
+    cgst,
+    sgst,
+    gstAmount: round2(cgst + sgst),
+    discountAmount: round2(grossBefore - taxable),
     discountPercent: disc,
   };
 }
@@ -80,10 +90,18 @@ export function computeSaleInvoice(lines: SaleLineInput[]): InvoiceGstResult {
   const computed = lines.map(saleLineAmounts);
   const totals = sumGstLines(computed);
   const discountAmount = round2(computed.reduce((sum, line) => sum + line.discountAmount, 0));
+  const rawTotal = totals.total;
+  const netTotal = Math.round(rawTotal);
+  const roundOff = round2(netTotal - rawTotal);
 
   return {
     lines: computed,
-    ...totals,
+    subtotal: totals.subtotal,
+    cgst: totals.cgst,
+    sgst: totals.sgst,
+    rawTotal,
+    roundOff,
+    total: netTotal,
     discountAmount,
     discountPercent: 0,
   };
@@ -111,6 +129,17 @@ export function sumGstLines(lines: GstLineAmounts[]): {
     sgst: round2(sgst),
     total: round2(total),
   };
+}
+
+/** Round-off implied by a stored sale (net total vs taxable + tax). */
+export function saleRoundOff(sale: {
+  subtotal: number;
+  cgst: number;
+  sgst: number;
+  total: number;
+}): number {
+  const raw = round2((sale.subtotal ?? 0) + (sale.cgst ?? 0) + (sale.sgst ?? 0));
+  return round2((sale.total ?? 0) - raw);
 }
 
 /** Purchase line amounts from distributor rate (GST-exclusive) after line discount. */

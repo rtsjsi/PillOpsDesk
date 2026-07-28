@@ -10,6 +10,7 @@ import type {
   Settings,
   DriveBackupSettings,
   UpdateManifest,
+  SalePaymentInput,
 } from '@shared/types';
 import * as medicines from '../db/services/medicines';
 import * as batches from '../db/services/batches';
@@ -133,6 +134,10 @@ export function registerIpc(): void {
   handleRead(IPC.salesList, (from?: string, to?: string) => sales.listSales(from, to));
   handleRead(IPC.salesGet, (id: number) => sales.getSale(id));
   handleWrite(IPC.salesUpdate, (id: number, input: SaleInput) => sales.updateSale(id, input));
+  handleWrite(IPC.salesRecordPayment, (saleId: number, input: SalePaymentInput) =>
+    sales.recordPayment(saleId, input)
+  );
+  handleWrite(IPC.salesRemovePayment, (paymentId: number) => sales.removePayment(paymentId));
 
   // Reports (read-only friendly)
   handleRead(IPC.reportsDashboard, () => reports.getDashboard());

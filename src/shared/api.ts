@@ -30,6 +30,7 @@ import type {
   UpdateCheckResult,
   UpdateManifest,
   UpdateDownloadProgress,
+  SalePaymentInput,
 } from './types';
 
 export interface PharmacyApi {
@@ -78,6 +79,8 @@ export interface PharmacyApi {
     list: (from?: string, to?: string) => Promise<SaleWithItems[]>;
     get: (id: number) => Promise<SaleWithItems | null>;
     update: (id: number, input: SaleInput) => Promise<SaleWithItems>;
+    recordPayment: (saleId: number, input: SalePaymentInput) => Promise<SaleWithItems>;
+    removePayment: (paymentId: number) => Promise<SaleWithItems>;
   };
   reports: {
     dashboard: () => Promise<DashboardStats>;
@@ -164,6 +167,8 @@ export const IPC = {
   salesList: 'sales:list',
   salesGet: 'sales:get',
   salesUpdate: 'sales:update',
+  salesRecordPayment: 'sales:recordPayment',
+  salesRemovePayment: 'sales:removePayment',
 
   reportsDashboard: 'reports:dashboard',
   reportsLowStock: 'reports:lowStock',

@@ -7,7 +7,58 @@ import type {
   SellableBatch,
   SaleItem,
   Sale,
+  SalePayment,
+  SalePaymentInput,
+  PaymentMethod,
+  PaymentStatus,
 } from '@shared/types';
+
+const PAYMENT_METHODS: PaymentMethod[] = ['cash', 'upi', 'card', 'neft', 'cheque', 'other'];
+
+function round2(n: number): number {
+  return Math.round((n + Number.EPSILON) * 100) / 100;
+}
+
+function paymentStatus(total: number, paid: number): PaymentStatus {
+  if (paid <= 0.009) return 'unpaid';
+  if (paid + 0.009 >= total) return 'paid';
+  return 'partial';
+}
+
+function blankToNull(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? '';
+  return trimmed ? trimmed : null;
+}
+
+function listPaymentsForSale(saleId: number): SalePayment[] {
+  return getDb()
+    .prepare(
+      `SELECT id, sale_id, amount, method, paid_at, reference, notes, created_at
+       FROM sale_payments WHERE sale_id = ? ORDER BY paid_at ASC, id ASC`
+    )
+    .all(saleId) as SalePayment[];
+}
+
+function sumPayments(payments: SalePayment[]): number {
+  return round2(payments.reduce((sum, p) => sum + Number(p.amount || 0), 0));
+}
+
+function withPaymentSummary(sale: Sale, items: SaleItem[], extra: Omit<SaleWithItems, keyof Sale | 'items' | 'amount_paid' | 'balance_due' | 'payment_status' | 'payments'>): SaleWithItems {
+  const payments = listPaymentsForSale(sale.id);
+  const amountPaid = sumPayments(payments);
+  const total = round2(Number(sale.total) || 0);
+  const balanceDue = round2(Math.max(0, total - amountPaid));
+  return {
+    ...sale,
+    discount_percent: sale.discount_percent ?? 0,
+    items,
+    ...extra,
+    amount_paid: amountPaid,
+    balance_due: balanceDue,
+    payment_status: paymentStatus(total, amountPaid),
+    payments,
+  };
+}
 
 export function searchSellable(search: string): SellableBatch[] {
   const db = getDb();
@@ -292,17 +343,14 @@ export function getSale(id: number): SaleWithItems | null {
           }
         | undefined)
     : undefined;
-  return {
-    ...sale,
-    discount_percent: sale.discount_percent ?? 0,
-    items,
+  return withPaymentSummary(sale, items, {
     customer_name: customer?.name ?? null,
     customer_phone: customer?.phone ?? null,
     customer_address: customer?.address ?? null,
     customer_gstin: customer?.gstin ?? null,
     customer_pan: customer?.pan ?? null,
     customer_dl_no: customer?.dl_no ?? null,
-  };
+  });
 }
 
 export function listSales(from?: string, to?: string): SaleWithItems[] {
@@ -321,4 +369,53 @@ export function listSales(from?: string, to?: string): SaleWithItems[] {
       .all() as Sale[];
   }
   return rows.map((r) => getSale(r.id)!);
+}
+
+export function recordPayment(saleId: number, input: SalePaymentInput): SaleWithItems {
+  const db = getDb();
+  const sale = getSale(saleId);
+  if (!sale) throw new Error('Sale invoice not found.');
+
+  const amount = round2(Number(input.amount));
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error('Payment amount must be greater than zero.');
+  }
+  if (amount > sale.balance_due + 0.01) {
+    throw new Error(
+      `Payment exceeds balance due (${sale.balance_due.toFixed(2)}).`
+    );
+  }
+  if (!PAYMENT_METHODS.includes(input.method)) {
+    throw new Error('Invalid payment method.');
+  }
+  const paidAt = (input.paid_at || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(paidAt)) {
+    throw new Error('Payment date must be YYYY-MM-DD.');
+  }
+
+  db.prepare(
+    `INSERT INTO sale_payments (sale_id, amount, method, paid_at, reference, notes)
+     VALUES (@sale_id, @amount, @method, @paid_at, @reference, @notes)`
+  ).run({
+    sale_id: saleId,
+    amount,
+    method: input.method,
+    paid_at: paidAt,
+    reference: blankToNull(input.reference),
+    notes: blankToNull(input.notes),
+  });
+
+  return getSale(saleId)!;
+}
+
+export function removePayment(paymentId: number): SaleWithItems {
+  const db = getDb();
+  const row = db
+    .prepare('SELECT id, sale_id FROM sale_payments WHERE id = ?')
+    .get(paymentId) as { id: number; sale_id: number } | undefined;
+  if (!row) throw new Error('Payment not found.');
+  db.prepare('DELETE FROM sale_payments WHERE id = ?').run(paymentId);
+  const sale = getSale(row.sale_id);
+  if (!sale) throw new Error('Sale invoice not found.');
+  return sale;
 }
