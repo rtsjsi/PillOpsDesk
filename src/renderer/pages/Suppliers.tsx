@@ -5,7 +5,14 @@ import { Spinner, EmptyState, useToast, errMsg } from '../components/ui';
 import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
 import { useWriteAllowed } from '../App';
 
-const empty: SupplierInput = { name: '', phone: '', address: '', gstin: '', pan: '' };
+const empty: SupplierInput = {
+  name: '',
+  phone: '',
+  address: '',
+  gstin: '',
+  pan: '',
+  dl_no: '',
+};
 
 export function Suppliers() {
   const toast = useToast();
@@ -39,6 +46,7 @@ export function Suppliers() {
       address: s.address ?? '',
       gstin: s.gstin ?? '',
       pan: s.pan ?? '',
+      dl_no: s.dl_no ?? '',
     });
     setModal(true);
   };
@@ -94,6 +102,7 @@ export function Suppliers() {
                 <th className="th">Phone</th>
                 <th className="th">GSTIN</th>
                 <th className="th">PAN</th>
+                <th className="th">D.L. No</th>
                 <th className="th">Address</th>
                 <th className="th text-right">Actions</th>
               </tr>
@@ -105,6 +114,7 @@ export function Suppliers() {
                   <td className="td">{s.phone || '-'}</td>
                   <td className="td">{s.gstin || '-'}</td>
                   <td className="td">{s.pan || '-'}</td>
+                  <td className="td">{s.dl_no || '-'}</td>
                   <td className="td">{s.address || '-'}</td>
                   <td className="td text-right">
                     <div className="flex justify-end gap-2">
@@ -181,6 +191,14 @@ export function Suppliers() {
                 placeholder="ABCDE1234F"
               />
             </div>
+            <div>
+              <label className="label">D.L. No</label>
+              <input
+                className="input"
+                value={form.dl_no ?? ''}
+                onChange={(e) => setForm({ ...form, dl_no: e.target.value })}
+              />
+            </div>
           </div>
           <div>
             <label className="label">Address</label>
@@ -237,6 +255,10 @@ export function Suppliers() {
             <div>
               <dt className="text-slate-500">PAN Card</dt>
               <dd className="font-medium text-slate-800">{viewing.pan || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">D.L. No</dt>
+              <dd className="font-medium text-slate-800">{viewing.dl_no || '-'}</dd>
             </div>
             <div>
               <dt className="text-slate-500">Address</dt>

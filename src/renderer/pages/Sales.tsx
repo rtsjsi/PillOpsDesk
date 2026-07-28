@@ -234,6 +234,7 @@ export function Sales() {
                     {selected.customer_phone && <div>Ph: {selected.customer_phone}</div>}
                     {selected.customer_gstin && <div>GSTIN: {selected.customer_gstin}</div>}
                     {selected.customer_pan && <div>PAN: {selected.customer_pan}</div>}
+                    {selected.customer_dl_no && <div>D.L. No: {selected.customer_dl_no}</div>}
                   </>
                 ) : (
                   <div>Walk-in Customer</div>

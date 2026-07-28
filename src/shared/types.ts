@@ -47,6 +47,7 @@ export interface Supplier {
   address: string | null;
   gstin: string | null;
   pan: string | null;
+  dl_no: string | null;
   created_at: string;
 }
 
@@ -59,6 +60,7 @@ export interface Customer {
   address: string | null;
   gstin: string | null;
   pan: string | null;
+  dl_no: string | null;
   created_at: string;
 }
 
@@ -184,6 +186,7 @@ export interface SaleWithItems extends Sale {
   customer_address: string | null;
   customer_gstin: string | null;
   customer_pan: string | null;
+  customer_dl_no: string | null;
 }
 
 // A sellable line as shown in the sales screen (a batch joined with its medicine).

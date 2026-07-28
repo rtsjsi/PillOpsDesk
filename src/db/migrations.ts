@@ -297,6 +297,11 @@ const MIGRATIONS: Migration[] = [
   ALTER TABLE suppliers ADD COLUMN pan TEXT;
   ALTER TABLE customers ADD COLUMN pan TEXT;
   `,
+  // v14: drug licence number on suppliers and customers
+  `
+  ALTER TABLE suppliers ADD COLUMN dl_no TEXT;
+  ALTER TABLE customers ADD COLUMN dl_no TEXT;
+  `,
 ];
 
 export function runMigrations(db: Database.Database): void {

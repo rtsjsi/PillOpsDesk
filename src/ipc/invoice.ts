@@ -48,7 +48,6 @@ function buildInvoiceHtml(sale: SaleWithItems, settings: Settings): string {
   const dateStr = new Date(sale.sale_date).toLocaleString('en-IN');
   const fromBlock = `
         <div class="party-title">From</div>
-        <div><strong>${esc(settings.store_name)}</strong></div>
         ${settings.address ? `<div class="muted">${esc(settings.address)}</div>` : ''}
         ${settings.phone ? `<div class="muted">Ph: ${esc(settings.phone)}</div>` : ''}
         ${settings.gstin ? `<div class="muted">GSTIN: ${esc(settings.gstin)}</div>` : ''}
@@ -63,10 +62,17 @@ function buildInvoiceHtml(sale: SaleWithItems, settings: Settings): string {
         ${sale.customer_phone ? `<div class="muted">Ph: ${esc(sale.customer_phone)}</div>` : ''}
         ${sale.customer_gstin ? `<div class="muted">GSTIN: ${esc(sale.customer_gstin)}</div>` : ''}
         ${sale.customer_pan ? `<div class="muted">PAN: ${esc(sale.customer_pan)}</div>` : ''}
+        ${sale.customer_dl_no ? `<div class="muted">D.L. No: ${esc(sale.customer_dl_no)}</div>` : ''}
       `
     : `
         <div class="party-title">To</div>
         <div><strong>Walk-in Customer</strong></div>
+      `;
+
+  const metaBlock = `
+        <div class="meta-title">TAX INVOICE</div>
+        <div class="meta-line"><span class="meta-label">Invoice No</span><br><strong>${esc(sale.invoice_no)}</strong></div>
+        <div class="meta-line"><span class="meta-label">Date</span><br>${esc(dateStr)}</div>
       `;
 
   return `<!doctype html>
@@ -74,14 +80,53 @@ function buildInvoiceHtml(sale: SaleWithItems, settings: Settings): string {
   <style>
     * { box-sizing: border-box; }
     body { font-family: Arial, sans-serif; color: #111; padding: 12px; font-size: 9px; }
-    h1 { margin: 0; font-size: 16px; }
-    h2 { margin: 0; font-size: 13px; }
     .muted { color: #555; }
-    .title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border-bottom: 2px solid #222; padding-bottom: 8px; }
-    .title-row .meta { text-align: right; }
-    .party { margin-top: 10px; display: flex; gap: 12px; align-items: stretch; }
-    .party-box { flex: 1; border: 1px solid #ccc; padding: 6px 8px; min-height: 72px; }
-    .party-title { font-weight: bold; font-size: 10px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .header {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+      border-bottom: 2px solid #222;
+      padding-bottom: 8px;
+      margin-bottom: 0;
+    }
+    .party-box {
+      flex: 1 1 0;
+      border: 1px solid #ccc;
+      padding: 6px 8px;
+      min-height: 78px;
+      min-width: 0;
+    }
+    .meta-box {
+      flex: 0 0 28%;
+      border: 1px solid #ccc;
+      padding: 8px 10px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      min-height: 78px;
+    }
+    .party-title {
+      font-weight: bold;
+      font-size: 10px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .meta-title {
+      font-weight: bold;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .meta-label {
+      color: #555;
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .meta-line { font-size: 10px; line-height: 1.35; }
     table.items { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
     table.items th, table.items td { border: 1px solid #ccc; padding: 2px 3px; text-align: left; vertical-align: top; word-wrap: break-word; }
     table.items th { background: #f0f0f0; font-size: 8px; }
@@ -95,19 +140,9 @@ function buildInvoiceHtml(sale: SaleWithItems, settings: Settings): string {
     }
   </style></head>
   <body>
-    <div class="title-row">
-      <div>
-        <h1>${esc(settings.store_name)}</h1>
-      </div>
-      <div class="meta">
-        <h2>TAX INVOICE</h2>
-        <div><strong>${esc(sale.invoice_no)}</strong></div>
-        <div class="muted">${dateStr}</div>
-      </div>
-    </div>
-
-    <div class="party">
+    <div class="header">
       <div class="party-box">${fromBlock}</div>
+      <div class="meta-box">${metaBlock}</div>
       <div class="party-box">${toBlock}</div>
     </div>
 

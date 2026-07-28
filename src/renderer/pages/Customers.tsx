@@ -5,7 +5,14 @@ import { Spinner, EmptyState, useToast, errMsg } from '../components/ui';
 import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
 import { useWriteAllowed } from '../App';
 
-const empty: CustomerInput = { name: '', phone: '', address: '', gstin: '', pan: '' };
+const empty: CustomerInput = {
+  name: '',
+  phone: '',
+  address: '',
+  gstin: '',
+  pan: '',
+  dl_no: '',
+};
 
 export function Customers() {
   const toast = useToast();
@@ -39,6 +46,7 @@ export function Customers() {
       address: c.address ?? '',
       gstin: c.gstin ?? '',
       pan: c.pan ?? '',
+      dl_no: c.dl_no ?? '',
     });
     setModal(true);
   };
@@ -94,6 +102,7 @@ export function Customers() {
                 <th className="th">Phone</th>
                 <th className="th">GSTIN</th>
                 <th className="th">PAN</th>
+                <th className="th">D.L. No</th>
                 <th className="th">Address</th>
                 <th className="th text-right">Actions</th>
               </tr>
@@ -105,6 +114,7 @@ export function Customers() {
                   <td className="td">{c.phone || '-'}</td>
                   <td className="td">{c.gstin || '-'}</td>
                   <td className="td">{c.pan || '-'}</td>
+                  <td className="td">{c.dl_no || '-'}</td>
                   <td className="td">{c.address || '-'}</td>
                   <td className="td text-right">
                     <div className="flex justify-end gap-2">
@@ -181,6 +191,14 @@ export function Customers() {
                 placeholder="ABCDE1234F"
               />
             </div>
+            <div>
+              <label className="label">D.L. No</label>
+              <input
+                className="input"
+                value={form.dl_no ?? ''}
+                onChange={(e) => setForm({ ...form, dl_no: e.target.value })}
+              />
+            </div>
           </div>
           <div>
             <label className="label">Address</label>
@@ -237,6 +255,10 @@ export function Customers() {
             <div>
               <dt className="text-slate-500">PAN Card</dt>
               <dd className="font-medium text-slate-800">{viewing.pan || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">D.L. No</dt>
+              <dd className="font-medium text-slate-800">{viewing.dl_no || '-'}</dd>
             </div>
             <div>
               <dt className="text-slate-500">Address</dt>

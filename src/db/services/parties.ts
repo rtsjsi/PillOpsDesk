@@ -12,9 +12,11 @@ export function listSuppliers(search?: string): Supplier[] {
     const q = `%${search.trim()}%`;
     return db
       .prepare(
-        'SELECT * FROM suppliers WHERE name LIKE ? OR phone LIKE ? OR gstin LIKE ? OR pan LIKE ? ORDER BY name'
+        `SELECT * FROM suppliers
+         WHERE name LIKE ? OR phone LIKE ? OR gstin LIKE ? OR pan LIKE ? OR dl_no LIKE ?
+         ORDER BY name`
       )
-      .all(q, q, q, q) as Supplier[];
+      .all(q, q, q, q, q) as Supplier[];
   }
   return db.prepare('SELECT * FROM suppliers ORDER BY name').all() as Supplier[];
 }
@@ -23,7 +25,8 @@ export function createSupplier(input: SupplierInput): Supplier {
   const db = getDb();
   const info = db
     .prepare(
-      'INSERT INTO suppliers (name, phone, address, gstin, pan) VALUES (@name, @phone, @address, @gstin, @pan)'
+      `INSERT INTO suppliers (name, phone, address, gstin, pan, dl_no)
+       VALUES (@name, @phone, @address, @gstin, @pan, @dl_no)`
     )
     .run({
       name: input.name,
@@ -31,6 +34,7 @@ export function createSupplier(input: SupplierInput): Supplier {
       address: blankToNull(input.address),
       gstin: blankToNull(input.gstin),
       pan: blankToNull(input.pan),
+      dl_no: blankToNull(input.dl_no),
     });
   return db
     .prepare('SELECT * FROM suppliers WHERE id = ?')
@@ -40,7 +44,10 @@ export function createSupplier(input: SupplierInput): Supplier {
 export function updateSupplier(id: number, input: SupplierInput): Supplier {
   const db = getDb();
   db.prepare(
-    'UPDATE suppliers SET name = @name, phone = @phone, address = @address, gstin = @gstin, pan = @pan WHERE id = @id'
+    `UPDATE suppliers SET
+       name = @name, phone = @phone, address = @address,
+       gstin = @gstin, pan = @pan, dl_no = @dl_no
+     WHERE id = @id`
   ).run({
     id,
     name: input.name,
@@ -48,6 +55,7 @@ export function updateSupplier(id: number, input: SupplierInput): Supplier {
     address: blankToNull(input.address),
     gstin: blankToNull(input.gstin),
     pan: blankToNull(input.pan),
+    dl_no: blankToNull(input.dl_no),
   });
   return db.prepare('SELECT * FROM suppliers WHERE id = ?').get(id) as Supplier;
 }
@@ -62,9 +70,11 @@ export function listCustomers(search?: string): Customer[] {
     const q = `%${search.trim()}%`;
     return db
       .prepare(
-        'SELECT * FROM customers WHERE name LIKE ? OR phone LIKE ? OR gstin LIKE ? OR pan LIKE ? ORDER BY name'
+        `SELECT * FROM customers
+         WHERE name LIKE ? OR phone LIKE ? OR gstin LIKE ? OR pan LIKE ? OR dl_no LIKE ?
+         ORDER BY name`
       )
-      .all(q, q, q, q) as Customer[];
+      .all(q, q, q, q, q) as Customer[];
   }
   return db.prepare('SELECT * FROM customers ORDER BY name').all() as Customer[];
 }
@@ -73,7 +83,8 @@ export function createCustomer(input: CustomerInput): Customer {
   const db = getDb();
   const info = db
     .prepare(
-      'INSERT INTO customers (name, phone, address, gstin, pan) VALUES (@name, @phone, @address, @gstin, @pan)'
+      `INSERT INTO customers (name, phone, address, gstin, pan, dl_no)
+       VALUES (@name, @phone, @address, @gstin, @pan, @dl_no)`
     )
     .run({
       name: input.name,
@@ -81,6 +92,7 @@ export function createCustomer(input: CustomerInput): Customer {
       address: blankToNull(input.address),
       gstin: blankToNull(input.gstin),
       pan: blankToNull(input.pan),
+      dl_no: blankToNull(input.dl_no),
     });
   return db
     .prepare('SELECT * FROM customers WHERE id = ?')
@@ -90,7 +102,10 @@ export function createCustomer(input: CustomerInput): Customer {
 export function updateCustomer(id: number, input: CustomerInput): Customer {
   const db = getDb();
   db.prepare(
-    'UPDATE customers SET name = @name, phone = @phone, address = @address, gstin = @gstin, pan = @pan WHERE id = @id'
+    `UPDATE customers SET
+       name = @name, phone = @phone, address = @address,
+       gstin = @gstin, pan = @pan, dl_no = @dl_no
+     WHERE id = @id`
   ).run({
     id,
     name: input.name,
@@ -98,6 +113,7 @@ export function updateCustomer(id: number, input: CustomerInput): Customer {
     address: blankToNull(input.address),
     gstin: blankToNull(input.gstin),
     pan: blankToNull(input.pan),
+    dl_no: blankToNull(input.dl_no),
   });
   return db.prepare('SELECT * FROM customers WHERE id = ?').get(id) as Customer;
 }

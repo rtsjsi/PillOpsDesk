@@ -280,7 +280,7 @@ export function getSale(id: number): SaleWithItems | null {
   ).map(normalizeSaleItem);
   const customer = sale.customer_id
     ? (db
-        .prepare('SELECT name, phone, address, gstin, pan FROM customers WHERE id = ?')
+        .prepare('SELECT name, phone, address, gstin, pan, dl_no FROM customers WHERE id = ?')
         .get(sale.customer_id) as
         | {
             name: string;
@@ -288,6 +288,7 @@ export function getSale(id: number): SaleWithItems | null {
             address: string | null;
             gstin: string | null;
             pan: string | null;
+            dl_no: string | null;
           }
         | undefined)
     : undefined;
@@ -300,6 +301,7 @@ export function getSale(id: number): SaleWithItems | null {
     customer_address: customer?.address ?? null,
     customer_gstin: customer?.gstin ?? null,
     customer_pan: customer?.pan ?? null,
+    customer_dl_no: customer?.dl_no ?? null,
   };
 }
 
