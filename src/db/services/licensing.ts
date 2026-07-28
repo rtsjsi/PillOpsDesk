@@ -7,7 +7,6 @@ import { DEFAULT_GRACE_DAYS, LICENSE_PUBLIC_KEY_PEM } from '@shared/license-publ
 import type { LicensePayload, LicenseStatus } from '@shared/types';
 
 const SETTING_LICENSE_KEY = 'license_key';
-const SETTING_LAST_SEEN = 'license_last_seen_at';
 
 interface StoredLicense {
   payload: LicensePayload;
@@ -189,18 +188,6 @@ function loadStoredLicense(): StoredLicense | null {
   }
 }
 
-function detectClockTamper(today: string): boolean {
-  const lastSeen = readSetting(SETTING_LAST_SEEN);
-  if (!lastSeen) return false;
-  return daysBetween(today, lastSeen) < -1;
-}
-
-function touchLastSeen(today: string): void {
-  const lastSeen = readSetting(SETTING_LAST_SEEN);
-  const next = !lastSeen || today > lastSeen ? today : lastSeen;
-  writeSetting(SETTING_LAST_SEEN, next);
-}
-
 function buildStatus(
   state: LicenseStatus['state'],
   message: string,
@@ -217,14 +204,6 @@ function buildStatus(
 export function getLicenseStatus(): LicenseStatus {
   const today = todayUtc();
   const machineId = getMachineId();
-
-  if (detectClockTamper(today)) {
-    return buildStatus(
-      'blocked',
-      'System date appears incorrect. Restore the correct date or contact support.',
-      { clockTampered: true }
-    );
-  }
 
   const stored = loadStoredLicense();
   if (!stored) {
@@ -255,7 +234,10 @@ export function getLicenseStatus(): LicenseStatus {
     );
   }
 
-  if (daysBetween(today, payload.issued) < -1) {
+  // Block only if the license issued date is still more than a day in the future
+  // (allows ~1 day of clock skew). Inverted comparison would lock out every
+  // license after the day it was issued.
+  if (daysBetween(today, payload.issued) > 1) {
     return buildStatus(
       'blocked',
       'This license is not valid yet. Check the system date or contact support.',
@@ -272,7 +254,6 @@ export function getLicenseStatus(): LicenseStatus {
   const daysRemaining = daysBetween(today, payload.expires);
 
   if (today > graceEnds) {
-    touchLastSeen(today);
     return buildStatus(
       'readonly',
       'Subscription expired. You can view records and reports, but sales and stock changes are disabled until you renew.',
@@ -288,7 +269,6 @@ export function getLicenseStatus(): LicenseStatus {
   }
 
   if (today > payload.expires) {
-    touchLastSeen(today);
     const graceDaysLeft = daysBetween(today, graceEnds);
     return buildStatus(
       'grace',
@@ -303,7 +283,6 @@ export function getLicenseStatus(): LicenseStatus {
     );
   }
 
-  touchLastSeen(today);
   return buildStatus(
     'active',
     daysRemaining <= 30
@@ -330,7 +309,6 @@ export function activateLicense(licenseKey: string): LicenseStatus {
   }
 
   writeSetting(SETTING_LICENSE_KEY, licenseKey.trim());
-  writeSetting(SETTING_LAST_SEEN, todayUtc());
 
   const status = getLicenseStatus();
   if (status.state === 'blocked') {

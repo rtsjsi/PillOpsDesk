@@ -52,8 +52,10 @@ export function listCustomers(search?: string): Customer[] {
   if (search && search.trim()) {
     const q = `%${search.trim()}%`;
     return db
-      .prepare('SELECT * FROM customers WHERE name LIKE ? OR phone LIKE ? ORDER BY name')
-      .all(q, q) as Customer[];
+      .prepare(
+        'SELECT * FROM customers WHERE name LIKE ? OR phone LIKE ? OR gstin LIKE ? ORDER BY name'
+      )
+      .all(q, q, q) as Customer[];
   }
   return db.prepare('SELECT * FROM customers ORDER BY name').all() as Customer[];
 }
@@ -61,11 +63,14 @@ export function listCustomers(search?: string): Customer[] {
 export function createCustomer(input: CustomerInput): Customer {
   const db = getDb();
   const info = db
-    .prepare('INSERT INTO customers (name, phone, address) VALUES (@name, @phone, @address)')
+    .prepare(
+      'INSERT INTO customers (name, phone, address, gstin) VALUES (@name, @phone, @address, @gstin)'
+    )
     .run({
       name: input.name,
       phone: input.phone ?? null,
       address: input.address ?? null,
+      gstin: input.gstin ?? null,
     });
   return db
     .prepare('SELECT * FROM customers WHERE id = ?')
@@ -75,12 +80,13 @@ export function createCustomer(input: CustomerInput): Customer {
 export function updateCustomer(id: number, input: CustomerInput): Customer {
   const db = getDb();
   db.prepare(
-    'UPDATE customers SET name = @name, phone = @phone, address = @address WHERE id = @id'
+    'UPDATE customers SET name = @name, phone = @phone, address = @address, gstin = @gstin WHERE id = @id'
   ).run({
     id,
     name: input.name,
     phone: input.phone ?? null,
     address: input.address ?? null,
+    gstin: input.gstin ?? null,
   });
   return db.prepare('SELECT * FROM customers WHERE id = ?').get(id) as Customer;
 }

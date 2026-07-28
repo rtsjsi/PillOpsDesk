@@ -7,7 +7,7 @@ import type {
   Batch,
 } from '../../shared/types';
 import { computeSaleInvoice, saleLineAmounts } from '../../shared/gst';
-import { inr, formatDateTime, formatDate, todayIso, monthStartIso } from '../lib/format';
+import { inr, formatDateTime, formatExpiry, todayIso, monthStartIso } from '../lib/format';
 import { Modal } from '../components/Modal';
 import { Spinner, EmptyState, useToast, errMsg, NumberInput } from '../components/ui';
 import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
@@ -16,7 +16,34 @@ import { useWriteAllowed } from '../App';
 interface CartLine {
   batch: SellableBatch;
   quantity: number;
+  free_quantity: number;
   discount_percent: number;
+  scheme: string;
+  /** Editable unit rate (defaults to batch sale_price). */
+  rate: number;
+  /** Editable line overrides (default from medicine/batch). */
+  hsn_code: string;
+  mrp: number;
+  gst_rate: number;
+}
+
+function cartLineFromBatch(batch: SellableBatch, overrides?: Partial<CartLine>): CartLine {
+  return {
+    batch,
+    quantity: 1,
+    free_quantity: 0,
+    discount_percent: 0,
+    scheme: '',
+    rate: batch.sale_price,
+    hsn_code: batch.hsn_code ?? '',
+    mrp: batch.mrp,
+    gst_rate: batch.gst_rate ?? 0,
+    ...overrides,
+  };
+}
+
+function lineStockOut(l: CartLine): number {
+  return l.quantity + Math.max(0, l.free_quantity);
 }
 
 export function Sales() {
@@ -198,44 +225,68 @@ export function Sales() {
         {selected && (
           <div className="space-y-4">
             <div className="flex justify-between text-sm text-slate-600">
-              <div>
+              <div className="space-y-0.5">
                 <div>{formatDateTime(selected.sale_date)}</div>
-                <div>Customer: {selected.customer_name || 'Walk-in'}</div>
+                {selected.customer_name ? (
+                  <>
+                    <div className="font-medium text-slate-800">{selected.customer_name}</div>
+                    {selected.customer_address && <div>{selected.customer_address}</div>}
+                    {selected.customer_phone && <div>Ph: {selected.customer_phone}</div>}
+                    {selected.customer_gstin && <div>GSTIN: {selected.customer_gstin}</div>}
+                  </>
+                ) : (
+                  <div>Walk-in Customer</div>
+                )}
               </div>
             </div>
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="th">Item</th>
-                  <th className="th text-center">Qty</th>
-                  <th className="th text-right">Rate</th>
-                  <th className="th text-center">GST</th>
-                  <th className="th text-center">Disc %</th>
-                  <th className="th text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selected.items.map((it) => (
-                  <tr key={it.id} className="border-t border-slate-100">
-                    <td className="td">
-                      {it.medicine_name}
-                      <span className="text-xs text-slate-400"> ({it.batch_no})</span>
-                    </td>
-                    <td className="td text-center">{it.quantity}</td>
-                    <td className="td text-right">{inr(it.price)}</td>
-                    <td className="td text-center">{it.gst_rate}%</td>
-                    <td className="td text-center">
-                      {it.discount_percent > 0 ? `${it.discount_percent}%` : '-'}
-                    </td>
-                    <td className="td text-right">{inr(it.line_total)}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="th">Item</th>
+                    <th className="th">Mfg</th>
+                    <th className="th">Pack</th>
+                    <th className="th">HSN</th>
+                    <th className="th">Batch</th>
+                    <th className="th">Exp</th>
+                    <th className="th text-right">MRP</th>
+                    <th className="th text-center">Qty</th>
+                    <th className="th text-center">Free</th>
+                    <th className="th text-right">Rate</th>
+                    <th className="th text-center">Disc %</th>
+                    <th className="th text-right">Taxable</th>
+                    <th className="th text-center">GST %</th>
+                    <th className="th text-right">Amount</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {selected.items.map((it) => (
+                    <tr key={it.id} className="border-t border-slate-100">
+                      <td className="td font-medium">{it.medicine_name}</td>
+                      <td className="td">{it.manufacturer || '-'}</td>
+                      <td className="td">{it.pack_size || '-'}</td>
+                      <td className="td">{it.hsn_code || '-'}</td>
+                      <td className="td">{it.batch_no}</td>
+                      <td className="td">
+                        {it.expiry_date ? formatExpiry(it.expiry_date) : '-'}
+                      </td>
+                      <td className="td text-right">{inr(it.mrp)}</td>
+                      <td className="td text-center">{it.quantity}</td>
+                      <td className="td text-center">{it.free_quantity || '-'}</td>
+                      <td className="td text-right">{inr(it.price)}</td>
+                      <td className="td text-center">
+                        {it.discount_percent > 0 ? `${it.discount_percent}%` : '-'}
+                      </td>
+                      <td className="td text-right">{inr(it.taxable_value)}</td>
+                      <td className="td text-center">{it.gst_rate}%</td>
+                      <td className="td text-right font-medium">{inr(it.line_total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <div className="ml-auto w-64 space-y-1 text-sm">
-              {selected.discount > 0 && (
-                <Row label="Discount" value={`- ${inr(selected.discount)}`} />
-              )}
+              <Row label="Discount" value={`- ${inr(selected.discount)}`} />
               <Row label="Taxable Value" value={inr(selected.subtotal)} />
               <Row label="CGST" value={inr(selected.cgst)} />
               <Row label="SGST" value={inr(selected.sgst)} />
@@ -323,11 +374,15 @@ function NewSaleForm({
       const idx = prev.findIndex((l) => l.batch.batch_id === batch.batch_id);
       if (idx >= 0) {
         const copy = [...prev];
-        const nextQty = Math.min(copy[idx].quantity + 1, batch.quantity_in_stock);
+        const nextQty = Math.min(
+          copy[idx].quantity + 1,
+          batch.quantity_in_stock - copy[idx].free_quantity
+        );
+        if (nextQty < 1) return prev;
         copy[idx] = { ...copy[idx], quantity: nextQty };
         return copy;
       }
-      return [...prev, { batch, quantity: 1, discount_percent: 0 }];
+      return [...prev, cartLineFromBatch(batch)];
     });
     setSearch('');
     setResults([]);
@@ -335,25 +390,25 @@ function NewSaleForm({
     searchRef.current?.focus();
   };
 
-  const updateLine = (batchId: number, quantity: number) => {
+  const patchLine = (batchId: number, patch: Partial<CartLine>) => {
     setCart((prev) =>
       prev.map((l) => {
         if (l.batch.batch_id !== batchId) return l;
+        const next = { ...l, ...patch };
+        const max = l.batch.quantity_in_stock;
+        const free = Math.max(0, next.free_quantity);
+        const qty = Math.max(1, Math.min(next.quantity, Math.max(1, max - free)));
         return {
-          ...l,
-          quantity: Math.max(1, Math.min(quantity, l.batch.quantity_in_stock)),
+          ...next,
+          free_quantity: Math.min(free, Math.max(0, max - qty)),
+          quantity: qty,
+          discount_percent: Math.min(100, Math.max(0, next.discount_percent)),
+          rate: Math.max(0, next.rate),
+          mrp: Math.max(0, next.mrp),
+          gst_rate: Math.min(100, Math.max(0, next.gst_rate)),
+          hsn_code: next.hsn_code,
         };
       })
-    );
-  };
-
-  const updateLineDiscount = (batchId: number, discount_percent: number) => {
-    setCart((prev) =>
-      prev.map((l) =>
-        l.batch.batch_id === batchId
-          ? { ...l, discount_percent: Math.min(100, Math.max(0, discount_percent)) }
-          : l
-      )
     );
   };
 
@@ -362,12 +417,13 @@ function NewSaleForm({
   };
 
   const totals = useMemo(() => {
-    const lines = cart.map((l) => ({
-      gross: l.batch.sale_price * l.quantity,
-      gst_rate: l.batch.gst_rate ?? 0,
-      discount_percent: l.discount_percent ?? 0,
-    }));
-    return computeSaleInvoice(lines);
+    return computeSaleInvoice(
+      cart.map((l) => ({
+        gross: l.rate * l.quantity,
+        gst_rate: l.gst_rate ?? 0,
+        discount_percent: l.discount_percent ?? 0,
+      }))
+    );
   }, [cart]);
 
   const checkout = async (print: boolean) => {
@@ -376,6 +432,14 @@ function NewSaleForm({
       return;
     }
     for (const l of cart) {
+      if (l.quantity <= 0) {
+        onError(`Quantity must be positive for ${l.batch.name}.`);
+        return;
+      }
+      if (lineStockOut(l) > l.batch.quantity_in_stock) {
+        onError(`Not enough stock for ${l.batch.name}.`);
+        return;
+      }
       if ((l.discount_percent ?? 0) < 0 || (l.discount_percent ?? 0) > 100) {
         onError(`Discount must be 0–100% for ${l.batch.name}.`);
         return;
@@ -388,7 +452,13 @@ function NewSaleForm({
         items: cart.map((l) => ({
           batch_id: l.batch.batch_id,
           quantity: l.quantity,
+          free_quantity: l.free_quantity,
           discount_percent: l.discount_percent ?? 0,
+          scheme: l.scheme.trim() || null,
+          price: l.rate,
+          hsn_code: l.hsn_code.trim() || null,
+          mrp: l.mrp,
+          gst_rate: l.gst_rate,
         })),
       });
       if (print) {
@@ -471,8 +541,10 @@ function NewSaleForm({
                     <div>
                       <div className="font-medium text-slate-800">{r.name}</div>
                       <div className="text-xs text-slate-400">
-                        Batch {r.batch_no} · Exp {formatDate(r.expiry_date)} · Stock{' '}
+                        Batch {r.batch_no} · Exp {formatExpiry(r.expiry_date)} · Stock{' '}
                         {r.quantity_in_stock}
+                        {r.manufacturer ? ` · ${r.manufacturer}` : ''}
+                        {r.pack_size ? ` · Pack ${r.pack_size}` : ''}
                       </div>
                     </div>
                     <div className="text-right">
@@ -490,83 +562,22 @@ function NewSaleForm({
           {cart.length === 0 ? (
             <EmptyState message="Cart is empty. Search and add medicines above." />
           ) : (
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 z-10 bg-slate-50">
-                <tr>
-                  <th className="th">Item</th>
-                  <th className="th text-center">Qty</th>
-                  <th className="th text-right">Rate</th>
-                  <th className="th text-center">Disc %</th>
-                  <th className="th text-right">Total</th>
-                  <th className="th"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {cart.map((l) => {
-                  const amounts = saleLineAmounts({
-                    gross: l.batch.sale_price * l.quantity,
-                    gst_rate: l.batch.gst_rate ?? 0,
-                    discount_percent: l.discount_percent ?? 0,
-                  });
-                  return (
-                  <tr key={l.batch.batch_id} className="border-t border-slate-100">
-                    <td className="td">
-                      <div className="font-medium">{l.batch.name}</div>
-                      <div className="text-xs text-slate-400">
-                        Batch {l.batch.batch_no} · {l.batch.gst_rate}% GST
-                      </div>
-                    </td>
-                    <td className="td text-center">
-                      <NumberInput
-                        min={1}
-                        max={l.batch.quantity_in_stock}
-                        value={l.quantity}
-                        emptyValue={1}
-                        onValueChange={(quantity) => updateLine(l.batch.batch_id, quantity)}
-                        className="input w-16 px-2 py-1 text-center"
-                      />
-                    </td>
-                    <td className="td text-right">{inr(l.batch.sale_price)}</td>
-                    <td className="td text-center">
-                      <NumberInput
-                        min={0}
-                        max={100}
-                        step="0.1"
-                        className="input w-14 px-2 py-1 text-center"
-                        value={l.discount_percent}
-                        onValueChange={(discount_percent) =>
-                          updateLineDiscount(l.batch.batch_id, discount_percent)
-                        }
-                      />
-                    </td>
-                    <td className="td text-right font-medium">
-                      {inr(amounts.gross)}
-                    </td>
-                    <td className="td text-right">
-                      <button
-                        className="text-red-500 hover:text-red-700"
-                        onClick={() => removeLine(l.batch.batch_id)}
-                      >
-                        ✕
-                      </button>
-                    </td>
-                  </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <SaleCartTable
+              lines={cart}
+              maxFor={(l) => l.batch.quantity_in_stock}
+              onPatch={patchLine}
+              onRemove={removeLine}
+            />
           )}
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-x-5 gap-y-1 border-t border-slate-200 pt-2 text-sm">
-          {totals.discountAmount > 0 && (
-            <span className="text-slate-600">
-              Discount:{' '}
-              <span className="font-medium text-slate-800">
-                - {inr(totals.discountAmount)}
-              </span>
+          <span className="text-slate-600">
+            Discount:{' '}
+            <span className="font-medium text-slate-800">
+              - {inr(totals.discountAmount)}
             </span>
-          )}
+          </span>
           <span className="text-slate-600">
             Taxable:{' '}
             <span className="font-medium text-slate-800">{inr(totals.subtotal)}</span>
@@ -609,18 +620,19 @@ function SaleEditForm({
   const [busy, setBusy] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const originalQty = useMemo(() => {
+  const originalStockOut = useMemo(() => {
     const map: Record<number, number> = {};
     for (const it of sale.items) {
       if (it.batch_id != null) {
-        map[it.batch_id] = (map[it.batch_id] ?? 0) + it.quantity;
+        map[it.batch_id] =
+          (map[it.batch_id] ?? 0) + it.quantity + Math.max(0, it.free_quantity ?? 0);
       }
     }
     return map;
   }, [sale.items]);
 
   const availableStock = (batch: SellableBatch) =>
-    batch.quantity_in_stock + (originalQty[batch.batch_id] ?? 0);
+    batch.quantity_in_stock + (originalStockOut[batch.batch_id] ?? 0);
 
   useEffect(() => {
     window.pharmacy.customers.list().then(setCustomers);
@@ -630,6 +642,7 @@ function SaleEditForm({
     async function initCart() {
       const lines: CartLine[] = [];
       const byMedicine = new Map<number, Batch[]>();
+      const medicineCache = new Map<number, Awaited<ReturnType<typeof window.pharmacy.medicines.get>>>();
       const legacyInvoiceDisc =
         (sale.discount_percent ?? 0) > 0 &&
         sale.items.every((row) => !(row.discount_percent ?? 0));
@@ -649,24 +662,49 @@ function SaleEditForm({
           }
           return;
         }
+
+        let med = medicineCache.get(it.medicine_id);
+        if (med === undefined) {
+          med = await window.pharmacy.medicines.get(it.medicine_id);
+          medicineCache.set(it.medicine_id, med);
+        }
+
         const sellable: SellableBatch = {
           batch_id: batch.id,
           medicine_id: batch.medicine_id,
           name: it.medicine_name,
           batch_no: batch.batch_no,
-          expiry_date: batch.expiry_date,
+          expiry_date: it.expiry_date || batch.expiry_date,
           sale_price: batch.sale_price,
-          mrp: batch.mrp,
+          mrp: it.mrp > 0 ? it.mrp : batch.mrp,
           gst_rate: it.gst_rate,
-          hsn_code: it.hsn_code,
+          hsn_code: it.hsn_code ?? med?.hsn_code ?? null,
+          manufacturer: it.manufacturer ?? med?.manufacturer ?? null,
+          pack_size: it.pack_size ?? med?.pack_size ?? null,
+          rack: it.rack ?? med?.rack ?? null,
           quantity_in_stock: batch.quantity_in_stock,
         };
         const lineDisc = legacyInvoiceDisc
           ? sale.discount_percent
           : (it.discount_percent ?? 0);
         const existing = lines.find((l) => l.batch.batch_id === it.batch_id);
-        if (existing) existing.quantity += it.quantity;
-        else lines.push({ batch: sellable, quantity: it.quantity, discount_percent: lineDisc });
+        if (existing) {
+          existing.quantity += it.quantity;
+          existing.free_quantity += Math.max(0, it.free_quantity ?? 0);
+        } else {
+          lines.push(
+            cartLineFromBatch(sellable, {
+              quantity: it.quantity,
+              free_quantity: Math.max(0, it.free_quantity ?? 0),
+              discount_percent: lineDisc,
+              scheme: it.scheme ?? '',
+              rate: it.price,
+              hsn_code: it.hsn_code ?? '',
+              mrp: it.mrp > 0 ? it.mrp : batch.mrp,
+              gst_rate: it.gst_rate,
+            })
+          );
+        }
       }
       if (!cancelled) setCart(lines);
     }
@@ -701,13 +739,15 @@ function SaleEditForm({
       const idx = list.findIndex((l) => l.batch.batch_id === batch.batch_id);
       if (idx >= 0) {
         const copy = [...list];
-        copy[idx] = {
-          ...copy[idx],
-          quantity: Math.min(copy[idx].quantity + 1, max),
-        };
+        const nextQty = Math.min(
+          copy[idx].quantity + 1,
+          max - copy[idx].free_quantity
+        );
+        if (nextQty < 1) return list;
+        copy[idx] = { ...copy[idx], quantity: nextQty };
         return copy;
       }
-      return [...list, { batch, quantity: 1, discount_percent: 0 }];
+      return [...list, cartLineFromBatch(batch)];
     });
     setSearch('');
     setResults([]);
@@ -715,23 +755,25 @@ function SaleEditForm({
     searchRef.current?.focus();
   };
 
-  const updateLine = (batchId: number, quantity: number) => {
+  const patchLine = (batchId: number, patch: Partial<CartLine>) => {
     setCart((prev) =>
       (prev ?? []).map((l) => {
         if (l.batch.batch_id !== batchId) return l;
+        const next = { ...l, ...patch };
         const max = availableStock(l.batch);
-        return { ...l, quantity: Math.max(1, Math.min(quantity, max)) };
+        const free = Math.max(0, next.free_quantity);
+        const qty = Math.max(1, Math.min(next.quantity, Math.max(1, max - free)));
+        return {
+          ...next,
+          free_quantity: Math.min(free, Math.max(0, max - qty)),
+          quantity: qty,
+          discount_percent: Math.min(100, Math.max(0, next.discount_percent)),
+          rate: Math.max(0, next.rate),
+          mrp: Math.max(0, next.mrp),
+          gst_rate: Math.min(100, Math.max(0, next.gst_rate)),
+          hsn_code: next.hsn_code,
+        };
       })
-    );
-  };
-
-  const updateLineDiscount = (batchId: number, discount_percent: number) => {
-    setCart((prev) =>
-      (prev ?? []).map((l) =>
-        l.batch.batch_id === batchId
-          ? { ...l, discount_percent: Math.min(100, Math.max(0, discount_percent)) }
-          : l
-      )
     );
   };
 
@@ -740,20 +782,25 @@ function SaleEditForm({
   };
 
   const totals = useMemo(() => {
-    if (!cart) {
-      return computeSaleInvoice([]);
-    }
-    const lines = cart.map((l) => ({
-      gross: l.batch.sale_price * l.quantity,
-      gst_rate: l.batch.gst_rate ?? 0,
-      discount_percent: l.discount_percent ?? 0,
-    }));
-    return computeSaleInvoice(lines);
+    if (!cart) return computeSaleInvoice([]);
+    return computeSaleInvoice(
+      cart.map((l) => ({
+        gross: l.rate * l.quantity,
+        gst_rate: l.gst_rate ?? 0,
+        discount_percent: l.discount_percent ?? 0,
+      }))
+    );
   }, [cart]);
 
   const save = async () => {
     if (!cart || cart.length === 0) return onError('Add at least one item.');
     for (const l of cart) {
+      if (l.quantity <= 0) {
+        return onError(`Quantity must be positive for ${l.batch.name}.`);
+      }
+      if (lineStockOut(l) > availableStock(l.batch)) {
+        return onError(`Not enough stock for ${l.batch.name}.`);
+      }
       if ((l.discount_percent ?? 0) < 0 || (l.discount_percent ?? 0) > 100) {
         return onError(`Discount must be 0–100% for ${l.batch.name}.`);
       }
@@ -765,7 +812,13 @@ function SaleEditForm({
         items: cart.map((l) => ({
           batch_id: l.batch.batch_id,
           quantity: l.quantity,
+          free_quantity: l.free_quantity,
           discount_percent: l.discount_percent ?? 0,
+          scheme: l.scheme.trim() || null,
+          price: l.rate,
+          hsn_code: l.hsn_code.trim() || null,
+          mrp: l.mrp,
+          gst_rate: l.gst_rate,
         })),
       });
       onSaved();
@@ -842,8 +895,9 @@ function SaleEditForm({
                         <div>
                           <div className="font-medium text-slate-800">{r.name}</div>
                           <div className="text-xs text-slate-400">
-                            Batch {r.batch_no} · Exp {formatDate(r.expiry_date)} · Avail{' '}
+                            Batch {r.batch_no} · Exp {formatExpiry(r.expiry_date)} · Avail{' '}
                             {avail}
+                            {r.manufacturer ? ` · ${r.manufacturer}` : ''}
                           </div>
                         </div>
                         <div className="font-semibold">{inr(r.sale_price)}</div>
@@ -859,86 +913,22 @@ function SaleEditForm({
             {cart.length === 0 ? (
               <EmptyState message="No items on invoice." />
             ) : (
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 z-10 bg-slate-50">
-                  <tr>
-                    <th className="th">Item</th>
-                    <th className="th text-center">Qty</th>
-                    <th className="th text-right">Rate</th>
-                    <th className="th text-center">Disc %</th>
-                    <th className="th text-right">Total</th>
-                    <th className="th"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cart.map((l) => {
-                    const max = availableStock(l.batch);
-                    const amounts = saleLineAmounts({
-                      gross: l.batch.sale_price * l.quantity,
-                      gst_rate: l.batch.gst_rate ?? 0,
-                      discount_percent: l.discount_percent ?? 0,
-                    });
-                    return (
-                      <tr key={l.batch.batch_id} className="border-t border-slate-100">
-                        <td className="td">
-                          <div className="font-medium">{l.batch.name}</div>
-                          <div className="text-xs text-slate-400">
-                            Batch {l.batch.batch_no} · avail {max}
-                          </div>
-                        </td>
-                        <td className="td text-center">
-                          <NumberInput
-                            min={1}
-                            max={max}
-                            className="input w-16 px-2 py-1 text-center"
-                            value={l.quantity}
-                            emptyValue={1}
-                            onValueChange={(quantity) =>
-                              updateLine(l.batch.batch_id, quantity)
-                            }
-                          />
-                        </td>
-                        <td className="td text-right">{inr(l.batch.sale_price)}</td>
-                        <td className="td text-center">
-                          <NumberInput
-                            min={0}
-                            max={100}
-                            step="0.1"
-                            className="input w-14 px-2 py-1 text-center"
-                            value={l.discount_percent}
-                            onValueChange={(discount_percent) =>
-                              updateLineDiscount(l.batch.batch_id, discount_percent)
-                            }
-                          />
-                        </td>
-                        <td className="td text-right font-medium">
-                          {inr(amounts.gross)}
-                        </td>
-                        <td className="td text-right">
-                          <button
-                            className="text-red-500 hover:text-red-700"
-                            onClick={() => removeLine(l.batch.batch_id)}
-                          >
-                            ✕
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <SaleCartTable
+                lines={cart}
+                maxFor={(l) => availableStock(l.batch)}
+                onPatch={patchLine}
+                onRemove={removeLine}
+              />
             )}
           </div>
 
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-x-5 gap-y-1 border-t border-slate-200 pt-2 text-sm">
-            {totals.discountAmount > 0 && (
-              <span className="text-slate-600">
-                Discount:{' '}
-                <span className="font-medium text-slate-800">
-                  - {inr(totals.discountAmount)}
-                </span>
+            <span className="text-slate-600">
+              Discount:{' '}
+              <span className="font-medium text-slate-800">
+                - {inr(totals.discountAmount)}
               </span>
-            )}
+            </span>
             <span className="text-slate-600">
               Taxable:{' '}
               <span className="font-medium text-slate-800">{inr(totals.subtotal)}</span>
@@ -959,6 +949,146 @@ function SaleEditForm({
         </div>
       )}
     </Modal>
+  );
+}
+
+function SaleCartTable({
+  lines,
+  maxFor,
+  onPatch,
+  onRemove,
+}: {
+  lines: CartLine[];
+  maxFor: (l: CartLine) => number;
+  onPatch: (batchId: number, patch: Partial<CartLine>) => void;
+  onRemove: (batchId: number) => void;
+}) {
+  return (
+    <table className="w-full min-w-[980px] text-xs">
+      <thead className="sticky top-0 z-10 bg-slate-50">
+        <tr>
+          <th className="th">Item</th>
+          <th className="th">Mfg</th>
+          <th className="th">Pack</th>
+          <th className="th">HSN</th>
+          <th className="th">Batch</th>
+          <th className="th">Exp</th>
+          <th className="th text-right">MRP</th>
+          <th className="th text-center">Qty</th>
+          <th className="th text-center">Free</th>
+          <th className="th text-right">Rate</th>
+          <th className="th text-center">Disc %</th>
+          <th className="th text-right">Taxable</th>
+          <th className="th text-center">GST %</th>
+          <th className="th text-right">Amount</th>
+          <th className="th"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {lines.map((l) => {
+          const max = maxFor(l);
+          const amounts = saleLineAmounts({
+            gross: l.rate * l.quantity,
+            gst_rate: l.gst_rate ?? 0,
+            discount_percent: l.discount_percent ?? 0,
+          });
+          return (
+            <tr key={l.batch.batch_id} className="border-t border-slate-100">
+              <td className="td">
+                <div className="max-w-[140px] font-medium text-slate-800">{l.batch.name}</div>
+                <div className="text-[10px] text-slate-400">Avail {max}</div>
+              </td>
+              <td className="td max-w-[90px] truncate" title={l.batch.manufacturer ?? undefined}>
+                {l.batch.manufacturer || '-'}
+              </td>
+              <td className="td whitespace-nowrap">{l.batch.pack_size || '-'}</td>
+              <td className="td">
+                <input
+                  type="text"
+                  value={l.hsn_code}
+                  onChange={(e) => onPatch(l.batch.batch_id, { hsn_code: e.target.value })}
+                  className="input w-16 px-1 py-0.5"
+                  placeholder="HSN"
+                />
+              </td>
+              <td className="td whitespace-nowrap">{l.batch.batch_no}</td>
+              <td className="td whitespace-nowrap">{formatExpiry(l.batch.expiry_date)}</td>
+              <td className="td text-right">
+                <NumberInput
+                  min={0}
+                  step="0.01"
+                  value={l.mrp}
+                  onValueChange={(mrp) => onPatch(l.batch.batch_id, { mrp })}
+                  className="input w-16 px-1 py-0.5 text-right"
+                />
+              </td>
+              <td className="td text-center">
+                <NumberInput
+                  min={1}
+                  max={Math.max(1, max - l.free_quantity)}
+                  value={l.quantity}
+                  emptyValue={1}
+                  onValueChange={(quantity) => onPatch(l.batch.batch_id, { quantity })}
+                  className="input w-12 px-1 py-0.5 text-center"
+                />
+              </td>
+              <td className="td text-center">
+                <NumberInput
+                  min={0}
+                  max={Math.max(0, max - l.quantity)}
+                  value={l.free_quantity}
+                  onValueChange={(free_quantity) =>
+                    onPatch(l.batch.batch_id, { free_quantity: Math.max(0, free_quantity) })
+                  }
+                  className="input w-12 px-1 py-0.5 text-center"
+                />
+              </td>
+              <td className="td text-right">
+                <NumberInput
+                  min={0}
+                  step="0.01"
+                  value={l.rate}
+                  onValueChange={(rate) => onPatch(l.batch.batch_id, { rate })}
+                  className="input w-16 px-1 py-0.5 text-right"
+                />
+              </td>
+              <td className="td text-center">
+                <NumberInput
+                  min={0}
+                  max={100}
+                  step="0.1"
+                  value={l.discount_percent}
+                  onValueChange={(discount_percent) =>
+                    onPatch(l.batch.batch_id, { discount_percent })
+                  }
+                  className="input w-12 px-1 py-0.5 text-center"
+                />
+              </td>
+              <td className="td text-right whitespace-nowrap">{inr(amounts.taxable)}</td>
+              <td className="td text-center">
+                <NumberInput
+                  min={0}
+                  max={100}
+                  step="0.1"
+                  value={l.gst_rate}
+                  onValueChange={(gst_rate) => onPatch(l.batch.batch_id, { gst_rate })}
+                  className="input w-12 px-1 py-0.5 text-center"
+                />
+              </td>
+              <td className="td text-right font-medium whitespace-nowrap">{inr(amounts.gross)}</td>
+              <td className="td text-right">
+                <button
+                  className="text-red-500 hover:text-red-700"
+                  onClick={() => onRemove(l.batch.batch_id)}
+                >
+                  ✕
+                </button>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }
 

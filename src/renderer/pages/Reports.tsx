@@ -5,7 +5,7 @@ import type {
   GstSummaryRow,
   StockRow,
 } from '../../shared/types';
-import { inr, formatDate, todayIso, monthStartIso, daysUntil, toCsv } from '../lib/format';
+import { inr, formatDate, formatExpiry, todayIso, monthStartIso, daysUntil, toCsv } from '../lib/format';
 import { Spinner, EmptyState, Badge, useToast, NumberInput } from '../components/ui';
 
 type Tab = 'sales' | 'purchases' | 'gst' | 'lowstock' | 'expiring' | 'valuation';
@@ -413,7 +413,7 @@ function StockTable({
             rows={rows.map((r) => [
               r.medicine_name,
               r.batch_no,
-              r.expiry_date,
+              formatExpiry(r.expiry_date),
               r.quantity_in_stock,
               r.purchase_price.toFixed(2),
               r.mrp.toFixed(2),
@@ -447,7 +447,7 @@ function StockTable({
                     <td className="td">{r.batch_no}</td>
                     {showExpiry && (
                       <td className="td">
-                        {formatDate(r.expiry_date)}{' '}
+                        {formatExpiry(r.expiry_date)}{' '}
                         {d < 0 ? (
                           <Badge tone="red">Expired</Badge>
                         ) : d <= 90 ? (

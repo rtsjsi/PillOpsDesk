@@ -1,4 +1,5 @@
 import { getDb } from '../index';
+import { normalizeExpiryDate } from '@shared/expiry';
 import type { Batch, BatchInput, StockRow } from '@shared/types';
 
 export function listBatchesByMedicine(medicineId: number): Batch[] {
@@ -8,15 +9,20 @@ export function listBatchesByMedicine(medicineId: number): Batch[] {
     .all(medicineId) as Batch[];
 }
 
+function withNormalizedExpiry(input: BatchInput): BatchInput {
+  return { ...input, expiry_date: normalizeExpiryDate(input.expiry_date) };
+}
+
 export function createBatch(input: BatchInput): Batch {
   const db = getDb();
+  const row = withNormalizedExpiry(input);
   const info = db
     .prepare(
       `INSERT INTO batches
         (medicine_id, batch_no, expiry_date, mrp, purchase_price, sale_price, quantity_in_stock)
        VALUES (@medicine_id, @batch_no, @expiry_date, @mrp, @purchase_price, @sale_price, @quantity_in_stock)`
     )
-    .run(input);
+    .run(row);
   return db
     .prepare('SELECT * FROM batches WHERE id = ?')
     .get(Number(info.lastInsertRowid)) as Batch;
@@ -24,13 +30,14 @@ export function createBatch(input: BatchInput): Batch {
 
 export function updateBatch(id: number, input: BatchInput): Batch {
   const db = getDb();
+  const row = withNormalizedExpiry(input);
   db.prepare(
     `UPDATE batches SET
       batch_no = @batch_no, expiry_date = @expiry_date, mrp = @mrp,
       purchase_price = @purchase_price, sale_price = @sale_price,
       quantity_in_stock = @quantity_in_stock
      WHERE id = @id`
-  ).run({ ...input, id });
+  ).run({ ...row, id });
   return db.prepare('SELECT * FROM batches WHERE id = ?').get(id) as Batch;
 }
 

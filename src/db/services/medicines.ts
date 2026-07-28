@@ -23,8 +23,45 @@ export function getMedicine(id: number): Medicine | null {
   return (db.prepare('SELECT * FROM medicines WHERE id = ?').get(id) as Medicine) ?? null;
 }
 
+/** Active medicine with the same name (case-insensitive), optionally excluding an id. */
+function findActiveDuplicateName(name: string, excludeId?: number): Medicine | null {
+  const db = getDb();
+  const trimmed = name.trim();
+  if (!trimmed) return null;
+  if (excludeId != null) {
+    return (
+      (db
+        .prepare(
+          `SELECT * FROM medicines
+           WHERE is_active = 1 AND id != ? AND LOWER(name) = LOWER(?)
+           LIMIT 1`
+        )
+        .get(excludeId, trimmed) as Medicine) ?? null
+    );
+  }
+  return (
+    (db
+      .prepare(
+        `SELECT * FROM medicines
+         WHERE is_active = 1 AND LOWER(name) = LOWER(?)
+         LIMIT 1`
+      )
+      .get(trimmed) as Medicine) ?? null
+  );
+}
+
+function assertUniqueName(name: string, excludeId?: number): void {
+  const dup = findActiveDuplicateName(name, excludeId);
+  if (dup) {
+    throw new Error(`A medicine named "${dup.name}" already exists.`);
+  }
+}
+
 export function createMedicine(input: MedicineInput): Medicine {
   const db = getDb();
+  const name = input.name.trim();
+  if (!name) throw new Error('Medicine name is required.');
+  assertUniqueName(name);
   const info = db
     .prepare(
       `INSERT INTO medicines
@@ -34,7 +71,7 @@ export function createMedicine(input: MedicineInput): Medicine {
          @pack_size, @schedule, @storage_type, @rack, @reorder_level, @is_active)`
     )
     .run({
-      name: input.name,
+      name,
       generic_name: input.generic_name ?? null,
       manufacturer: input.manufacturer ?? null,
       hsn_code: input.hsn_code ?? null,
@@ -53,6 +90,9 @@ export function createMedicine(input: MedicineInput): Medicine {
 
 export function updateMedicine(id: number, input: MedicineInput): Medicine {
   const db = getDb();
+  const name = input.name.trim();
+  if (!name) throw new Error('Medicine name is required.');
+  assertUniqueName(name, id);
   db.prepare(
     `UPDATE medicines SET
        name = @name, generic_name = @generic_name, manufacturer = @manufacturer,
@@ -62,7 +102,7 @@ export function updateMedicine(id: number, input: MedicineInput): Medicine {
      WHERE id = @id`
   ).run({
     id,
-    name: input.name,
+    name,
     generic_name: input.generic_name ?? null,
     manufacturer: input.manufacturer ?? null,
     hsn_code: input.hsn_code ?? null,
@@ -76,10 +116,4 @@ export function updateMedicine(id: number, input: MedicineInput): Medicine {
     reorder_level: input.reorder_level ?? 10,
   });
   return getMedicine(id)!;
-}
-
-export function removeMedicine(id: number): void {
-  const db = getDb();
-  // Soft-delete to preserve historical sale references.
-  db.prepare('UPDATE medicines SET is_active = 0 WHERE id = ?').run(id);
 }

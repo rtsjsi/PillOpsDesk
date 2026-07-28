@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { DashboardStats, StockRow } from '../../shared/types';
-import { inr, formatDate, daysUntil } from '../lib/format';
+import { inr, formatExpiry, daysUntil } from '../lib/format';
 import { Spinner, Badge, EmptyState } from '../components/ui';
 
 function StatCard({
@@ -114,7 +114,7 @@ export function Dashboard() {
                           </div>
                         </td>
                         <td className="td text-right">
-                          <div>{formatDate(b.expiry_date)}</div>
+                          <div>{formatExpiry(b.expiry_date)}</div>
                           {d < 0 ? (
                             <Badge tone="red">Expired</Badge>
                           ) : (

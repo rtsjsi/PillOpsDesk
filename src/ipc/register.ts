@@ -91,7 +91,6 @@ export function registerIpc(): void {
   handleWrite(IPC.medicinesUpdate, (id: number, input: MedicineInput) =>
     medicines.updateMedicine(id, input)
   );
-  handleWrite(IPC.medicinesRemove, (id: number) => medicines.removeMedicine(id));
 
   // Batches
   handleRead(IPC.batchesListByMedicine, (id: number) => batches.listBatchesByMedicine(id));

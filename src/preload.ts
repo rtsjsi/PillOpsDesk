@@ -20,7 +20,6 @@ const api: PharmacyApi = {
     get: (id) => invoke(IPC.medicinesGet, id),
     create: (input) => invoke(IPC.medicinesCreate, input),
     update: (id, input) => invoke(IPC.medicinesUpdate, id, input),
-    remove: (id) => invoke(IPC.medicinesRemove, id),
   },
   batches: {
     listByMedicine: (medicineId) => invoke(IPC.batchesListByMedicine, medicineId),

@@ -1,7 +1,10 @@
 import type Database from 'better-sqlite3';
+import { seedAnetaMedicines } from './seed-aneta-medicines';
+
+type Migration = string | ((db: Database.Database) => void);
 
 // Simple sequential migration runner using PRAGMA user_version.
-const MIGRATIONS: string[] = [
+const MIGRATIONS: Migration[] = [
   // v1: initial schema
   `
   CREATE TABLE IF NOT EXISTS medicines (
@@ -257,12 +260,49 @@ const MIGRATIONS: string[] = [
   UPDATE medicines SET hsn_code = '30049099'
   WHERE hsn_code IS NULL OR trim(hsn_code) = '';
   `,
+  // v9: richer sale line snapshots for Metro-style invoices
+  `
+  ALTER TABLE sale_items ADD COLUMN free_quantity INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE sale_items ADD COLUMN scheme TEXT;
+  ALTER TABLE sale_items ADD COLUMN mrp REAL NOT NULL DEFAULT 0;
+  ALTER TABLE sale_items ADD COLUMN expiry_date TEXT;
+  ALTER TABLE sale_items ADD COLUMN manufacturer TEXT;
+  ALTER TABLE sale_items ADD COLUMN pack_size TEXT;
+  ALTER TABLE sale_items ADD COLUMN rack TEXT;
+  `,
+  // v10: customer GSTIN
+  `
+  ALTER TABLE customers ADD COLUMN gstin TEXT;
+  `,
+  // v11: seed Aneta / shared medicine master for client installs (idempotent)
+  (db) => {
+    seedAnetaMedicines(db);
+  },
+  // v12: normalize batch/sale expiry to last day of month (month+year only)
+  `
+  UPDATE batches
+  SET expiry_date = date(expiry_date, 'start of month', '+1 month', '-1 day')
+  WHERE expiry_date IS NOT NULL
+    AND length(expiry_date) >= 7
+    AND expiry_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]*';
+
+  UPDATE sale_items
+  SET expiry_date = date(expiry_date, 'start of month', '+1 month', '-1 day')
+  WHERE expiry_date IS NOT NULL
+    AND length(expiry_date) >= 7
+    AND expiry_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]*';
+  `,
 ];
 
 export function runMigrations(db: Database.Database): void {
   const current = (db.pragma('user_version', { simple: true }) as number) ?? 0;
   for (let v = current; v < MIGRATIONS.length; v++) {
-    db.exec(MIGRATIONS[v]);
+    const step = MIGRATIONS[v];
+    if (typeof step === 'function') {
+      step(db);
+    } else {
+      db.exec(step);
+    }
     db.pragma(`user_version = ${v + 1}`);
   }
   seedDefaults(db);

@@ -217,7 +217,8 @@ npm run license:generate -- --pharmacy-id PH-0001 --pharmacy-name "Sharma Medica
   dosage_form (Tablet/Capsule/…), category (therapeutic class), pack_size,
   schedule, storage_type, rack, reorder_level, `is_active` (soft delete),
   created_at.
-- `batches` — medicine_id (FK), batch_no, expiry_date (yyyy-mm-dd), mrp,
+- `batches` — medicine_id (FK), batch_no, expiry_date (month+year; stored as
+  last day of month `yyyy-mm-dd`, displayed as `MM-YYYY`), mrp,
   purchase_price, sale_price, quantity_in_stock.
 - `suppliers`, `customers` — contact info (supplier also has gstin).
 - `purchases` + `purchase_items` — stock inward; increments batch stock.
@@ -238,7 +239,8 @@ existing migration in place) so existing installs upgrade cleanly.
   (for live display in New Sale / Edit Invoice) — keep them consistent.
 - **Money**: store as REAL; round to 2 decimals with the `round2` helper in
   sales service. Format for display with `inr()` from `renderer/lib/format.ts`.
-- **Dates**: expiry dates are `yyyy-mm-dd` strings; timestamps are ISO strings.
+- **Dates**: batch expiry is month+year only (`MM-YYYY` in UI; stored as last
+  day of that month). Other dates are `yyyy-mm-dd`; timestamps are ISO strings.
 - **Deletes**: medicines are **soft-deleted** (`is_active = 0`) to preserve
   historical sale references. Batches/parties are hard-deleted.
 - **Invoice numbers**: `<invoice_prefix>-<5-digit sequence>` from the `counters`

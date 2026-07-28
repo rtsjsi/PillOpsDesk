@@ -5,7 +5,7 @@ import { Spinner, EmptyState, useToast, errMsg } from '../components/ui';
 import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
 import { useWriteAllowed } from '../App';
 
-const empty: CustomerInput = { name: '', phone: '', address: '' };
+const empty: CustomerInput = { name: '', phone: '', address: '', gstin: '' };
 
 export function Customers() {
   const toast = useToast();
@@ -33,7 +33,12 @@ export function Customers() {
   };
   const openEdit = (c: Customer) => {
     setEditing(c);
-    setForm({ name: c.name, phone: c.phone ?? '', address: c.address ?? '' });
+    setForm({
+      name: c.name,
+      phone: c.phone ?? '',
+      address: c.address ?? '',
+      gstin: c.gstin ?? '',
+    });
     setModal(true);
   };
 
@@ -86,6 +91,7 @@ export function Customers() {
               <tr>
                 <th className="th">Name</th>
                 <th className="th">Phone</th>
+                <th className="th">GSTIN</th>
                 <th className="th">Address</th>
                 <th className="th text-right">Actions</th>
               </tr>
@@ -95,6 +101,7 @@ export function Customers() {
                 <tr key={c.id} className="border-t border-slate-100 hover:bg-slate-50">
                   <td className="td font-medium">{c.name}</td>
                   <td className="td">{c.phone || '-'}</td>
+                  <td className="td">{c.gstin || '-'}</td>
                   <td className="td">{c.address || '-'}</td>
                   <td className="td text-right">
                     <div className="flex justify-end gap-2">
@@ -144,13 +151,23 @@ export function Customers() {
               autoFocus
             />
           </div>
-          <div>
-            <label className="label">Phone</label>
-            <input
-              className="input"
-              value={form.phone ?? ''}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Phone</label>
+              <input
+                className="input"
+                value={form.phone ?? ''}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="label">GSTIN</label>
+              <input
+                className="input"
+                value={form.gstin ?? ''}
+                onChange={(e) => setForm({ ...form, gstin: e.target.value })}
+              />
+            </div>
           </div>
           <div>
             <label className="label">Address</label>
@@ -199,6 +216,10 @@ export function Customers() {
             <div>
               <dt className="text-slate-500">Phone</dt>
               <dd className="font-medium text-slate-800">{viewing.phone || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">GSTIN</dt>
+              <dd className="font-medium text-slate-800">{viewing.gstin || '-'}</dd>
             </div>
             <div>
               <dt className="text-slate-500">Address</dt>

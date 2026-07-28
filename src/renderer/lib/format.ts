@@ -1,3 +1,7 @@
+import { formatExpiry, normalizeExpiryDate } from '../../shared/expiry';
+
+export { formatExpiry, expiryMonthInputValue, currentExpiryMonth } from '../../shared/expiry';
+
 export function inr(n: number): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -42,9 +46,15 @@ export function monthStartIso(): string {
   return `${y}-${m}-01`;
 }
 
-// Days until (or since, if negative) the given expiry date.
+/** Days until (or since, if negative) end of the expiry month. */
 export function daysUntil(iso: string): number {
-  const d = new Date(iso + 'T00:00:00');
+  let end: string;
+  try {
+    end = normalizeExpiryDate(iso);
+  } catch {
+    end = iso;
+  }
+  const d = new Date(end + 'T00:00:00');
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   return Math.round((d.getTime() - now.getTime()) / 86400000);

@@ -46,7 +46,6 @@ export interface PharmacyApi {
     get: (id: number) => Promise<Medicine | null>;
     create: (input: MedicineInput) => Promise<Medicine>;
     update: (id: number, input: MedicineInput) => Promise<Medicine>;
-    remove: (id: number) => Promise<void>;
   };
   batches: {
     listByMedicine: (medicineId: number) => Promise<Batch[]>;
@@ -138,7 +137,6 @@ export const IPC = {
   medicinesGet: 'medicines:get',
   medicinesCreate: 'medicines:create',
   medicinesUpdate: 'medicines:update',
-  medicinesRemove: 'medicines:remove',
 
   batchesListByMedicine: 'batches:listByMedicine',
   batchesCreate: 'batches:create',

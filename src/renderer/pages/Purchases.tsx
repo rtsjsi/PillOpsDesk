@@ -6,7 +6,7 @@ import type {
   PurchaseItemInput,
   PurchaseWithItems,
 } from '../../shared/types';
-import { inr, formatDate, todayIso, monthStartIso } from '../lib/format';
+import { inr, formatDate, formatExpiry, todayIso, monthStartIso, expiryMonthInputValue } from '../lib/format';
 import { purchaseLineAmounts, purchaseInvoiceTotals, round2 } from '../../shared/gst';
 import { Modal } from '../components/Modal';
 import { Spinner, EmptyState, useToast, errMsg, NumberInput } from '../components/ui';
@@ -270,7 +270,7 @@ export function Purchases() {
                   <tr key={it.id} className="border-t border-slate-100">
                     <td className="td">{it.medicine_name}</td>
                     <td className="td">{it.batch_no}</td>
-                    <td className="td">{formatDate(it.expiry_date)}</td>
+                    <td className="td">{formatExpiry(it.expiry_date)}</td>
                     <td className="td text-center">{it.quantity}</td>
                     <td className="td text-center">{it.free_quantity || '-'}</td>
                     <td className="td text-right">{inr(it.purchase_price)}</td>
@@ -406,7 +406,7 @@ function PurchaseForm({
     if (items.length === 0) return onError('Add at least one item.');
     for (const it of items) {
       if (!it.batch_no.trim() || !it.expiry_date) {
-        return onError(`Batch number and expiry required for ${it.medicine_name}.`);
+        return onError(`Batch number and expiry month required for ${it.medicine_name}.`);
       }
       if (it.quantity <= 0) return onError(`Quantity must be positive for ${it.medicine_name}.`);
       if ((it.free_quantity ?? 0) < 0) {
@@ -556,9 +556,10 @@ function PurchaseForm({
                     </td>
                     <td className="td">
                       <input
-                        type="date"
-                        className="input w-36 px-2 py-1"
-                        value={it.expiry_date}
+                        type="month"
+                        className="input w-32 px-2 py-1"
+                        title="Expiry MM-YYYY"
+                        value={expiryMonthInputValue(it.expiry_date)}
                         onChange={(e) => patch(idx, { expiry_date: e.target.value })}
                       />
                     </td>

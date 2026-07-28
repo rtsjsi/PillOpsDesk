@@ -1,4 +1,5 @@
 import { getDb } from '../index';
+import { normalizeExpiryDate } from '@shared/expiry';
 import { purchaseLandingCost, purchaseLineAmounts } from '@shared/gst';
 import type {
   Purchase,
@@ -52,7 +53,8 @@ function applyPurchaseItems(
     const amounts = lineAmounts(it);
     const landing = purchaseLandingCost(it);
     const qtyIn = stockQty(it);
-    const existing = findBatch.get(it.medicine_id, it.batch_no, it.expiry_date) as
+    const expiryDate = normalizeExpiryDate(it.expiry_date);
+    const existing = findBatch.get(it.medicine_id, it.batch_no, expiryDate) as
       | { id: number }
       | undefined;
     let batchId: number;
@@ -69,7 +71,7 @@ function applyPurchaseItems(
       const bInfo = insertBatch.run({
         medicine_id: it.medicine_id,
         batch_no: it.batch_no,
-        expiry_date: it.expiry_date,
+        expiry_date: expiryDate,
         mrp: it.mrp,
         purchase_price: landing,
         sale_price: it.sale_price,

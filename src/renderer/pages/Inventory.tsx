@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import type { Medicine, MedicineInput, MedicineSchedule, MedicineStorageType, Batch, BatchInput } from '../../shared/types';
-import { inr, formatDate, daysUntil, todayIso } from '../lib/format';
+import { inr, formatExpiry, daysUntil, currentExpiryMonth, expiryMonthInputValue } from '../lib/format';
 import { Modal } from '../components/Modal';
 import { Spinner, EmptyState, Badge, useToast, errMsg, NumberInput } from '../components/ui';
 import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
@@ -122,17 +122,6 @@ export function Inventory() {
     }
   };
 
-  const remove = async (m: Medicine) => {
-    if (!confirm(`Remove "${m.name}"? It will be hidden from lists.`)) return;
-    try {
-      await window.pharmacy.medicines.remove(m.id);
-      toast.success('Medicine removed.');
-      load();
-    } catch (e) {
-      toast.error(errMsg(e));
-    }
-  };
-
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="shrink-0 space-y-4">
@@ -223,12 +212,6 @@ export function Inventory() {
                           onClick={() => openEdit(m)}
                         >
                           Edit
-                        </button>
-                        <button
-                          className="btn-danger px-2 py-1"
-                          onClick={() => remove(m)}
-                        >
-                          Delete
                         </button>
                       </div>
                     </td>
@@ -524,7 +507,7 @@ function BatchManager({
 
   const save = async () => {
     if (!form.batch_no.trim() || !form.expiry_date) {
-      toast.error('Batch number and expiry date are required.');
+      toast.error('Batch number and expiry month are required.');
       return;
     }
     try {
@@ -547,7 +530,7 @@ function BatchManager({
     setForm({
       medicine_id: b.medicine_id,
       batch_no: b.batch_no,
-      expiry_date: b.expiry_date,
+      expiry_date: expiryMonthInputValue(b.expiry_date),
       mrp: b.mrp,
       purchase_price: b.purchase_price,
       sale_price: b.sale_price,
@@ -575,12 +558,12 @@ function BatchManager({
             />
           </div>
           <div>
-            <label className="label">Expiry *</label>
+            <label className="label">Expiry (MM-YYYY) *</label>
             <input
               className="input"
-              type="date"
-              value={form.expiry_date}
-              min={todayIso()}
+              type="month"
+              value={expiryMonthInputValue(form.expiry_date)}
+              min={currentExpiryMonth()}
               onChange={(e) => setForm({ ...form, expiry_date: e.target.value })}
             />
           </div>
@@ -657,7 +640,7 @@ function BatchManager({
                   <tr key={b.id} className="border-t border-slate-100">
                     <td className="td font-medium">{b.batch_no}</td>
                     <td className="td">
-                      {formatDate(b.expiry_date)}{' '}
+                      {formatExpiry(b.expiry_date)}{' '}
                       {d < 0 ? (
                         <Badge tone="red">Expired</Badge>
                       ) : d <= 90 ? (

@@ -29,7 +29,8 @@ export interface Batch {
   id: number;
   medicine_id: number;
   batch_no: string;
-  expiry_date: string; // ISO yyyy-mm-dd
+  /** Month expiry stored as last day of month (yyyy-mm-dd); display as MM-YYYY. */
+  expiry_date: string;
   mrp: number;
   purchase_price: number;
   sale_price: number;
@@ -55,6 +56,7 @@ export interface Customer {
   name: string;
   phone: string | null;
   address: string | null;
+  gstin: string | null;
   created_at: string;
 }
 
@@ -132,7 +134,16 @@ export interface Sale {
 export interface SaleItemInput {
   batch_id: number;
   quantity: number;
+  free_quantity?: number;
   discount_percent: number;
+  /** Optional scheme label (e.g. 10+1). */
+  scheme?: string | null;
+  /** Unit rate; defaults to batch sale_price when omitted. */
+  price?: number;
+  /** Line overrides; defaults to medicine/batch values when omitted. */
+  hsn_code?: string | null;
+  mrp?: number;
+  gst_rate?: number;
 }
 
 export interface SaleInput {
@@ -149,7 +160,14 @@ export interface SaleItem {
   batch_no: string;
   hsn_code: string | null;
   quantity: number;
+  free_quantity: number;
+  scheme: string | null;
   price: number;
+  mrp: number;
+  expiry_date: string | null;
+  manufacturer: string | null;
+  pack_size: string | null;
+  rack: string | null;
   gst_rate: number;
   discount_percent: number;
   discount: number; // rupee amount saved on this line
@@ -160,6 +178,9 @@ export interface SaleItem {
 export interface SaleWithItems extends Sale {
   items: SaleItem[];
   customer_name: string | null;
+  customer_phone: string | null;
+  customer_address: string | null;
+  customer_gstin: string | null;
 }
 
 // A sellable line as shown in the sales screen (a batch joined with its medicine).
@@ -173,6 +194,9 @@ export interface SellableBatch {
   mrp: number;
   gst_rate: number;
   hsn_code: string | null;
+  manufacturer: string | null;
+  pack_size: string | null;
+  rack: string | null;
   quantity_in_stock: number;
 }
 
@@ -252,7 +276,6 @@ export interface LicenseStatus {
   graceEnds?: string;
   daysRemaining?: number;
   message: string;
-  clockTampered?: boolean;
   /** True when subscription is past expiry + grace; viewing allowed, writes blocked. */
   readOnly?: boolean;
 }
