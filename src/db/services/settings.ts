@@ -13,6 +13,7 @@ export function getSettings(): Settings {
     address: map.get('address') ?? '',
     phone: map.get('phone') ?? '',
     gstin: map.get('gstin') ?? '',
+    pan: map.get('pan') ?? '',
     dl_no: map.get('dl_no') ?? '',
     invoice_prefix: map.get('invoice_prefix') ?? 'INV',
     expiry_alert_days: parseInt(map.get('expiry_alert_days') ?? '90', 10) || 90,
@@ -30,6 +31,7 @@ export function saveSettings(settings: Settings): Settings {
     upsert.run('address', settings.address);
     upsert.run('phone', settings.phone);
     upsert.run('gstin', settings.gstin);
+    upsert.run('pan', settings.pan);
     upsert.run('dl_no', settings.dl_no);
     upsert.run('invoice_prefix', settings.invoice_prefix);
     upsert.run('expiry_alert_days', String(settings.expiry_alert_days));

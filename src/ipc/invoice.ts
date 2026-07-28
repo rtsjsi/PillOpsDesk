@@ -52,6 +52,7 @@ function buildInvoiceHtml(sale: SaleWithItems, settings: Settings): string {
         ${settings.address ? `<div class="muted">${esc(settings.address)}</div>` : ''}
         ${settings.phone ? `<div class="muted">Ph: ${esc(settings.phone)}</div>` : ''}
         ${settings.gstin ? `<div class="muted">GSTIN: ${esc(settings.gstin)}</div>` : ''}
+        ${settings.pan ? `<div class="muted">PAN: ${esc(settings.pan)}</div>` : ''}
         ${settings.dl_no ? `<div class="muted">D.L. No: ${esc(settings.dl_no)}</div>` : ''}
       `;
   const toBlock = sale.customer_name
@@ -61,6 +62,7 @@ function buildInvoiceHtml(sale: SaleWithItems, settings: Settings): string {
         ${sale.customer_address ? `<div class="muted">${esc(sale.customer_address)}</div>` : ''}
         ${sale.customer_phone ? `<div class="muted">Ph: ${esc(sale.customer_phone)}</div>` : ''}
         ${sale.customer_gstin ? `<div class="muted">GSTIN: ${esc(sale.customer_gstin)}</div>` : ''}
+        ${sale.customer_pan ? `<div class="muted">PAN: ${esc(sale.customer_pan)}</div>` : ''}
       `
     : `
         <div class="party-title">To</div>

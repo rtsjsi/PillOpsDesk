@@ -541,6 +541,16 @@ export function SettingsPage() {
             />
           </div>
           <div>
+            <label className="label">PAN Card</label>
+            <input
+              className="input"
+              value={settings.pan}
+              onChange={(e) => set({ pan: e.target.value.toUpperCase() })}
+              maxLength={10}
+              placeholder="ABCDE1234F"
+            />
+          </div>
+          <div>
             <label className="label">Drug Licence No</label>
             <input
               className="input"

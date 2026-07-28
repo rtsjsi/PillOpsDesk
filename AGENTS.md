@@ -220,7 +220,7 @@ npm run license:generate -- --pharmacy-id PH-0001 --pharmacy-name "Sharma Medica
 - `batches` — medicine_id (FK), batch_no, expiry_date (month+year; stored as
   last day of month `yyyy-mm-dd`, displayed as `MM-YYYY`), mrp,
   purchase_price, sale_price, quantity_in_stock.
-- `suppliers`, `customers` — contact info (supplier also has gstin).
+- `suppliers`, `customers` — contact info (gstin, pan).
 - `purchases` + `purchase_items` — stock inward; increments batch stock.
 - `sales` + `sale_items` — invoices; decrements batch stock. `invoice_no` unique.
 - `users` — username, pin_hash, salt, role (`owner` | `staff`).

@@ -292,6 +292,11 @@ const MIGRATIONS: Migration[] = [
     AND length(expiry_date) >= 7
     AND expiry_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]*';
   `,
+  // v13: PAN card on store settings (key/value), suppliers, customers
+  `
+  ALTER TABLE suppliers ADD COLUMN pan TEXT;
+  ALTER TABLE customers ADD COLUMN pan TEXT;
+  `,
 ];
 
 export function runMigrations(db: Database.Database): void {
@@ -314,6 +319,7 @@ function seedDefaults(db: Database.Database): void {
     address: '',
     phone: '',
     gstin: '',
+    pan: '',
     dl_no: '',
     invoice_prefix: 'INV',
     expiry_alert_days: '90',

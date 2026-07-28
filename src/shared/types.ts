@@ -46,6 +46,7 @@ export interface Supplier {
   phone: string | null;
   address: string | null;
   gstin: string | null;
+  pan: string | null;
   created_at: string;
 }
 
@@ -57,6 +58,7 @@ export interface Customer {
   phone: string | null;
   address: string | null;
   gstin: string | null;
+  pan: string | null;
   created_at: string;
 }
 
@@ -181,6 +183,7 @@ export interface SaleWithItems extends Sale {
   customer_phone: string | null;
   customer_address: string | null;
   customer_gstin: string | null;
+  customer_pan: string | null;
 }
 
 // A sellable line as shown in the sales screen (a batch joined with its medicine).
@@ -211,6 +214,7 @@ export interface Settings {
   address: string;
   phone: string;
   gstin: string;
+  pan: string;
   dl_no: string; // drug licence number
   invoice_prefix: string;
   expiry_alert_days: number;

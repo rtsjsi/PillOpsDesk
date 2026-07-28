@@ -5,7 +5,7 @@ import { Spinner, EmptyState, useToast, errMsg } from '../components/ui';
 import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
 import { useWriteAllowed } from '../App';
 
-const empty: SupplierInput = { name: '', phone: '', address: '', gstin: '' };
+const empty: SupplierInput = { name: '', phone: '', address: '', gstin: '', pan: '' };
 
 export function Suppliers() {
   const toast = useToast();
@@ -38,6 +38,7 @@ export function Suppliers() {
       phone: s.phone ?? '',
       address: s.address ?? '',
       gstin: s.gstin ?? '',
+      pan: s.pan ?? '',
     });
     setModal(true);
   };
@@ -92,6 +93,7 @@ export function Suppliers() {
                 <th className="th">Name</th>
                 <th className="th">Phone</th>
                 <th className="th">GSTIN</th>
+                <th className="th">PAN</th>
                 <th className="th">Address</th>
                 <th className="th text-right">Actions</th>
               </tr>
@@ -102,6 +104,7 @@ export function Suppliers() {
                   <td className="td font-medium">{s.name}</td>
                   <td className="td">{s.phone || '-'}</td>
                   <td className="td">{s.gstin || '-'}</td>
+                  <td className="td">{s.pan || '-'}</td>
                   <td className="td">{s.address || '-'}</td>
                   <td className="td text-right">
                     <div className="flex justify-end gap-2">
@@ -168,6 +171,16 @@ export function Suppliers() {
                 onChange={(e) => setForm({ ...form, gstin: e.target.value })}
               />
             </div>
+            <div>
+              <label className="label">PAN Card</label>
+              <input
+                className="input"
+                value={form.pan ?? ''}
+                onChange={(e) => setForm({ ...form, pan: e.target.value.toUpperCase() })}
+                maxLength={10}
+                placeholder="ABCDE1234F"
+              />
+            </div>
           </div>
           <div>
             <label className="label">Address</label>
@@ -220,6 +233,10 @@ export function Suppliers() {
             <div>
               <dt className="text-slate-500">GSTIN</dt>
               <dd className="font-medium text-slate-800">{viewing.gstin || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">PAN Card</dt>
+              <dd className="font-medium text-slate-800">{viewing.pan || '-'}</dd>
             </div>
             <div>
               <dt className="text-slate-500">Address</dt>

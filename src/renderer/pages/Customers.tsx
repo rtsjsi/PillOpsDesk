@@ -5,7 +5,7 @@ import { Spinner, EmptyState, useToast, errMsg } from '../components/ui';
 import { ReadOnlyNotice } from '../components/ReadOnlyNotice';
 import { useWriteAllowed } from '../App';
 
-const empty: CustomerInput = { name: '', phone: '', address: '', gstin: '' };
+const empty: CustomerInput = { name: '', phone: '', address: '', gstin: '', pan: '' };
 
 export function Customers() {
   const toast = useToast();
@@ -38,6 +38,7 @@ export function Customers() {
       phone: c.phone ?? '',
       address: c.address ?? '',
       gstin: c.gstin ?? '',
+      pan: c.pan ?? '',
     });
     setModal(true);
   };
@@ -92,6 +93,7 @@ export function Customers() {
                 <th className="th">Name</th>
                 <th className="th">Phone</th>
                 <th className="th">GSTIN</th>
+                <th className="th">PAN</th>
                 <th className="th">Address</th>
                 <th className="th text-right">Actions</th>
               </tr>
@@ -102,6 +104,7 @@ export function Customers() {
                   <td className="td font-medium">{c.name}</td>
                   <td className="td">{c.phone || '-'}</td>
                   <td className="td">{c.gstin || '-'}</td>
+                  <td className="td">{c.pan || '-'}</td>
                   <td className="td">{c.address || '-'}</td>
                   <td className="td text-right">
                     <div className="flex justify-end gap-2">
@@ -168,6 +171,16 @@ export function Customers() {
                 onChange={(e) => setForm({ ...form, gstin: e.target.value })}
               />
             </div>
+            <div>
+              <label className="label">PAN Card</label>
+              <input
+                className="input"
+                value={form.pan ?? ''}
+                onChange={(e) => setForm({ ...form, pan: e.target.value.toUpperCase() })}
+                maxLength={10}
+                placeholder="ABCDE1234F"
+              />
+            </div>
           </div>
           <div>
             <label className="label">Address</label>
@@ -220,6 +233,10 @@ export function Customers() {
             <div>
               <dt className="text-slate-500">GSTIN</dt>
               <dd className="font-medium text-slate-800">{viewing.gstin || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">PAN Card</dt>
+              <dd className="font-medium text-slate-800">{viewing.pan || '-'}</dd>
             </div>
             <div>
               <dt className="text-slate-500">Address</dt>
