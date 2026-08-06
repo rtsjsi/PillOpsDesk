@@ -316,6 +316,25 @@ const MIGRATIONS: Migration[] = [
   );
   CREATE INDEX IF NOT EXISTS idx_sale_payments_sale ON sale_payments(sale_id);
   `,
+  // v16: persist purchase-line margin % (avoid reverse-calc drift from rounded sale)
+  `
+  ALTER TABLE purchase_items ADD COLUMN margin_percent REAL NOT NULL DEFAULT 0;
+
+  UPDATE purchase_items
+  SET margin_percent = ROUND(
+    CASE
+      WHEN (purchase_price * (1.0 - IFNULL(discount_percent, 0) / 100.0)) <= 0 THEN 0
+      ELSE (
+        (
+          (SELECT sale_price FROM batches WHERE id = purchase_items.batch_id)
+          - (purchase_price * (1.0 - IFNULL(discount_percent, 0) / 100.0))
+        )
+        / (purchase_price * (1.0 - IFNULL(discount_percent, 0) / 100.0))
+      ) * 100.0
+    END
+  , 2)
+  WHERE margin_percent = 0;
+  `,
 ];
 
 export function runMigrations(db: Database.Database): void {

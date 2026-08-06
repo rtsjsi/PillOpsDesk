@@ -15,8 +15,6 @@ import { useWriteAllowed } from '../App';
 
 interface DraftItem extends PurchaseItemInput {
   medicine_name: string;
-  /** Markup % applied on net rate (rate after discount). */
-  margin_percent: number;
 }
 
 function netPurchaseRate(purchase: number, discountPercent: number): number {
@@ -281,11 +279,14 @@ export function Purchases() {
                     <td className="td text-right">{inr(it.taxable_value)}</td>
                     <td className="td text-right">{inr(it.line_total)}</td>
                     <td className="td text-right">
-                      {marginFromSale(
-                        it.purchase_price,
-                        it.sale_price,
-                        it.discount_percent
-                      ).toFixed(1)}%
+                      {(Number.isFinite(it.margin_percent)
+                        ? it.margin_percent
+                        : marginFromSale(
+                            it.purchase_price,
+                            it.sale_price,
+                            it.discount_percent
+                          )
+                      ).toFixed(2)}%
                     </td>
                     <td className="td text-right">{inr(it.sale_price)}</td>
                     <td className="td text-right">{inr(it.mrp)}</td>
@@ -348,11 +349,13 @@ function PurchaseForm({
         quantity: it.quantity,
         discount_percent: it.discount_percent ?? 0,
         free_quantity: it.free_quantity ?? 0,
-        margin_percent: marginFromSale(
-          it.purchase_price,
-          it.sale_price,
-          it.discount_percent ?? 0
-        ),
+        margin_percent: Number.isFinite(it.margin_percent)
+          ? it.margin_percent
+          : marginFromSale(
+              it.purchase_price,
+              it.sale_price,
+              it.discount_percent ?? 0
+            ),
       })) ?? []
   );
   const [busy, setBusy] = useState(false);
@@ -421,9 +424,7 @@ function PurchaseForm({
       invoice_no: invoiceNo.trim() || null,
       purchase_date: date,
       notes: initial?.notes ?? null,
-      items: items.map(
-        ({ medicine_name: _n, margin_percent: _m, ...rest }) => rest
-      ),
+      items: items.map(({ medicine_name: _n, ...rest }) => rest),
     };
     setBusy(true);
     try {

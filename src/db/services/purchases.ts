@@ -44,9 +44,10 @@ function applyPurchaseItems(
   const insertItem = db.prepare(
     `INSERT INTO purchase_items
       (purchase_id, batch_id, medicine_id, quantity, free_quantity, purchase_price,
-       discount_percent, gst_rate, taxable_value, line_total)
+       discount_percent, margin_percent, gst_rate, taxable_value, line_total)
      VALUES (@purchase_id, @batch_id, @medicine_id, @quantity, @free_quantity,
-             @purchase_price, @discount_percent, @gst_rate, @taxable_value, @line_total)`
+             @purchase_price, @discount_percent, @margin_percent, @gst_rate,
+             @taxable_value, @line_total)`
   );
 
   for (const it of items) {
@@ -87,6 +88,7 @@ function applyPurchaseItems(
       free_quantity: Math.max(0, it.free_quantity ?? 0),
       purchase_price: it.purchase_price,
       discount_percent: Math.min(Math.max(0, it.discount_percent ?? 0), 100),
+      margin_percent: Number.isFinite(it.margin_percent) ? Number(it.margin_percent) : 0,
       gst_rate: it.gst_rate,
       taxable_value: amounts.taxable_value,
       line_total: amounts.line_total,
@@ -137,7 +139,7 @@ export function getPurchase(id: number): PurchaseWithItems | null {
       `SELECT pi.id, pi.purchase_id, pi.batch_id, pi.medicine_id,
               m.name AS medicine_name,
               b.batch_no, b.expiry_date, b.mrp, b.sale_price,
-              pi.purchase_price, pi.discount_percent, pi.free_quantity,
+              pi.purchase_price, pi.discount_percent, pi.margin_percent, pi.free_quantity,
               pi.gst_rate, pi.quantity, pi.taxable_value, pi.line_total
        FROM purchase_items pi
        JOIN medicines m ON m.id = pi.medicine_id

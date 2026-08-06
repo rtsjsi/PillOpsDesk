@@ -83,6 +83,8 @@ export interface PurchaseItemInput {
   mrp: number;
   purchase_price: number;
   sale_price: number;
+  /** Markup % on net rate (rate after disc). Stored as entered — not reverse-calculated from sale. */
+  margin_percent: number;
   gst_rate: number;
   quantity: number;
   discount_percent: number;
@@ -108,6 +110,7 @@ export interface PurchaseItem {
   mrp: number;
   purchase_price: number;
   sale_price: number;
+  margin_percent: number;
   gst_rate: number;
   quantity: number;
   discount_percent: number;
