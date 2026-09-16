@@ -241,6 +241,73 @@ export interface StockRow extends Batch {
   reorder_level: number;
 }
 
+export interface Quotation {
+  id: number;
+  quotation_no: string;
+  customer_id: number | null;
+  quotation_date: string;
+  notes: string | null;
+  subtotal: number;
+  discount: number;
+  discount_percent: number;
+  cgst: number;
+  sgst: number;
+  total: number;
+  created_at: string;
+}
+
+export interface QuotationItemInput {
+  medicine_name: string;
+  manufacturer?: string | null;
+  pack_size?: string | null;
+  hsn_code?: string | null;
+  quantity: number;
+  mrp?: number;
+  /** Internal cost (GST-exclusive). Used with margin % to derive quoted rate. Not printed. */
+  cost_price?: number;
+  /** Internal markup on cost. Hidden from the printed quotation. */
+  margin_percent?: number;
+  /** Quoted GST-exclusive unit rate (after margin). */
+  price: number;
+  gst_rate: number;
+  discount_percent?: number;
+}
+
+export interface QuotationInput {
+  customer_id: number | null;
+  notes?: string | null;
+  items: QuotationItemInput[];
+}
+
+export interface QuotationItem {
+  id: number;
+  quotation_id: number;
+  medicine_name: string;
+  manufacturer: string | null;
+  pack_size: string | null;
+  hsn_code: string | null;
+  quantity: number;
+  mrp: number;
+  cost_price: number;
+  margin_percent: number;
+  price: number;
+  gst_rate: number;
+  discount_percent: number;
+  discount: number;
+  taxable_value: number;
+  line_total: number;
+}
+
+export interface QuotationWithItems extends Quotation {
+  items: QuotationItem[];
+  customer_name: string | null;
+  customer_phone: string | null;
+  customer_address: string | null;
+  customer_gstin: string | null;
+  customer_pan: string | null;
+  customer_dl_no: string | null;
+}
+
 export interface Settings {
   store_name: string;
   address: string;
@@ -249,6 +316,7 @@ export interface Settings {
   pan: string;
   dl_no: string; // drug licence number
   invoice_prefix: string;
+  quotation_prefix: string;
   expiry_alert_days: number;
 }
 

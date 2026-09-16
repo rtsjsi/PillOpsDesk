@@ -55,6 +55,12 @@ const api: PharmacyApi = {
     recordPayment: (saleId, input) => invoke(IPC.salesRecordPayment, saleId, input),
     removePayment: (paymentId) => invoke(IPC.salesRemovePayment, paymentId),
   },
+  quotations: {
+    create: (input) => invoke(IPC.quotationsCreate, input),
+    list: (from, to) => invoke(IPC.quotationsList, from, to),
+    get: (id) => invoke(IPC.quotationsGet, id),
+    update: (id, input) => invoke(IPC.quotationsUpdate, id, input),
+  },
   reports: {
     dashboard: () => invoke(IPC.reportsDashboard),
     lowStock: () => invoke(IPC.reportsLowStock),
@@ -85,6 +91,7 @@ const api: PharmacyApi = {
   },
   print: {
     invoice: (saleId) => invoke(IPC.printInvoice, saleId),
+    quotation: (quotationId) => invoke(IPC.printQuotation, quotationId),
   },
   license: {
     getStatus: () => invoke(IPC.licenseGetStatus),

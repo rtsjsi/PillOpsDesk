@@ -11,12 +11,14 @@ import type {
   DriveBackupSettings,
   UpdateManifest,
   SalePaymentInput,
+  QuotationInput,
 } from '@shared/types';
 import * as medicines from '../db/services/medicines';
 import * as batches from '../db/services/batches';
 import * as parties from '../db/services/parties';
 import * as purchases from '../db/services/purchases';
 import * as sales from '../db/services/sales';
+import * as quotations from '../db/services/quotations';
 import * as reports from '../db/services/reports';
 import * as settings from '../db/services/settings';
 import * as auth from '../db/services/auth';
@@ -32,6 +34,7 @@ import {
   saveDriveSettings,
 } from './google-drive';
 import { printInvoice } from './invoice';
+import { printQuotation } from './quotation';
 import {
   applyUpdate,
   checkForUpdates,
@@ -139,6 +142,16 @@ export function registerIpc(): void {
   );
   handleWrite(IPC.salesRemovePayment, (paymentId: number) => sales.removePayment(paymentId));
 
+  // Quotations (no stock movement)
+  handleWrite(IPC.quotationsCreate, (input: QuotationInput) => quotations.createQuotation(input));
+  handleRead(IPC.quotationsList, (from?: string, to?: string) =>
+    quotations.listQuotations(from, to)
+  );
+  handleRead(IPC.quotationsGet, (id: number) => quotations.getQuotation(id));
+  handleWrite(IPC.quotationsUpdate, (id: number, input: QuotationInput) =>
+    quotations.updateQuotation(id, input)
+  );
+
   // Reports (read-only friendly)
   handleRead(IPC.reportsDashboard, () => reports.getDashboard());
   handleRead(IPC.reportsLowStock, () => reports.getLowStock());
@@ -175,8 +188,9 @@ export function registerIpc(): void {
   handleRead(IPC.driveListBackups, () => listCloudBackups());
   handleWrite(IPC.driveRestore, () => restoreFromDrive());
 
-  // Reprinting past invoices is allowed in read-only
+  // Reprinting past invoices / quotations is allowed in read-only
   handleRead(IPC.printInvoice, (saleId: number) => printInvoice(saleId));
+  handleRead(IPC.printQuotation, (quotationId: number) => printQuotation(quotationId));
 
   // App updates via GitHub Releases (available even in read-only mode)
   handle(IPC.updatesGetVersion, () => getAppVersion());

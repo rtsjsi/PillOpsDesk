@@ -567,6 +567,14 @@ export function SettingsPage() {
             />
           </div>
           <div>
+            <label className="label">Quotation Prefix</label>
+            <input
+              className="input"
+              value={settings.quotation_prefix ?? 'QT'}
+              onChange={(e) => set({ quotation_prefix: e.target.value })}
+            />
+          </div>
+          <div>
             <label className="label">Expiry Alert (days)</label>
             <NumberInput
               className="input"

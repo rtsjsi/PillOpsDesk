@@ -335,6 +335,47 @@ const MIGRATIONS: Migration[] = [
   , 2)
   WHERE margin_percent = 0;
   `,
+  // v17: quotations (manual line items; margin % is internal, not printed)
+  `
+  CREATE TABLE IF NOT EXISTS quotations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    quotation_no TEXT NOT NULL UNIQUE,
+    customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
+    quotation_date TEXT NOT NULL,
+    notes TEXT,
+    subtotal REAL NOT NULL DEFAULT 0,
+    discount REAL NOT NULL DEFAULT 0,
+    discount_percent REAL NOT NULL DEFAULT 0,
+    cgst REAL NOT NULL DEFAULT 0,
+    sgst REAL NOT NULL DEFAULT 0,
+    total REAL NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_quotations_date ON quotations(quotation_date);
+
+  CREATE TABLE IF NOT EXISTS quotation_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    quotation_id INTEGER NOT NULL REFERENCES quotations(id) ON DELETE CASCADE,
+    medicine_name TEXT NOT NULL,
+    manufacturer TEXT,
+    pack_size TEXT,
+    hsn_code TEXT,
+    quantity INTEGER NOT NULL,
+    mrp REAL NOT NULL DEFAULT 0,
+    cost_price REAL NOT NULL DEFAULT 0,
+    margin_percent REAL NOT NULL DEFAULT 0,
+    price REAL NOT NULL,
+    gst_rate REAL NOT NULL DEFAULT 0,
+    discount_percent REAL NOT NULL DEFAULT 0,
+    discount REAL NOT NULL DEFAULT 0,
+    taxable_value REAL NOT NULL DEFAULT 0,
+    line_total REAL NOT NULL DEFAULT 0
+  );
+  CREATE INDEX IF NOT EXISTS idx_quotation_items_quotation ON quotation_items(quotation_id);
+
+  INSERT OR IGNORE INTO counters (key, value) VALUES ('quotation', 0);
+  INSERT OR IGNORE INTO settings (key, value) VALUES ('quotation_prefix', 'QT');
+  `,
 ];
 
 export function runMigrations(db: Database.Database): void {
@@ -360,6 +401,7 @@ function seedDefaults(db: Database.Database): void {
     pan: '',
     dl_no: '',
     invoice_prefix: 'INV',
+    quotation_prefix: 'QT',
     expiry_alert_days: '90',
   };
   const insert = db.prepare(
@@ -369,6 +411,10 @@ function seedDefaults(db: Database.Database): void {
     for (const [k, v] of Object.entries(defaults)) insert.run(k, v);
     db.prepare('INSERT OR IGNORE INTO counters (key, value) VALUES (?, ?)').run(
       'invoice',
+      0
+    );
+    db.prepare('INSERT OR IGNORE INTO counters (key, value) VALUES (?, ?)').run(
+      'quotation',
       0
     );
   });

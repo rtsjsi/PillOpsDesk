@@ -83,12 +83,14 @@ src/
       parties.ts          # Suppliers + Customers CRUD
       purchases.ts        # Stock inward; creates/merges batches (transaction)
       sales.ts            # Sales: sellable search, createSale, invoice numbering
+      quotations.ts       # Quotations: manual line items, margin %, no stock movement
       reports.ts          # Dashboard stats + report queries
       settings.ts         # Key/value settings get/save
       auth.ts             # PIN users (scrypt hash), login
   ipc/
     register.ts           # Wires every IPC channel to a service
     invoice.ts            # Builds invoice HTML + prints via hidden BrowserWindow
+    quotation.ts          # Builds quotation HTML + prints via hidden BrowserWindow
     backup.ts             # DB backup/restore + CSV export (uses dialog)
     updates.ts            # GitHub Releases OTA check / download / install
   renderer/
@@ -98,7 +100,7 @@ src/
       Modal.tsx           # Reusable modal
       ui.tsx              # Spinner, EmptyState, Badge, Toast system, errMsg()
     lib/format.ts         # inr(), formatDate(), daysUntil(), toCsv(), etc.
-    pages/                # Dashboard, Inventory, Purchases, Sales,
+    pages/                # Dashboard, Inventory, Purchases, Sales, Quotations,
                           # Customers, Suppliers, Reports, SettingsPage, LoginPage
     global.d.ts           # Declares window.pharmacy for the renderer
 forge.config.ts           # Forge: makers, AutoUnpackNatives, Vite, Fuses
@@ -223,10 +225,12 @@ npm run license:generate -- --pharmacy-id PH-0001 --pharmacy-name "Sharma Medica
 - `suppliers`, `customers` — contact info (gstin, pan, dl_no).
 - `purchases` + `purchase_items` — stock inward; increments batch stock.
 - `sales` + `sale_items` — invoices; decrements batch stock. `invoice_no` unique.
+- `quotations` + `quotation_items` — price quotes with typed medicine names (no stock
+  movement). Line `margin_percent` / `cost_price` are internal and never printed.
 - `sale_payments` — payments against sales (partial/full); status derived from sums.
 - `users` — username, pin_hash, salt, role (`owner` | `staff`).
 - `settings` — key/value store profile + preferences.
-- `counters` — holds the incrementing `invoice` sequence.
+- `counters` — holds the incrementing `invoice` and `quotation` sequences.
 
 Migrations: `src/db/migrations.ts` uses `PRAGMA user_version`. To change the
 schema, **append a new SQL string** to the `MIGRATIONS` array (never edit an
@@ -238,7 +242,8 @@ existing migration in place) so existing installs upgrade cleanly.
   `gross × (1 − disc%/100)`; GST = `taxable × rate/100`, split evenly into
   CGST and SGST; line total = taxable + tax. Invoice **net amount** is rounded
   to the nearest rupee. Logic lives in `@shared/gst` (`saleLineAmounts` /
-  `computeSaleInvoice`) and must stay consistent with `pages/Sales.tsx`.
+  `computeSaleInvoice`) and must stay consistent with `pages/Sales.tsx` and
+  `pages/Quotations.tsx`.
 - **Money**: store as REAL; round to 2 decimals with the `round2` helper in
   sales service. Format for display with `inr()` from `renderer/lib/format.ts`.
 - **Dates**: batch expiry is month+year only (`MM-YYYY` in UI; stored as last
@@ -247,6 +252,9 @@ existing migration in place) so existing installs upgrade cleanly.
   historical sale references. Batches/parties are hard-deleted.
 - **Invoice numbers**: `<invoice_prefix>-<5-digit sequence>` from the `counters`
   table; prefix comes from settings.
+- **Quotation numbers**: `<quotation_prefix>-<5-digit sequence>` (default `QT`) from
+  the `counters` table. Quoted rates use the same GST-exclusive math as sales.
+  Margin % is stored per line for internal pricing and is omitted from print.
 - **Auth**: PINs hashed with Node `crypto.scryptSync` + per-user salt; verified
   with `timingSafeEqual`. First launch registers the `owner`. Session is kept in
   the renderer's `sessionStorage` only (per-launch).

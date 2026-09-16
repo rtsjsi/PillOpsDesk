@@ -31,6 +31,8 @@ import type {
   UpdateManifest,
   UpdateDownloadProgress,
   SalePaymentInput,
+  QuotationInput,
+  QuotationWithItems,
 } from './types';
 
 export interface PharmacyApi {
@@ -82,6 +84,12 @@ export interface PharmacyApi {
     recordPayment: (saleId: number, input: SalePaymentInput) => Promise<SaleWithItems>;
     removePayment: (paymentId: number) => Promise<SaleWithItems>;
   };
+  quotations: {
+    create: (input: QuotationInput) => Promise<QuotationWithItems>;
+    list: (from?: string, to?: string) => Promise<QuotationWithItems[]>;
+    get: (id: number) => Promise<QuotationWithItems | null>;
+    update: (id: number, input: QuotationInput) => Promise<QuotationWithItems>;
+  };
   reports: {
     dashboard: () => Promise<DashboardStats>;
     lowStock: () => Promise<StockRow[]>;
@@ -112,6 +120,7 @@ export interface PharmacyApi {
   };
   print: {
     invoice: (saleId: number) => Promise<boolean>;
+    quotation: (quotationId: number) => Promise<boolean>;
   };
   license: {
     getStatus: () => Promise<LicenseStatus>;
@@ -170,6 +179,11 @@ export const IPC = {
   salesRecordPayment: 'sales:recordPayment',
   salesRemovePayment: 'sales:removePayment',
 
+  quotationsCreate: 'quotations:create',
+  quotationsList: 'quotations:list',
+  quotationsGet: 'quotations:get',
+  quotationsUpdate: 'quotations:update',
+
   reportsDashboard: 'reports:dashboard',
   reportsLowStock: 'reports:lowStock',
   reportsExpiring: 'reports:expiring',
@@ -195,6 +209,7 @@ export const IPC = {
   driveRestore: 'drive:restore',
 
   printInvoice: 'print:invoice',
+  printQuotation: 'print:quotation',
 
   licenseGetStatus: 'license:getStatus',
   licenseGetMachineId: 'license:getMachineId',

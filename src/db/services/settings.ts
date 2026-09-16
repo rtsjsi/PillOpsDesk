@@ -16,6 +16,7 @@ export function getSettings(): Settings {
     pan: map.get('pan') ?? '',
     dl_no: map.get('dl_no') ?? '',
     invoice_prefix: map.get('invoice_prefix') ?? 'INV',
+    quotation_prefix: map.get('quotation_prefix') ?? 'QT',
     expiry_alert_days: parseInt(map.get('expiry_alert_days') ?? '90', 10) || 90,
   };
 }
@@ -34,6 +35,7 @@ export function saveSettings(settings: Settings): Settings {
     upsert.run('pan', settings.pan);
     upsert.run('dl_no', settings.dl_no);
     upsert.run('invoice_prefix', settings.invoice_prefix);
+    upsert.run('quotation_prefix', settings.quotation_prefix || 'QT');
     upsert.run('expiry_alert_days', String(settings.expiry_alert_days));
   });
   tx();

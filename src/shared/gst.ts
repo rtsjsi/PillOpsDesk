@@ -195,6 +195,20 @@ export function purchaseInvoiceTotals(
   );
 }
 
+/** Quoted GST-exclusive rate from cost + margin %. */
+export function quotedRateFromCost(cost: number, marginPercent: number): number {
+  const costAmt = Math.max(0, cost ?? 0);
+  const margin = Math.max(0, marginPercent ?? 0);
+  return round2(costAmt * (1 + margin / 100));
+}
+
+/** Reverse-calculate margin % from cost and quoted rate. */
+export function marginPercentFromRates(cost: number, quotedRate: number): number {
+  const costAmt = Math.max(0, cost ?? 0);
+  if (costAmt <= 0) return 0;
+  return round2(((Math.max(0, quotedRate) - costAmt) / costAmt) * 100);
+}
+
 /** Landing cost per paid unit (after discount, incl. GST). */
 export function purchaseLandingCost(
   line: Pick<

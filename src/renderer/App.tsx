@@ -13,6 +13,7 @@ import { Suppliers } from './pages/Suppliers';
 import { Reports } from './pages/Reports';
 import { SettingsPage } from './pages/SettingsPage';
 import { Sales } from './pages/Sales';
+import { Quotations } from './pages/Quotations';
 import { applyAppTitle } from './lib/appTitle';
 
 const SESSION_USER_KEY = 'user';
@@ -174,6 +175,7 @@ export default function App() {
             >
               <Route index element={<Dashboard />} />
               <Route path="sales" element={<Sales />} />
+              <Route path="quotations" element={<Quotations />} />
               <Route path="inventory" element={<Inventory />} />
               <Route path="purchases" element={<Purchases />} />
               <Route path="customers" element={<Customers />} />
